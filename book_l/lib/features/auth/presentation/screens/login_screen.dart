@@ -23,7 +23,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onLogin() {
-    // TODO: implementar lógica de autenticación
+    // Te lleva directamente al HomeScreen por ahora
+    Navigator.pushReplacementNamed(context, '/home');
   }
 
   @override
