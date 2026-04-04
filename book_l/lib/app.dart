@@ -3,6 +3,7 @@ import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/auth/presentation/screens/register_screen.dart';
 import 'features/home/presentation/screens/home_screen.dart';
 import 'features/notificacion/presentation/screens/notificaciones_screen.dart';
+import 'features/configuracion/presentation/screens/configuracion_screen.dart';
 
 class BookLApp extends StatelessWidget {
   const BookLApp({super.key});
@@ -23,6 +24,7 @@ class BookLApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
         '/notificaciones': (context) => const NotificacionScreen(),
+        '/configuracion': (context) => const ConfiguracionScreen(),
       },
     );
   }
