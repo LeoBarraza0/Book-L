@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/widgets/nav_bar.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -13,14 +14,15 @@ class HomeScreen extends StatelessWidget {
           CustomScrollView(
             slivers: [
               // Header blanco superior
-              SliverToBoxAdapter(
-                child: _buildTopHeader(),
-              ),
-              
+              SliverToBoxAdapter(child: _buildTopHeader()),
+
               // Sección de Bienvenida
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -42,18 +44,19 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Racha Buky
                       _buildRachaCard(),
                       const SizedBox(height: 24),
-                      
+
                       // Lista de Materiales
                       _buildMaterialCard(
                         title: 'Vectores Bidimencionales',
                         categoryLabel: 'Cálculo diferencial',
                         badgeLabel: 'Nuevo',
                         badgeColor: const Color(0xFFF6B55C),
-                        imageUrl: 'http://localhost:3845/assets/8c82a4b652fc817b4e269031a428e684d5d7d999.png',
+                        imageUrl:
+                            'http://localhost:3845/assets/8c82a4b652fc817b4e269031a428e684d5d7d999.png',
                       ),
                       const SizedBox(height: 20),
                       _buildMaterialCard(
@@ -61,7 +64,8 @@ class HomeScreen extends StatelessWidget {
                         categoryLabel: 'Derecho',
                         badgeLabel: 'Derecho',
                         badgeColor: const Color(0xFFFF606F),
-                        imageUrl: 'http://localhost:3845/assets/c2656cc2eff92737828dbe3c8a53f7a960cf56d3.png',
+                        imageUrl:
+                            'http://localhost:3845/assets/c2656cc2eff92737828dbe3c8a53f7a960cf56d3.png',
                       ),
                       const SizedBox(height: 20),
                       _buildMaterialCard(
@@ -69,9 +73,12 @@ class HomeScreen extends StatelessWidget {
                         categoryLabel: 'Cálculo diferencial',
                         badgeLabel: 'Nuevo',
                         badgeColor: const Color(0xFFF6B55C),
-                        imageUrl: 'http://localhost:3845/assets/8c82a4b652fc817b4e269031a428e684d5d7d999.png',
+                        imageUrl:
+                            'http://localhost:3845/assets/8c82a4b652fc817b4e269031a428e684d5d7d999.png',
                       ),
-                      const SizedBox(height: 100), // Espacio para el bottom nav bar
+                      const SizedBox(
+                        height: 100,
+                      ), // Espacio para el bottom nav bar
                     ],
                   ),
                 ),
@@ -80,11 +87,11 @@ class HomeScreen extends StatelessWidget {
           ),
 
           // ── Bottom Navigation Bar flotante ───────────────────────────
-          Positioned(
+          const Positioned(
             bottom: 24,
             left: 20,
             right: 20,
-            child: _buildFloatingNavBar(),
+            child: SharedBottomNavBar(selectedIndex: -1),
           ),
         ],
       ),
@@ -96,7 +103,12 @@ class HomeScreen extends StatelessWidget {
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildTopHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 50, 20, 20), // Padding para el SafeArea
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        50,
+        20,
+        20,
+      ), // Padding para el SafeArea
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -117,7 +129,7 @@ class HomeScreen extends StatelessWidget {
             ),
             child: const Icon(Icons.settings, color: Colors.white),
           ),
-          
+
           // Logo Central
           Image.network(
             'http://localhost:3845/assets/e537c25c6a77635361d3fb2f09f3fe514f61e72a.png',
@@ -132,7 +144,7 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Botón Notificaciones
           Stack(
             children: [
@@ -143,7 +155,10 @@ class HomeScreen extends StatelessWidget {
                   color: Color(0xFF96D786),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.notifications_none, color: Colors.white),
+                child: const Icon(
+                  Icons.notifications_none,
+                  color: Colors.white,
+                ),
               ),
               Positioned(
                 top: 0,
@@ -195,7 +210,8 @@ class HomeScreen extends StatelessWidget {
                 Image.network(
                   'http://localhost:3845/assets/879d428d4bb0c7be1d2a6ddd9836319586b81a37.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.pets, color: Colors.green, size: 40),
+                  errorBuilder: (_, __, ___) =>
+                      const Icon(Icons.pets, color: Colors.green, size: 40),
                 ),
                 Positioned(
                   bottom: 0,
@@ -215,12 +231,12 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),
           const SizedBox(width: 16),
-          
+
           // Textos y Racha
           Expanded(
             child: Column(
@@ -264,7 +280,9 @@ class HomeScreen extends StatelessWidget {
                           height: 20,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: logrados[index] ? const Color(0xFF96D786) : const Color(0xFFB0B0B0),
+                            color: logrados[index]
+                                ? const Color(0xFF96D786)
+                                : const Color(0xFFB0B0B0),
                           ),
                         ),
                       ],
@@ -302,7 +320,10 @@ class HomeScreen extends StatelessWidget {
             image: DecorationImage(
               image: NetworkImage(imageUrl),
               fit: BoxFit.cover,
-              colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.05), BlendMode.darken),
+              colorFilter: ColorFilter.mode(
+                Colors.black.withOpacity(0.05),
+                BlendMode.darken,
+              ),
             ),
           ),
           child: Stack(
@@ -312,7 +333,10 @@ class HomeScreen extends StatelessWidget {
                 top: 12,
                 left: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF4DC130),
                     borderRadius: BorderRadius.circular(10),
@@ -332,7 +356,10 @@ class HomeScreen extends StatelessWidget {
                 top: 12,
                 right: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: badgeColor,
                     borderRadius: BorderRadius.circular(10),
@@ -361,7 +388,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        
+
         // Título y Rating
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -390,72 +417,8 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ],
-            )
-          ],
-        ),
-      ],
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Barra de Navegación Inferior Flotante
-  // ─────────────────────────────────────────────────────────────────────────
-  Widget _buildFloatingNavBar() {
-    return Container(
-      height: 70,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(35),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x30000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(icon: Icons.home_outlined, label: 'Home', isSelected: true),
-          _buildNavItem(icon: Icons.search, label: 'Buscar', isSelected: false),
-          
-          // Botón Circular Central (+)
-          Container(
-            width: 50,
-            height: 50,
-            decoration: const BoxDecoration(
-              color: Color(0xFF4DC130),
-              shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.add, color: Colors.white, size: 28),
-          ),
-          
-          _buildNavItem(icon: Icons.person_outline, label: 'Perfil', isSelected: false),
-          _buildNavItem(icon: Icons.bookmark_outline, label: 'Booki', isSelected: false),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem({required IconData icon, required String label, required bool isSelected}) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          color: isSelected ? const Color(0xFF4DC130) : const Color(0xFF676767),
-          size: 26,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            color: isSelected ? const Color(0xFF4DC130) : const Color(0xFF676767),
-          ),
+          ],
         ),
       ],
     );
