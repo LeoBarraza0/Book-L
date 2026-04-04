@@ -151,34 +151,39 @@ class HomeScreen extends StatelessWidget {
           ),
 
           // Botón Notificaciones
-          Stack(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF96D786),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.notifications_none,
-                  color: Colors.white,
-                ),
-              ),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF949F),
+          GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(context, '/notificaciones');
+            },
+            child: Stack(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF96D786),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.notifications_none,
+                    color: Colors.white,
                   ),
                 ),
-              ),
-            ],
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF949F),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -207,35 +212,16 @@ class HomeScreen extends StatelessWidget {
             height: 80,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white,
+              color: Color(0xFF96D786),
             ),
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Image.network(
-                  'http://localhost:3845/assets/879d428d4bb0c7be1d2a6ddd9836319586b81a37.png',
+                Image.asset(
+                  'assets/images/racha.png',
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) =>
                       const Icon(Icons.pets, color: Colors.green, size: 40),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 15,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Text(
-                      '12',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
                 ),
               ],
             ),
