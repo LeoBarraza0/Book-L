@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../perfil/presentation/screens/perfil_screen.dart';
 
 class ConfiguracionScreen extends StatelessWidget {
   const ConfiguracionScreen({super.key});
@@ -88,10 +89,11 @@ class ConfiguracionScreen extends StatelessWidget {
 
             // Floating Bottom Navigation Bar
             const Positioned(
-              bottom: 24,
               left: 20,
               right: 20,
-              child: SharedBottomNavBar(selectedIndex: 2), // Index 2 -> Perfil
+              bottom: 30, // Elevated off bottom
+              child:
+                  SharedBottomNavBar(), // Index 2 is "Perfil" in the SharedBottomNavBar
             ),
           ],
         ),
@@ -192,7 +194,12 @@ class ConfiguracionScreen extends StatelessWidget {
 
           // Ver perfil Button
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PerfilScreen()),
+              );
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4DC130),
               foregroundColor: Colors.white,
