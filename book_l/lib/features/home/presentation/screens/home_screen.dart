@@ -14,7 +14,7 @@ class HomeScreen extends StatelessWidget {
           CustomScrollView(
             slivers: [
               // Header blanco superior
-              SliverToBoxAdapter(child: _buildTopHeader()),
+              SliverToBoxAdapter(child: _buildTopHeader(context)),
 
               // Sección de Bienvenida
               SliverToBoxAdapter(
@@ -101,7 +101,7 @@ class HomeScreen extends StatelessWidget {
   // ─────────────────────────────────────────────────────────────────────────
   // Header superior blanco
   // ─────────────────────────────────────────────────────────────────────────
-  Widget _buildTopHeader() {
+  Widget _buildTopHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(
         20,
@@ -120,14 +120,19 @@ class HomeScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Botón Ajustes
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(
-              color: Color(0xFF96D786),
-              shape: BoxShape.circle,
+          GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(context, '/configuracion');
+            },
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: const BoxDecoration(
+                color: Color(0xFF96D786),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.settings, color: Colors.white),
             ),
-            child: const Icon(Icons.settings, color: Colors.white),
           ),
 
           // Logo Central

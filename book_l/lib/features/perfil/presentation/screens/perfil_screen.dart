@@ -8,7 +8,8 @@ class PerfilScreen extends StatefulWidget {
   State<PerfilScreen> createState() => _PerfilScreenState();
 }
 
-class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderStateMixin {
+class _PerfilScreenState extends State<PerfilScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -26,7 +27,9 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB), // Light bluish-white background matching Figma
+      backgroundColor: const Color(
+        0xFFF4F7FB,
+      ), // Light bluish-white background matching Figma
       body: Stack(
         children: [
           // Background Gradient (Optional slight top blue blur as in Figma)
@@ -43,7 +46,7 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
               ),
             ),
           ),
-          
+
           SafeArea(
             bottom: false,
             child: Column(
@@ -58,15 +61,27 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                       // Back button
                       Container(
                         decoration: const BoxDecoration(
-                          color: Color(0xFF88D288), // Lighter green for header buttons
+                          color: Color(
+                            0xFF88D288,
+                          ), // Lighter green for header buttons
                           shape: BoxShape.circle,
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                          onPressed: () {
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            } else {
+                              Navigator.pushReplacementNamed(context, '/home');
+                            }
+                          },
                         ),
                       ),
-                      
+
                       const Text(
                         '@Manu7u7',
                         style: TextStyle(
@@ -75,7 +90,7 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                           color: Colors.black87,
                         ),
                       ),
-                      
+
                       // Notification bell with badge
                       Stack(
                         children: [
@@ -85,7 +100,11 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                               shape: BoxShape.circle,
                             ),
                             child: IconButton(
-                              icon: const Icon(Icons.notifications_none, color: Colors.white, size: 28),
+                              icon: const Icon(
+                                Icons.notifications_none,
+                                color: Colors.white,
+                                size: 28,
+                              ),
                               onPressed: () {},
                             ),
                           ),
@@ -98,7 +117,10 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFA8E9E), // Pink dot
                                 shape: BoxShape.circle,
-                                border: Border.all(color: const Color(0xFFF4F7FB), width: 2), // Matching background border
+                                border: Border.all(
+                                  color: const Color(0xFFF4F7FB),
+                                  width: 2,
+                                ), // Matching background border
                               ),
                             ),
                           ),
@@ -107,9 +129,9 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 25),
-                
+
                 // Profile Information (Photo + Text)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -122,7 +144,9 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                         clipBehavior: Clip.none,
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(5), // Border thickness
+                            padding: const EdgeInsets.all(
+                              5,
+                            ), // Border thickness
                             decoration: const BoxDecoration(
                               color: Color(0xFF4DC130), // Solid green border
                               shape: BoxShape.circle,
@@ -130,7 +154,9 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                             child: CircleAvatar(
                               radius: 45,
                               backgroundColor: Colors.white,
-                              child: Icon(Icons.person, size: 50, color: Colors.grey[400]), // Replaced NetworkImage to avoid CORS issues
+                              backgroundImage: NetworkImage(
+                                'https://i.pravatar.cc/150?img=11',
+                              ), // Placeholder photo
                             ),
                           ),
                           Positioned(
@@ -142,14 +168,18 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                                 color: Color(0xFFE8AB52), // Orange yellow badge
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.add, color: Colors.white, size: 16),
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(width: 20),
-                      
+
                       // Name and details
                       Expanded(
                         child: Column(
@@ -186,16 +216,18 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 25),
-                
+
                 // Stats Box
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF9CD19A), // Muted green matching the stats background
+                      color: const Color(
+                        0xFF9CD19A,
+                      ), // Muted green matching the stats background
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -211,9 +243,9 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Editar perfil button
                 ElevatedButton(
                   onPressed: () {},
@@ -224,19 +256,19 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 12,
+                    ),
                   ),
                   child: const Text(
                     'Editar perfil',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
                 ),
-                
+
                 const SizedBox(height: 25),
-                
+
                 // Tab Bar
                 TabBar(
                   controller: _tabController,
@@ -245,18 +277,14 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                   labelColor: const Color(0xFF4DC130),
                   unselectedLabelColor: Colors.grey,
                   tabs: const [
-                    Tab(
-                      icon: Icon(Icons.grid_on, size: 30),
-                    ),
-                    Tab(
-                      icon: Icon(Icons.favorite_border, size: 30),
-                    ),
+                    Tab(icon: Icon(Icons.grid_on, size: 30)),
+                    Tab(icon: Icon(Icons.favorite_border, size: 30)),
                   ],
                 ),
-                
+
                 // Divider under tabs
                 const Divider(height: 1, color: Colors.black12),
-                
+
                 // Tab Views
                 Expanded(
                   child: TabBarView(
@@ -265,20 +293,27 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
                       // Grid Tab content (Empty state)
                       _buildEmptyState(),
                       // Favorite Tab
-                      const Center(child: Text('Favoritos', style: TextStyle(color: Colors.grey))),
+                      const Center(
+                        child: Text(
+                          'Favoritos',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          
+
           // Floating Bottom Navigation Bar aligned as in design
           const Positioned(
             left: 20,
             right: 20,
             bottom: 30, // Elevated off bottom
-            child: SharedBottomNavBar(selectedIndex: 2), // Index 2 is "Perfil" in the SharedBottomNavBar
+            child: SharedBottomNavBar(
+              selectedIndex: 2,
+            ), // Index 2 is "Perfil" in the SharedBottomNavBar
           ),
         ],
       ),
@@ -300,7 +335,7 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
         Text(
           value,
           style: const TextStyle(
-            fontWeight: FontWeight.bold, 
+            fontWeight: FontWeight.bold,
             fontSize: 18,
             color: Colors.black,
           ),
@@ -317,52 +352,49 @@ class _PerfilScreenState extends State<PerfilScreen> with SingleTickerProviderSt
           const SizedBox(height: 30),
           // Using an icon to mimic the teacher graphic
           const Icon(
-          Icons.co_present_outlined, 
-          size: 90, 
-          color: Colors.black38,
-        ),
-        const SizedBox(height: 24),
-        
-        const Text(
-          'Comparte conocimiento',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
+            Icons.co_present_outlined,
+            size: 90,
+            color: Colors.black38,
           ),
-        ),
-        const SizedBox(height: 12),
-        
-        const Text(
-          'Cuando compartes algún dato, aparecerán en tu perfil',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 16),
-        
-        GestureDetector(
-          onTap: () {
-            // Action for "Sumate al desarrollo..."
-          },
-          child: const Text(
-            'Sumate al desarrollo académico de la libre',
+          const SizedBox(height: 24),
+
+          const Text(
+            'Comparte conocimiento',
             style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF4DC130), // Main green
+              fontSize: 22,
               fontWeight: FontWeight.bold,
-              decoration: TextDecoration.underline,
-              decorationColor: Color(0xFF4DC130),
+              color: Colors.black,
             ),
           ),
-        ),
-        
-        // Bottom padding to ensure the floating nav bar doesn't cover content
-        const SizedBox(height: 120), 
-      ],
-    ),
+          const SizedBox(height: 12),
+
+          const Text(
+            'Cuando compartes algún dato, aparecerán en tu perfil',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: Colors.black87),
+          ),
+          const SizedBox(height: 16),
+
+          GestureDetector(
+            onTap: () {
+              // Action for "Sumate al desarrollo..."
+            },
+            child: const Text(
+              'Sumate al desarrollo académico de la libre',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF4DC130), // Main green
+                fontWeight: FontWeight.bold,
+                decoration: TextDecoration.underline,
+                decorationColor: Color(0xFF4DC130),
+              ),
+            ),
+          ),
+
+          // Bottom padding to ensure the floating nav bar doesn't cover content
+          const SizedBox(height: 120),
+        ],
+      ),
     );
   }
 }
