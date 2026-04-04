@@ -28,6 +28,11 @@ class SharedBottomNavBar extends StatelessWidget {
             icon: Icons.home_outlined,
             label: 'Home',
             isSelected: selectedIndex == 0,
+            onTap: () {
+              if (selectedIndex != 0) {
+                Navigator.pushReplacementNamed(context, '/home');
+              }
+            },
           ),
           _buildNavItem(
             icon: Icons.search,
@@ -50,6 +55,11 @@ class SharedBottomNavBar extends StatelessWidget {
             icon: Icons.person_outline,
             label: 'Perfil',
             isSelected: selectedIndex == 2,
+            onTap: () {
+              if (selectedIndex != 2) {
+                Navigator.pushReplacementNamed(context, '/perfil');
+              }
+            },
           ),
           _buildNavItem(
             icon: Icons.bookmark_outline,
@@ -65,10 +75,14 @@ class SharedBottomNavBar extends StatelessWidget {
     required IconData icon,
     required String label,
     required bool isSelected,
+    VoidCallback? onTap,
   }) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
         Icon(
           icon,
           color: isSelected ? const Color(0xFF4DC130) : const Color(0xFF676767),
@@ -86,6 +100,7 @@ class SharedBottomNavBar extends StatelessWidget {
           ),
         ),
       ],
+    ),
     );
   }
 }
