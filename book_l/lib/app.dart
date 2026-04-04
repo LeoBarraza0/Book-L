@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/auth/presentation/screens/register_screen.dart';
 import 'features/home/presentation/screens/home_screen.dart';
+import 'features/notificacion/presentation/screens/notificaciones_screen.dart';
 
 class BookLApp extends StatelessWidget {
   const BookLApp({super.key});
@@ -13,9 +14,7 @@ class BookLApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'Inter',
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF4DC130),
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4DC130)),
         useMaterial3: true,
       ),
       initialRoute: '/login',
@@ -23,6 +22,7 @@ class BookLApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
+        '/notificaciones': (context) => const NotificacionScreen(),
       },
     );
   }
