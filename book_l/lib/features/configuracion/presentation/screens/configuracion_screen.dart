@@ -29,7 +29,10 @@ class ConfiguracionScreen extends StatelessWidget {
                     ),
                     clipBehavior: Clip.hardEdge,
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 30,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -49,7 +52,7 @@ class ConfiguracionScreen extends StatelessWidget {
                             iconColor: const Color(0xFF555555),
                             title: 'Auto Scroll',
                           ),
-                          
+
                           const SizedBox(height: 20),
                           _buildSectionTitle('Soporte'),
                           _buildSettingTile(
@@ -71,8 +74,10 @@ class ConfiguracionScreen extends StatelessWidget {
                             title: 'Cerrar sesión',
                             isDestructive: true,
                           ),
-                          
-                          const SizedBox(height: 100), // Reserve space for bottom nav
+
+                          const SizedBox(
+                            height: 100,
+                          ), // Reserve space for bottom nav
                         ],
                       ),
                     ),
@@ -80,7 +85,7 @@ class ConfiguracionScreen extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             // Floating Bottom Navigation Bar
             const Positioned(
               bottom: 24,
@@ -110,10 +115,18 @@ class ConfiguracionScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                   onPressed: () {
                     // Navigate to Home as requested
-                    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/home',
+                      (route) => false,
+                    );
                   },
                 ),
               ),
@@ -133,7 +146,7 @@ class ConfiguracionScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          
+
           // Profile Picture
           Stack(
             children: [
@@ -162,9 +175,9 @@ class ConfiguracionScreen extends StatelessWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // User Name
           const Text(
             'Emanuel Barranco',
@@ -174,9 +187,9 @@ class ConfiguracionScreen extends StatelessWidget {
               color: Color(0xFF212121),
             ),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Ver perfil Button
           ElevatedButton(
             onPressed: () {},
@@ -189,7 +202,10 @@ class ConfiguracionScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
-            child: const Text('Ver perfil', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Ver perfil',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
           const SizedBox(height: 10),
         ],
@@ -239,7 +255,9 @@ class ConfiguracionScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: isDestructive ? const Color(0xFFFF606F) : const Color(0xFF424242),
+                color: isDestructive
+                    ? const Color(0xFFFF606F)
+                    : const Color(0xFF424242),
               ),
             ),
           ),

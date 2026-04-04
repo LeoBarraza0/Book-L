@@ -32,9 +32,9 @@ class NotificacionScreen extends StatelessWidget {
                         ),
                         child: IconButton(
                           icon: const Icon(
-                            Icons.arrow_back_ios_new,
+                            Icons.arrow_back,
                             color: Colors.white,
-                            size: 20,
+                            size: 28,
                           ),
                           onPressed: () {
                             if (Navigator.canPop(context)) {
