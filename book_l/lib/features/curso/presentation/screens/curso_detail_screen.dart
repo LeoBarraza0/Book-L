@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../calificacion/presentation/widgets/stars_rating_widget.dart';
+import '../../../discusion/presentation/screens/discusion_screen.dart';
+import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
 
 class CursoDetailScreen extends StatefulWidget {
   const CursoDetailScreen({super.key});
@@ -9,7 +12,7 @@ class CursoDetailScreen extends StatefulWidget {
 }
 
 class _CursoDetailScreenState extends State<CursoDetailScreen> {
-  int _selectedTab = 1; // 0: Lecciones, 1: Discusión
+  int _selectedTab = 0; // 0: Lecciones, 1: Ejercicios, 2: Discusión
 
   @override
   Widget build(BuildContext context) {
@@ -44,10 +47,12 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                                 key: const ValueKey(0),
                                 child: _buildLeccionesContent(),
                               )
-                            : Container(
-                                key: const ValueKey(1),
-                                child: _buildDiscusionContent(),
-                              ),
+                            : _selectedTab == 1
+                                ? const EjerciciosScreen(key: ValueKey(1))
+                                : Container(
+                                    key: const ValueKey(2),
+                                    child: _buildDiscusionContent(),
+                                  ),
                       ),
 
                       const SizedBox(height: 100), // Espacio para NavBar
@@ -246,7 +251,8 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
       child: Row(
         children: [
           _buildTabItem('Lecciones', 0),
-          _buildTabItem('Discusión', 1),
+          _buildTabItem('Ejercicios', 1),
+          _buildTabItem('Discusión', 2),
         ],
       ),
     );
@@ -280,135 +286,12 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
 
   Widget _buildDiscusionContent() {
     return Column(
-      children: [
-        const SizedBox(height: 10),
-        const Text('Tu calificación', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(5, (index) => const Icon(Icons.star_border, color: Colors.black45, size: 36)),
-        ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () {},
-          child: const Text(
-            '¡Enviar!',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black54,
-              decoration: TextDecoration.underline,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Comentarios', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        ),
-        const SizedBox(height: 20),
-        _buildCommentInput(),
-        const SizedBox(height: 24),
-        _buildCommentCard(
-          name: 'Mike Morales',
-          content: 'Guao, explicas muy bien, ¿Por qué no eres profesora?',
-          time: '3h',
-          likes: '6 Me gusta',
-        ),
-        _buildCommentCard(
-          name: 'Mike Morales',
-          content: 'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo...',
-          time: '3h',
-          likes: '6 Me gusta',
-        ),
-        _buildCommentCard(
-          name: 'Mike Morales',
-          content: 'Guao, explicas muy bien, ¿Por qué no eres profesora?',
-          time: '3h',
-          likes: '6 Me gusta',
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Ver más',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            decoration: TextDecoration.underline,
-          ),
-        ),
+      children: const [
+        SizedBox(height: 10),
+        StarsRatingWidget(),
+        SizedBox(height: 24),
+        DiscusionScreen(),
       ],
-    );
-  }
-
-  Widget _buildCommentInput() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFD9D9D9),
-              borderRadius: BorderRadius.circular(22),
-            ),
-            alignment: Alignment.centerLeft,
-            child: const Text('Comentar...', style: TextStyle(color: Colors.black54, fontSize: 13)),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Container(
-          width: 44,
-          height: 44,
-          decoration: const BoxDecoration(
-            color: Color(0xFF4DC130),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.send, color: Colors.white, size: 20),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCommentCard({required String name, required String content, required String time, required String likes}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const CircleAvatar(
-            radius: 20,
-            backgroundColor: Colors.black87,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(content, style: const TextStyle(fontSize: 13, color: Colors.black87)),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Text(time, style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.bold)),
-                    const SizedBox(width: 16),
-                    Text(likes, style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.bold)),
-                    const SizedBox(width: 16),
-                    const Text('Responder', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 

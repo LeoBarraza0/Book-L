@@ -8,6 +8,7 @@ import 'features/configuracion/presentation/screens/configuracion_screen.dart';
 import 'features/chatbot/presentation/screens/chatbot_screen.dart';
 import 'features/curso/presentation/screens/curso_detail_screen.dart';
 import 'features/leccion/presentation/screens/leccion_detail_screen.dart';
+import 'features/leccion/presentation/screens/capitulo_screen.dart';
 
 class BookLApp extends StatelessWidget {
   const BookLApp({super.key});
@@ -33,6 +34,7 @@ class BookLApp extends StatelessWidget {
         '/chatbot': (context) => const ChatbotScreen(),
         '/curso_detail': (context) => const CursoDetailScreen(),
         '/leccion_detail': (context) => const LeccionDetailScreen(),
+        '/capitulo_detail': (context) => const CapituloScreen(),
       },
     );
   }

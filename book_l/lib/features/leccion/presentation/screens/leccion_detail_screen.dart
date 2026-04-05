@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../discusion/presentation/screens/discusion_screen.dart';
+import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
 
 enum CapituloStatus { completed, inProgress, locked }
 
@@ -53,16 +55,11 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                         child: _selectedTab == 0
                             ? Container(key: const ValueKey(0), child: _buildContenido())
                             : _selectedTab == 1
-                                ? Container(
-                                    key: const ValueKey(1),
-                                    alignment: Alignment.center,
-                                    padding: const EdgeInsets.all(40),
-                                    child: const Text("Falta implementar: Ejercicios"))
-                                : Container(
-                                    key: const ValueKey(2),
-                                    alignment: Alignment.center,
-                                    padding: const EdgeInsets.all(40),
-                                    child: const Text("Falta implementar: Discusión")),
+                                  ? const EjerciciosScreen(key: ValueKey(1))
+                                  : Container(
+                                      key: const ValueKey(2),
+                                      child: const DiscusionScreen(),
+                                    ),
                       ),
 
                       const SizedBox(
@@ -403,17 +400,23 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
     bool isInProgress = status == CapituloStatus.inProgress;
     bool isCompleted = status == CapituloStatus.completed;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFD9D9D9),
-        borderRadius: BorderRadius.circular(16),
-        border: isInProgress
-            ? Border.all(color: const Color(0xFF4DC130), width: 2)
-            : null,
-      ),
-      child: Row(
-        children: [
+    return GestureDetector(
+      onTap: () {
+        if (!isLocked) {
+          Navigator.pushNamed(context, '/capitulo_detail');
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFD9D9D9),
+          borderRadius: BorderRadius.circular(16),
+          border: isInProgress
+              ? Border.all(color: const Color(0xFF4DC130), width: 2)
+              : null,
+        ),
+        child: Row(
+          children: [
           // Icono Redondo o Número
           if (isCompleted)
             Container(
@@ -475,7 +478,8 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
             ),
         ],
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildMaterialItem({
