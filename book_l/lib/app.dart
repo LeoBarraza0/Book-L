@@ -5,6 +5,7 @@ import 'features/home/presentation/screens/home_screen.dart';
 import 'features/notificacion/presentation/screens/notificaciones_screen.dart';
 import 'features/perfil/presentation/screens/perfil_screen.dart';
 import 'features/configuracion/presentation/screens/configuracion_screen.dart';
+import 'features/chatbot/presentation/screens/chatbot_screen.dart';
 
 class BookLApp extends StatelessWidget {
   const BookLApp({super.key});
@@ -27,6 +28,7 @@ class BookLApp extends StatelessWidget {
         '/notificaciones': (context) => const NotificacionScreen(),
         '/perfil': (context) => const PerfilScreen(),
         '/configuracion': (context) => const ConfiguracionScreen(),
+        '/chatbot': (context) => const ChatbotScreen(),
       },
     );
   }
