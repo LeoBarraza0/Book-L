@@ -245,13 +245,13 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
-              _buildCursoAsociadoItem(width: 110),
+              _buildCursoAsociadoItem(context, width: 110),
               const SizedBox(width: 12),
-              _buildCursoAsociadoItem(width: 110),
+              _buildCursoAsociadoItem(context, width: 110),
               const SizedBox(width: 12),
-              _buildCursoAsociadoItem(width: 110),
+              _buildCursoAsociadoItem(context, width: 110),
               const SizedBox(width: 12),
-              _buildCursoAsociadoItem(width: 110),
+              _buildCursoAsociadoItem(context, width: 110),
             ],
           ),
         ),
@@ -259,13 +259,17 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     );
   }
 
-  Widget _buildCursoAsociadoItem({required double width}) {
-    // Replica los rectángulos verdes pequeños del diseño
-    return Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: const Color(0xFF81CF6E),
-        borderRadius: BorderRadius.circular(10),
+  Widget _buildCursoAsociadoItem(BuildContext context, {required double width}) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, '/curso_list');
+      },
+      child: Container(
+        width: width,
+        decoration: BoxDecoration(
+          color: const Color(0xFF81CF6E),
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
   }
