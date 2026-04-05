@@ -51,6 +51,7 @@ class HomeScreen extends StatelessWidget {
 
                       // Lista de Materiales
                       _buildMaterialCard(
+                        context: context,
                         title: 'Vectores Bidimencionales',
                         categoryLabel: 'Cálculo diferencial',
                         badgeLabel: 'Nuevo',
@@ -60,6 +61,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       _buildMaterialCard(
+                        context: context,
                         title: 'Tipo de leyes en Colombia',
                         categoryLabel: 'Derecho',
                         badgeLabel: 'Derecho',
@@ -69,6 +71,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       _buildMaterialCard(
+                        context: context,
                         title: 'Vectores Bidimencionales',
                         categoryLabel: 'Cálculo diferencial',
                         badgeLabel: 'Nuevo',
@@ -292,13 +295,16 @@ class HomeScreen extends StatelessWidget {
   // Tarjeta de Material (Cursos)
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildMaterialCard({
+    required BuildContext context,
     required String title,
     required String categoryLabel,
     required String badgeLabel,
     required Color badgeColor,
     required String imageUrl,
   }) {
-    return Column(
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, '/curso_detail'),
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Contenedor de Imagen con Labels
@@ -412,6 +418,7 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ],
+      ),
     );
   }
 }
