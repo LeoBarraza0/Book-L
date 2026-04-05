@@ -303,7 +303,7 @@ class HomeScreen extends StatelessWidget {
     required String imageUrl,
   }) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, '/curso_detail'),
+      onTap: () => Navigator.pushNamed(context, '/leccion_detail'),
       child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

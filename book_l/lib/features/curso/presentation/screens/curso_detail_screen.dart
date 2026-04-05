@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 
-enum CapituloStatus { completed, inProgress, locked }
-
 class CursoDetailScreen extends StatefulWidget {
   const CursoDetailScreen({super.key});
 
@@ -11,71 +9,54 @@ class CursoDetailScreen extends StatefulWidget {
 }
 
 class _CursoDetailScreenState extends State<CursoDetailScreen> {
-  int _selectedTab = 0; // 0: Contenido, 1: Ejercicios, 2: Discusión
+  int _selectedTab = 1; // 0: Lecciones, 1: Discusión
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFECEBEB), // Color de fondo del layout
+      backgroundColor: const Color(0xFFECEBEB), 
       body: Stack(
         children: [
-          // ── Contenido Principal (Scroll) ─────────────────────────────
           CustomScrollView(
             slivers: [
-              // 1. Imagen Superior (Header) 
               SliverToBoxAdapter(child: _buildHeaderImage(context)),
-
-              // 2. Cuerpo del detalle
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 20,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildTitleAndProgress(),
                       const SizedBox(height: 24),
                       
-                      _buildCursosAsociados(),
-                      const SizedBox(height: 28),
+                      _buildStatsRow(),
+                      const SizedBox(height: 24),
                       
                       _buildTabs(),
                       const SizedBox(height: 24),
                       
-                      // Render Dinámico según la Pestaña animado
+                      // Render Dinámico según la Pestaña
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (child, animation) {
-                          return FadeTransition(opacity: animation, child: child);
-                        },
+                        transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
                         child: _selectedTab == 0
-                            ? Container(key: const ValueKey(0), child: _buildContenido())
-                            : _selectedTab == 1
-                                ? Container(
-                                    key: const ValueKey(1),
-                                    alignment: Alignment.center,
-                                    padding: const EdgeInsets.all(40),
-                                    child: const Text("Falta implementar: Ejercicios"))
-                                : Container(
-                                    key: const ValueKey(2),
-                                    alignment: Alignment.center,
-                                    padding: const EdgeInsets.all(40),
-                                    child: const Text("Falta implementar: Discusión")),
+                            ? Container(
+                                key: const ValueKey(0),
+                                child: _buildLeccionesContent(),
+                              )
+                            : Container(
+                                key: const ValueKey(1),
+                                child: _buildDiscusionContent(),
+                              ),
                       ),
 
-                      const SizedBox(
-                        height: 100,
-                      ), // Espacio extra para el NavBar Flotante
+                      const SizedBox(height: 100), // Espacio para NavBar
                     ],
                   ),
                 ),
               ),
             ],
           ),
-
-          // ── Bottom Navigation Bar flotante ───────────────────────────
           const Positioned(
             bottom: 24,
             left: 20,
@@ -87,17 +68,12 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Componentes Privados
-  // ─────────────────────────────────────────────────────────────────────────
-
   Widget _buildHeaderImage(BuildContext context) {
     return SizedBox(
-      height: 300, // Altura ajustada similar al diseño de Figma (298px)
+      height: 300, 
       width: double.infinity,
       child: Stack(
         children: [
-          // Background Image
           Positioned.fill(
             child: ClipRRect(
               borderRadius: const BorderRadius.only(
@@ -105,24 +81,22 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 bottomRight: Radius.circular(25),
               ),
               child: Transform.scale(
-                scale: 1.15, // Ajusta el zoom para ignorar bordes transparentes integrados del PNG original
+                scale: 1.15,
                 child: Image.network(
-                  'http://localhost:3845/assets/97d721d65cda6c381af1d405c8d26f13dcce76df.png', // image 36 de Figma
+                  'http://localhost:3845/assets/2f178e062fbcf7ac085cd51914ceac0bc82eacc2.png', 
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(color: Colors.grey[400]),
                 ),
               ),
             ),
           ),
-          // Botones Top (Nav)
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildCircularIconButton(
-                      Icons.arrow_back, () => Navigator.pop(context)),
+                  _buildCircularIconButton(Icons.arrow_back, () => Navigator.pop(context)),
                   _buildCircularIconButton(Icons.share, () {}),
                 ],
               ),
@@ -140,7 +114,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: const Color(0xFF6BCA54).withOpacity(0.9), // Más visible sobre imagen
+          color: const Color(0xFF6BCA54).withOpacity(0.9),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: Colors.white, size: 24),
@@ -152,18 +126,13 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Título + Info del Autor
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Ejemplo De Lección',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+                'Ejemplo De Curso',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
               ),
               const SizedBox(height: 12),
               Row(
@@ -174,26 +143,15 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                     child: Icon(Icons.person, color: Colors.white, size: 16),
                   ),
                   const SizedBox(width: 8),
-                  const Text('Ema Nuel',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 13)),
+                  const Text('Ema Nuel', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                        color: const Color(0xFF79AC63),
-                        borderRadius: BorderRadius.circular(4)),
-                    child: const Text('Estudiante',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600)),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: const Color(0xFF79AC63), borderRadius: BorderRadius.circular(4)),
+                    child: const Text('Estudiante', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600)),
                   ),
                   const SizedBox(width: 8),
-                  const Text('|  4.5',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 13)),
+                  const Text('|  4.5', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                   const SizedBox(width: 4),
                   const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
                 ],
@@ -201,8 +159,6 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
             ],
           ),
         ),
-
-        // Círculo de Progreso
         const SizedBox(
           width: 65,
           height: 65,
@@ -213,17 +169,14 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 width: 65,
                 height: 65,
                 child: CircularProgressIndicator(
-                  value: 0.2, // 20%
+                  value: 0.2,
                   strokeWidth: 6,
                   backgroundColor: Color(0xFFD9D9D9),
                   color: Color(0xFF4DC130),
                   strokeAlign: CircularProgressIndicator.strokeAlignCenter,
                 ),
               ),
-              Text(
-                '20%',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              ),
+              Text('20%', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             ],
           ),
         ),
@@ -231,46 +184,55 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     );
   }
 
-  Widget _buildCursosAsociados() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildStatsRow() {
+    return Row(
       children: [
-        const Text(
-          'Cursos asociados',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF606F),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined, color: Colors.black87, size: 28),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text('Creación', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text('1 Marzo 2026', style: TextStyle(fontSize: 11, color: Colors.black54)),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 60,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: [
-              _buildCursoAsociadoItem(context, width: 110),
-              const SizedBox(width: 12),
-              _buildCursoAsociadoItem(context, width: 110),
-              const SizedBox(width: 12),
-              _buildCursoAsociadoItem(context, width: 110),
-              const SizedBox(width: 12),
-              _buildCursoAsociadoItem(context, width: 110),
-            ],
+        const SizedBox(width: 12),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEB95C),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.star_border, color: Colors.black87, size: 30),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text('Rate: 4.5', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text('167 comentarios', style: TextStyle(fontSize: 11, color: Colors.black54)),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildCursoAsociadoItem(BuildContext context, {required double width}) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(context, '/curso_list');
-      },
-      child: Container(
-        width: width,
-        decoration: BoxDecoration(
-          color: const Color(0xFF81CF6E),
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
     );
   }
 
@@ -283,9 +245,8 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
       ),
       child: Row(
         children: [
-          _buildTabItem('Contenido', 0),
-          _buildTabItem('Ejercicios', 1),
-          _buildTabItem('Discusión', 2),
+          _buildTabItem('Lecciones', 0),
+          _buildTabItem('Discusión', 1),
         ],
       ),
     );
@@ -302,14 +263,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           decoration: BoxDecoration(
             color: isSelected ? const Color(0xFF4DC130) : Colors.transparent,
             borderRadius: BorderRadius.circular(21),
-            boxShadow: isSelected
-                ? [
-                    const BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 4,
-                        offset: Offset(0, 2))
-                  ]
-                : [],
+            boxShadow: isSelected ? [const BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))] : [],
           ),
           child: Text(
             label,
@@ -324,244 +278,304 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     );
   }
 
-  Widget _buildContenido() {
+  Widget _buildDiscusionContent() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Introducción ──
-        const Text('Introducción',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
-        const Text(
-          'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada lacinia integer nunc posuere ut hendrerit.',
-          style: TextStyle(
-            fontSize: 13,
-            color: Color(0xFF787878),
-            height: 1.5,
-            fontWeight: FontWeight.w500,
+        const Text('Tu calificación', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(5, (index) => const Icon(Icons.star_border, color: Colors.black45, size: 36)),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () {},
+          child: const Text(
+            '¡Enviar!',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+              decoration: TextDecoration.underline,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
-        const SizedBox(height: 28),
-
-        // ── Capítulos ──
-        const Text('Capítulos',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 14),
-        _buildCapituloItem(
-          status: CapituloStatus.completed,
-          title: '¿Qué son las derivadas?',
-          duration: '15 minutos',
+        const SizedBox(height: 24),
+        const Align(
+          alignment: Alignment.centerLeft,
+          child: Text('Comentarios', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         ),
-        const SizedBox(height: 12),
-        _buildCapituloItem(
-          status: CapituloStatus.inProgress,
-          title: '¿Qué son las derivadas?',
-          duration: '15 minutos',
-          number: 3,
+        const SizedBox(height: 20),
+        _buildCommentInput(),
+        const SizedBox(height: 24),
+        _buildCommentCard(
+          name: 'Mike Morales',
+          content: 'Guao, explicas muy bien, ¿Por qué no eres profesora?',
+          time: '3h',
+          likes: '6 Me gusta',
         ),
-        const SizedBox(height: 12),
-        _buildCapituloItem(
-          status: CapituloStatus.locked,
-          title: '¿Qué son las derivadas?',
-          duration: '15 minutos',
-          number: 4,
+        _buildCommentCard(
+          name: 'Mike Morales',
+          content: 'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo...',
+          time: '3h',
+          likes: '6 Me gusta',
         ),
-        const SizedBox(height: 32),
-
-        // ── Material Relacionado ──
-        const Text('Material Relacionado',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 14),
-        _buildMaterialItem(
-            icon: Icons.insert_drive_file,
-            title: 'Limites y continuidad',
-            duration: '15 minutos'),
-        const SizedBox(height: 12),
-        _buildMaterialItem(
-            icon: Icons.play_arrow,
-            title: 'Limites y continuidad',
-            duration: '15 minutos',
-            iconColor: const Color(0xFFFF606F)),
-        const SizedBox(height: 32),
-
-        // ── Autor ──
-        const Text('Autor',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 14),
-        _buildAutorCard(),
+        _buildCommentCard(
+          name: 'Mike Morales',
+          content: 'Guao, explicas muy bien, ¿Por qué no eres profesora?',
+          time: '3h',
+          likes: '6 Me gusta',
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Ver más',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            decoration: TextDecoration.underline,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildCapituloItem({
-    required CapituloStatus status,
-    required String title,
-    required String duration,
-    int? number,
-  }) {
-    bool isLocked = status == CapituloStatus.locked;
-    bool isInProgress = status == CapituloStatus.inProgress;
-    bool isCompleted = status == CapituloStatus.completed;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFD9D9D9),
-        borderRadius: BorderRadius.circular(16),
-        border: isInProgress
-            ? Border.all(color: const Color(0xFF4DC130), width: 2)
-            : null,
-      ),
-      child: Row(
-        children: [
-          // Icono Redondo o Número
-          if (isCompleted)
-            Container(
-              width: 48,
-              height: 48,
-              decoration: const BoxDecoration(
-                  color: Color(0xFF4DC130), shape: BoxShape.circle),
-              child: const Icon(Icons.check, color: Colors.white, size: 28),
-            )
-          else
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: isLocked
-                    ? const Color(0xFFAFAFAF)
-                    : const Color(0xFFBDBDBD),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                number?.toString() ?? '',
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold),
-              ),
+  Widget _buildCommentInput() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFD9D9D9),
+              borderRadius: BorderRadius.circular(22),
             ),
-          const SizedBox(width: 16),
-          // Textos
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 14)),
-                const SizedBox(height: 2),
-                Text(duration,
-                    style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF676767),
-                        fontWeight: FontWeight.w600)),
-              ],
-            ),
+            alignment: Alignment.centerLeft,
+            child: const Text('Comentar...', style: TextStyle(color: Colors.black54, fontSize: 13)),
           ),
-          // Etiqueta "En curso" si aplica
-          if (isInProgress)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                  color: const Color(0xFF4DC130).withOpacity(0.85),
-                  borderRadius: BorderRadius.circular(10)),
-              child: const Text('En curso',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold)),
-            ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 12),
+        Container(
+          width: 44,
+          height: 44,
+          decoration: const BoxDecoration(
+            color: Color(0xFF4DC130),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.send, color: Colors.white, size: 20),
+        ),
+      ],
     );
   }
 
-  Widget _buildMaterialItem({
-    required IconData icon,
-    required String title,
-    required String duration,
-    Color iconColor = const Color(0xFF4DC130),
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFD9D9D9),
-        borderRadius: BorderRadius.circular(16),
-      ),
+  Widget _buildCommentCard({required String name, required String content, required String time, required String likes}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(color: iconColor, shape: BoxShape.circle),
-            child: Icon(icon, color: Colors.white, size: 24),
+          const CircleAvatar(
+            radius: 20,
+            backgroundColor: Colors.black87,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 14)),
-                const SizedBox(height: 2),
-                Text(duration,
-                    style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF676767),
-                        fontWeight: FontWeight.w600)),
-              ],
-            ),
-          ),
-          const Icon(Icons.arrow_forward_outlined,
-              size: 20, color: Color(0xFF787878)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAutorCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFD9D9D9),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Image.network(
-              'https://picsum.photos/100/100?random=1', // Placeholder temporal
-              width: 75,
-              height: 75,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  Container(width: 75, height: 75, color: Colors.grey),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Emanuel Barranco',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87)),
+                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 6),
-                const Text('Estudiante de Ingeniería de Sistemas',
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF555555),
-                        fontWeight: FontWeight.w500)),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(content, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text(time, style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 16),
+                    Text(likes, style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 16),
+                    const Text('Responder', style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.bold)),
+                  ],
+                ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLeccionesContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // "Introducción" section
+        const Text('Introducción', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        const Text(
+          'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada lacinia integer nunc posuere ut hendrerit.',
+          style: TextStyle(fontSize: 14, color: Color(0xFF787878), fontWeight: FontWeight.w600, height: 1.4),
+        ),
+        const SizedBox(height: 32),
+        const Text('Lecciones', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16),
+        _buildLeccionCard(
+          category: 'Cálculo diferencial',
+          categoryColor: const Color(0xFF6BC654),
+          title: 'Derivadas',
+          duration: '1 Hora',
+          rating: '4.9',
+          students: '1.200 estudiantes',
+          progress: 0.2, // 20%
+          imageUrl: 'https://picsum.photos/150/150?random=10', // Placeholder
+        ),
+        const SizedBox(height: 12),
+        _buildLeccionCard(
+          category: 'JAVA',
+          categoryColor: const Color(0xFF4DC130).withOpacity(0.8),
+          category2: 'P.O.O',
+          categoryColor2: const Color(0xFFFF606F).withOpacity(0.74),
+          title: 'Herencia',
+          duration: '1 Hora',
+          rating: '4.9',
+          students: '1.200 estudiantes',
+          progress: 0.2,
+          imageUrl: 'https://picsum.photos/150/150?random=11',
+        ),
+        const SizedBox(height: 12),
+        _buildLeccionCard(
+          category: 'Cálculo diferencial',
+          categoryColor: const Color(0xFFF6B55C).withOpacity(0.69),
+          title: 'Derivadas',
+          duration: '1 Hora',
+          rating: '4.9',
+          students: '1.200 estudiantes',
+          progress: 0.2,
+          imageUrl: 'https://picsum.photos/150/150?random=12',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLeccionCard({
+    required String category,
+    Color categoryColor = const Color(0xFF6BC654),
+    String? category2,
+    Color? categoryColor2,
+    required String title,
+    required String duration,
+    required String rating,
+    required String students,
+    required double progress,
+    required String imageUrl,
+  }) {
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, '/leccion_detail'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12), // Padding dinámico y natural
+        decoration: BoxDecoration(
+          color: const Color(0xFFD9D9D9),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            // Imagen del curso / lección
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                imageUrl,
+                width: 74,
+                height: 74,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(width: 74, height: 74, color: Colors.grey),
+              ),
+            ),
+            const SizedBox(width: 14),
+            // Contenido en texto
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Categorías superpuestas
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: categoryColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(category, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
+                      ),
+                      if (category2 != null) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: categoryColor2,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(category2, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
+                        ),
+                      ]
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black)),
+                  const SizedBox(height: 2),
+                  Text(duration, style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  // Rating y número de estudiantes
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
+                      const SizedBox(width: 4),
+                      Text(rating, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 8),
+                      Container(width: 1, height: 10, color: Colors.black26),
+                      const SizedBox(width: 8),
+                      Text(students, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Columna derecha: Corazón de favoritos y Progreso circular
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Icon(Icons.favorite_border, color: Colors.redAccent, size: 20),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value: progress,
+                        backgroundColor: Colors.transparent,
+                        color: const Color(0xFF4DC130),
+                        strokeWidth: 4,
+                        strokeCap: StrokeCap.round,
+                      ),
+                      Text('${(progress * 100).toInt()}%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
