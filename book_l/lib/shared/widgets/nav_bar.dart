@@ -65,6 +65,11 @@ class SharedBottomNavBar extends StatelessWidget {
             icon: Icons.bookmark_outline,
             label: 'Booki',
             isSelected: selectedIndex == 3,
+            onTap: () {
+              if (selectedIndex != 3) {
+                Navigator.pushReplacementNamed(context, '/chatbot');
+              }
+            },
           ),
         ],
       ),
@@ -83,24 +88,26 @@ class SharedBottomNavBar extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-        Icon(
-          icon,
-          color: isSelected ? const Color(0xFF4DC130) : const Color(0xFF676767),
-          size: 26,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
+          Icon(
+            icon,
             color: isSelected
                 ? const Color(0xFF4DC130)
                 : const Color(0xFF676767),
+            size: 26,
           ),
-        ),
-      ],
-    ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: isSelected
+                  ? const Color(0xFF4DC130)
+                  : const Color(0xFF676767),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
