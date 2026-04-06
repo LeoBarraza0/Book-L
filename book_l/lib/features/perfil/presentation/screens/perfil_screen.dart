@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart'; // Import from shared widgets
+import '../../../notificacion/presentation/screens/notificaciones_screen.dart';
+import 'editar_perfil.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -105,7 +107,14 @@ class _PerfilScreenState extends State<PerfilScreen>
                                 color: Colors.white,
                                 size: 28,
                               ),
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const NotificacionScreen(),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                           Positioned(
@@ -248,7 +257,14 @@ class _PerfilScreenState extends State<PerfilScreen>
 
                 // Editar perfil button
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EditarPerfil(),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF9BCE97), // Light green
                     foregroundColor: Colors.black,
