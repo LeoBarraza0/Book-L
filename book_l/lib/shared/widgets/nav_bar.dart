@@ -38,6 +38,11 @@ class SharedBottomNavBar extends StatelessWidget {
             icon: Icons.search,
             label: 'Buscar',
             isSelected: selectedIndex == 1,
+            onTap: () {
+              if (selectedIndex != 1) {
+                Navigator.pushReplacementNamed(context, '/busqueda');
+              }
+            },
           ),
 
           // Botón Circular Central (+)
