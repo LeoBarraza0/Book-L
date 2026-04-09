@@ -20,8 +20,6 @@ class DiscusionScreen extends StatelessWidget {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
-        const ComentarioInput(),
-        const SizedBox(height: 24),
         const ComentarioTile(
           name: 'Mike Morales',
           content: 'Guao, explicas muy bien, ¿Por qué no eres profesora?',
@@ -42,12 +40,14 @@ class DiscusionScreen extends StatelessWidget {
           likes: '6 Me gusta',
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Ver más',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            decoration: TextDecoration.underline,
+        const Center(
+          child: Text(
+            'Ver más',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              decoration: TextDecoration.underline,
+            ),
           ),
         ),
       ],

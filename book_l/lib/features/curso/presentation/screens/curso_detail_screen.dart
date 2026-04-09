@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../calificacion/presentation/widgets/stars_rating_widget.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
+import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
 
 class CursoDetailScreen extends StatefulWidget {
@@ -62,6 +63,20 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
               ),
             ],
           ),
+          // ── Input de Comentarios Flotante (Solo en pestaña Discusión) ──
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.fastOutSlowIn,
+            bottom: _selectedTab == 2 ? 110 : -60,
+            left: 20,
+            right: 20,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 400),
+              opacity: _selectedTab == 2 ? 1.0 : 0.0,
+              child: const ComentarioInput(),
+            ),
+          ),
+
           const Positioned(
             bottom: 24,
             left: 20,
