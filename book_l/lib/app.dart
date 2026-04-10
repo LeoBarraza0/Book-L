@@ -11,6 +11,8 @@ import 'features/leccion/presentation/screens/leccion_detail_screen.dart';
 import 'features/leccion/presentation/screens/capitulo_screen.dart';
 import 'features/busqueda/presentation/screens/busqueda_screen.dart';
 import 'features/busqueda/presentation/screens/resultado_screen.dart';
+import 'features/ejercicio/presentation/screens/teorico_screen.dart';
+import 'features/calificacion/presentation/screens/resultado_screen.dart';
 
 class BookLApp extends StatelessWidget {
   const BookLApp({super.key});
@@ -39,6 +41,8 @@ class BookLApp extends StatelessWidget {
         '/capitulo_detail': (context) => const CapituloScreen(),
         '/busqueda': (context) => const BusquedaScreen(),
         '/resultado': (context) => const ResultadoScreen(),
+        '/teorico': (context) => const TeoricoScreen(),
+        '/calificacion': (context) => const EjercicioResultadoScreen(),
       },
     );
   }

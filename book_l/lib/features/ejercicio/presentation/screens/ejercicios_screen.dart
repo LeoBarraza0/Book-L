@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'teorico_screen.dart';
 
 class EjerciciosScreen extends StatefulWidget {
   const EjerciciosScreen({super.key});
@@ -114,10 +115,16 @@ class _HoverScaleCardState extends State<_HoverScaleCard> {
           onTapDown: (_) => setState(() => _isPressed = true),
           onTapUp: (_) {
             setState(() => _isPressed = false);
-            // Mostrar un SnackBar de feedback
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Navegando a ejercicios ${widget.title.toLowerCase()}...')),
-            );
+            if (widget.title == 'Teóricos') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const TeoricoScreen()),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Navegando a ejercicios ${widget.title.toLowerCase()}...')),
+              );
+            }
           },
           onTapCancel: () => setState(() => _isPressed = false),
           child: Container(
