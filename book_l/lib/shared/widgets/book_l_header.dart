@@ -47,8 +47,8 @@ class BookLHeader extends StatelessWidget {
                 const SizedBox(height: 12),
                 SvgPicture.asset(
                   _logoPath,
-                  width: 320,
-                  height: 120,
+                  width: 400,
+                  height: 160,
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 14),

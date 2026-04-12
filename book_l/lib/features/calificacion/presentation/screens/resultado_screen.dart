@@ -296,28 +296,31 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Stack(
+            alignment: Alignment.center,
             children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF8FE67A),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.white,
-                    size: 28,
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF8FE67A),
+                    shape: BoxShape.circle,
                   ),
-                  onPressed: () => Navigator.pop(context),
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ),
               ),
               SvgPicture.asset(
                 'assets/images/logo.svg',
-                height: 48,
+                height: 72,
               ),
             ],
           ),

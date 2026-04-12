@@ -142,7 +142,7 @@ class HomeScreen extends StatelessWidget {
           // Logo Central
           SvgPicture.asset(
             'assets/images/logo.svg',
-            height: 40,
+            height: 60,
             fit: BoxFit.contain,
           ),
 

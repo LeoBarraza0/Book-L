@@ -235,10 +235,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         children: [
           // Logo en fila superior (top-right como en Figma)
           Align(
-            alignment: Alignment.centerRight,
+            alignment: Alignment.center,
             child: SvgPicture.asset(
               'assets/images/logo.svg',
-              height: 44,
+              height: 70,
               fit: BoxFit.contain,
             ),
           ),
