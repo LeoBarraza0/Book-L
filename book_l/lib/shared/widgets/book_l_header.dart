@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Header reutilizable con la imagen de fondo y el logo de BOOK-L.
 /// Úsalo en las pantallas que lo requieran pasando [height].
@@ -7,10 +8,8 @@ class BookLHeader extends StatelessWidget {
 
   const BookLHeader({super.key, this.height = 420});
 
-  static const String _bgUrl =
-      'http://localhost:3845/assets/4f249115e7c6cfc36e828c251b7c4ce632f1f4c2.png';
-  static const String _logoUrl =
-      'http://localhost:3845/assets/e537c25c6a77635361d3fb2f09f3fe514f61e72a.png';
+  static const String _bgPath = 'assets/images/Fondo_Blanco.png';
+  static const String _logoPath = 'assets/images/logo.svg';
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +20,8 @@ class BookLHeader extends StatelessWidget {
         children: [
           // Fondo animado con las figuras geométricas
           Positioned.fill(
-            child: Image.network(
-              _bgUrl,
+            child: Image.asset(
+              _bgPath,
               fit: BoxFit.cover,
               alignment: Alignment.center,
               errorBuilder: (_, __, ___) =>
@@ -46,20 +45,11 @@ class BookLHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Image.network(
-                  _logoUrl,
+                SvgPicture.asset(
+                  _logoPath,
                   width: 320,
                   height: 120,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Text(
-                    'BOOK-L',
-                    style: TextStyle(
-                      fontSize: 54,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF4DC130),
-                      letterSpacing: 1.5,
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 14),
                 RichText(
