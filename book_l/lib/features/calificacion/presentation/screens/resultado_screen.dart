@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import 'package:book_l/features/leccion/presentation/screens/leccion_detail_screen.dart';
 
@@ -314,11 +315,9 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
-              Image.asset(
-                'assets/images/Book-L.png',
+              SvgPicture.asset(
+                'assets/images/logo.svg',
                 height: 48,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.image_not_supported, color: Colors.grey),
               ),
             ],
           ),

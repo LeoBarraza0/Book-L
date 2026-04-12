@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 
@@ -235,18 +236,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // Logo en fila superior (top-right como en Figma)
           Align(
             alignment: Alignment.centerRight,
-            child: Image.network(
-              'http://localhost:3845/assets/e537c25c6a77635361d3fb2f09f3fe514f61e72a.png',
+            child: SvgPicture.asset(
+              'assets/images/logo.svg',
               height: 44,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const Text(
-                'BOOK-L',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF4DC130),
-                ),
-              ),
             ),
           ),
           const SizedBox(height: 12),
