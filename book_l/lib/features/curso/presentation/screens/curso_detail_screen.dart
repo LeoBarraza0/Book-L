@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
-import '../../../calificacion/presentation/widgets/stars_rating_widget.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
@@ -18,7 +17,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFECEBEB), 
+      backgroundColor: const Color(0xFFECEBEB),
       body: Stack(
         children: [
           CustomScrollView(
@@ -26,34 +25,38 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
               SliverToBoxAdapter(child: _buildHeaderImage(context)),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildTitleAndProgress(),
                       const SizedBox(height: 24),
-                      
+
                       _buildStatsRow(),
                       const SizedBox(height: 24),
-                      
+
                       _buildTabs(),
                       const SizedBox(height: 24),
-                      
+
                       // Render Dinámico según la Pestaña
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+                        transitionBuilder: (child, animation) =>
+                            FadeTransition(opacity: animation, child: child),
                         child: _selectedTab == 0
                             ? Container(
                                 key: const ValueKey(0),
                                 child: _buildLeccionesContent(),
                               )
                             : _selectedTab == 1
-                                ? const EjerciciosScreen(key: ValueKey(1))
-                                : Container(
-                                    key: const ValueKey(2),
-                                    child: _buildDiscusionContent(),
-                                  ),
+                            ? const EjerciciosScreen(key: ValueKey(1))
+                            : Container(
+                                key: const ValueKey(2),
+                                child: _buildDiscusionContent(),
+                              ),
                       ),
 
                       const SizedBox(height: 100), // Espacio para NavBar
@@ -90,7 +93,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
 
   Widget _buildHeaderImage(BuildContext context) {
     return SizedBox(
-      height: 300, 
+      height: 300,
       width: double.infinity,
       child: Stack(
         children: [
@@ -102,10 +105,11 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
               ),
               child: Transform.scale(
                 scale: 1.15,
-                child: Image.network(
-                  'http://localhost:3845/assets/2f178e062fbcf7ac085cd51914ceac0bc82eacc2.png', 
+                child: Image.asset(
+                  'assets/images/red_bg.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(color: Colors.grey[400]),
+                  errorBuilder: (_, __, ___) =>
+                      Container(color: Colors.grey[400]),
                 ),
               ),
             ),
@@ -116,7 +120,10 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildCircularIconButton(Icons.arrow_back, () => Navigator.pop(context)),
+                  _buildCircularIconButton(
+                    Icons.arrow_back,
+                    () => Navigator.pop(context),
+                  ),
                   _buildCircularIconButton(Icons.share, () {}),
                 ],
               ),
@@ -152,7 +159,11 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
             children: [
               const Text(
                 'Ejemplo De Curso',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 12),
               Row(
@@ -163,15 +174,34 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                     child: Icon(Icons.person, color: Colors.white, size: 16),
                   ),
                   const SizedBox(width: 8),
-                  const Text('Ema Nuel', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: const Color(0xFF79AC63), borderRadius: BorderRadius.circular(4)),
-                    child: const Text('Estudiante', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600)),
+                  const Text(
+                    'Ema Nuel',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                   ),
                   const SizedBox(width: 8),
-                  const Text('|  4.5', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF79AC63),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'Estudiante',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '|  4.5',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
                   const SizedBox(width: 4),
                   const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
                 ],
@@ -196,7 +226,10 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                   strokeAlign: CircularProgressIndicator.strokeAlignCenter,
                 ),
               ),
-              Text('20%', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              Text(
+                '20%',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
             ],
           ),
         ),
@@ -216,13 +249,26 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.calendar_today_outlined, color: Colors.black87, size: 28),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  color: Colors.black87,
+                  size: 28,
+                ),
                 const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
-                    Text('Creación', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text('1 Marzo 2026', style: TextStyle(fontSize: 11, color: Colors.black54)),
+                    Text(
+                      'Creación',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      '1 Marzo 2026',
+                      style: TextStyle(fontSize: 11, color: Colors.black54),
+                    ),
                   ],
                 ),
               ],
@@ -244,8 +290,17 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
-                    Text('Rate: 4.5', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text('167 comentarios', style: TextStyle(fontSize: 11, color: Colors.black54)),
+                    Text(
+                      'Rate: 4.5',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      '167 comentarios',
+                      style: TextStyle(fontSize: 11, color: Colors.black54),
+                    ),
                   ],
                 ),
               ],
@@ -284,7 +339,15 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           decoration: BoxDecoration(
             color: isSelected ? const Color(0xFF4DC130) : Colors.transparent,
             borderRadius: BorderRadius.circular(21),
-            boxShadow: isSelected ? [const BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))] : [],
+            boxShadow: isSelected
+                ? [
+                    const BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ]
+                : [],
           ),
           child: Text(
             label,
@@ -301,12 +364,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
 
   Widget _buildDiscusionContent() {
     return Column(
-      children: const [
-        SizedBox(height: 10),
-        StarsRatingWidget(),
-        SizedBox(height: 24),
-        DiscusionScreen(),
-      ],
+      children: const [SizedBox(height: 10), DiscusionScreen(showRating: true)],
     );
   }
 
@@ -315,14 +373,25 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // "Introducción" section
-        const Text('Introducción', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const Text(
+          'Introducción',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 12),
         const Text(
           'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada lacinia integer nunc posuere ut hendrerit.',
-          style: TextStyle(fontSize: 14, color: Color(0xFF787878), fontWeight: FontWeight.w600, height: 1.4),
+          style: TextStyle(
+            fontSize: 14,
+            color: Color(0xFF787878),
+            fontWeight: FontWeight.w600,
+            height: 1.4,
+          ),
         ),
         const SizedBox(height: 32),
-        const Text('Lecciones', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const Text(
+          'Lecciones',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 16),
         _buildLeccionCard(
           category: 'Cálculo diferencial',
@@ -377,7 +446,10 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     return GestureDetector(
       onTap: () => Navigator.pushNamed(context, '/leccion_detail'),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12), // Padding dinámico y natural
+        padding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 12,
+        ), // Padding dinámico y natural
         decoration: BoxDecoration(
           color: const Color(0xFFD9D9D9),
           borderRadius: BorderRadius.circular(12),
@@ -392,7 +464,8 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 width: 74,
                 height: 74,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(width: 74, height: 74, color: Colors.grey),
+                errorBuilder: (_, __, ___) =>
+                    Container(width: 74, height: 74, color: Colors.grey),
               ),
             ),
             const SizedBox(width: 14),
@@ -406,41 +479,91 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: categoryColor,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text(category, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
+                        child: Text(
+                          category,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                       if (category2 != null) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: categoryColor2,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text(category2, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
+                          child: Text(
+                            category2,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                      ]
+                      ],
                     ],
                   ),
                   const SizedBox(height: 2),
-                  Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(duration, style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w600)),
+                  Text(
+                    duration,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   // Rating y número de estudiantes
                   Row(
                     children: [
-                      const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
+                      const Icon(
+                        Icons.star,
+                        color: Color(0xFFF6B55C),
+                        size: 14,
+                      ),
                       const SizedBox(width: 4),
-                      Text(rating, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text(
+                        rating,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(width: 8),
                       Container(width: 1, height: 10, color: Colors.black26),
                       const SizedBox(width: 8),
-                      Text(students, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text(
+                        students,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -451,7 +574,11 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Icon(Icons.favorite_border, color: Colors.redAccent, size: 20),
+                const Icon(
+                  Icons.favorite_border,
+                  color: Colors.redAccent,
+                  size: 20,
+                ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: 32,
@@ -466,7 +593,13 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                         strokeWidth: 4,
                         strokeCap: StrokeCap.round,
                       ),
-                      Text('${(progress * 100).toInt()}%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                      Text(
+                        '${(progress * 100).toInt()}%',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),

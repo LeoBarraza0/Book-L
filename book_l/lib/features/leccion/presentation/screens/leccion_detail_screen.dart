@@ -59,7 +59,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                                   ? const EjerciciosScreen(key: ValueKey(1))
                                   : Container(
                                       key: const ValueKey(2),
-                                      child: const DiscusionScreen(),
+                                      child: const DiscusionScreen(showRating: true),
                                     ),
                       ),
 
@@ -118,8 +118,8 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
               ),
               child: Transform.scale(
                 scale: 1.15, // Ajusta el zoom para ignorar bordes transparentes integrados del PNG original
-                child: Image.network(
-                  'http://localhost:3845/assets/97d721d65cda6c381af1d405c8d26f13dcce76df.png', // image 36 de Figma
+                child: Image.asset(
+                  'assets/images/green_bg.png', // image 36 de Figma (local version)
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(color: Colors.grey[400]),
                 ),

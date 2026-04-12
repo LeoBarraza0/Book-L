@@ -193,8 +193,8 @@ class CapituloScreen extends StatelessWidget {
               ),
               child: Transform.scale(
                 scale: 1.15,
-                child: Image.network(
-                  'http://localhost:3845/assets/97d721d65cda6c381af1d405c8d26f13dcce76df.png',
+                child: Image.asset(
+                  'assets/images/green_bg.png',
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(color: Colors.grey[400]),
                 ),

@@ -43,15 +43,13 @@ class _EjerciciosScreenState extends State<EjerciciosScreen>
           children: [
             _buildAnimatedCard(
               title: "Teóricos",
-              imageUrl:
-                  'http://localhost:3845/assets/97d721d65cda6c381af1d405c8d26f13dcce76df.png',
+              imageUrl: 'assets/images/green_bg.png',
               delay: 0,
             ),
             const SizedBox(height: 20),
             _buildAnimatedCard(
               title: "Prácticos",
-              imageUrl:
-                  'http://localhost:3845/assets/054aa59f66a0849c4fddffa77a03ace19440d588.png',
+              imageUrl: 'assets/images/yellow_bg.png',
               delay: 200,
             ),
           ],
@@ -148,7 +146,7 @@ class _HoverScaleCardState extends State<_HoverScaleCard> {
                   Positioned.fill(
                     child: Transform.scale(
                       scale: 1.15, // Ajuste para evitar que se corte el contenido útil del PNG
-                      child: Image.network(
+                      child: Image.asset(
                         widget.imageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Container(

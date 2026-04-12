@@ -1,32 +1,160 @@
 import 'package:flutter/material.dart';
 
-class StarsRatingWidget extends StatelessWidget {
-  const StarsRatingWidget({super.key});
+class StarsRatingWidget extends StatefulWidget {
+  final Function(int)? onRatingChanged;
+  final bool showTitle;
+  final bool showSendButton;
+  final double starSize;
+
+  const StarsRatingWidget({
+    super.key,
+    this.onRatingChanged,
+    this.showTitle = true,
+    this.showSendButton = true,
+    this.starSize = 42,
+  });
+
+  @override
+  State<StarsRatingWidget> createState() => _StarsRatingWidgetState();
+}
+
+class _StarsRatingWidgetState extends State<StarsRatingWidget> {
+  int _currentRating = 0;
+
+  void _handleTap(int index) {
+    setState(() {
+      _currentRating = index + 1;
+    });
+    if (widget.onRatingChanged != null) {
+      widget.onRatingChanged!(_currentRating);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const Text('Tu calificación', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(5, (index) => const Icon(Icons.star_border, color: Colors.black45, size: 36)),
-        ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () {},
-          child: const Text(
-            '¡Enviar!',
+        if (widget.showTitle) ...[
+          const Text(
+            'Tu calificación',
             style: TextStyle(
-              fontSize: 14,
-              color: Colors.black54,
-              decoration: TextDecoration.underline,
-              fontWeight: FontWeight.w500,
+              fontSize: 20,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
+              letterSpacing: 0.5,
             ),
           ),
+          const SizedBox(height: 16),
+        ],
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(5, (index) {
+            final isSelected = index < _currentRating;
+            
+            return _StarItem(
+              isSelected: isSelected,
+              onTap: () => _handleTap(index),
+              starSize: widget.starSize,
+            );
+          }),
         ),
+        const SizedBox(height: 12),
+        // Botón de enviar con transición de entrada
+        if (widget.showSendButton)
+          AnimatedOpacity(
+            opacity: _currentRating > 0 ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 300),
+            child: Visibility(
+              visible: _currentRating > 0,
+              child: TextButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('¡Gracias por calificar con $_currentRating estrellas!'),
+                      backgroundColor: const Color(0xFF4DC130),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                },
+                child: const Text(
+                  '¡Enviar reseña!',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontFamily: 'Inter',
+                    color: Color(0xFF4DC130),
+                    fontWeight: FontWeight.w700,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
+    );
+  }
+}
+
+class _StarItem extends StatefulWidget {
+  final bool isSelected;
+  final VoidCallback onTap;
+  final double starSize;
+
+  const _StarItem({required this.isSelected, required this.onTap, required this.starSize});
+
+  @override
+  State<_StarItem> createState() => _StarItemState();
+}
+
+class _StarItemState extends State<_StarItem> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0), weight: 50),
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void didUpdateWidget(_StarItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isSelected && !oldWidget.isSelected) {
+      _controller.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      behavior: HitTestBehavior.opaque, // Asegura que el toque se registre bien
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: Icon(
+            widget.isSelected ? Icons.star_rounded : Icons.star_outline_rounded,
+            color: widget.isSelected ? const Color(0xFFF6B55C) : const Color(0xFFD9D9D9),
+            size: widget.starSize,
+          ),
+        ),
+      ),
     );
   }
 }

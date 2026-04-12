@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../../../shared/widgets/nav_bar.dart';
 import 'package:book_l/features/leccion/presentation/screens/leccion_detail_screen.dart';
+import '../../../../shared/widgets/nav_bar.dart';
+import '../widgets/stars_rating_widget.dart';
 
 class EjercicioResultadoScreen extends StatefulWidget {
   const EjercicioResultadoScreen({super.key});
@@ -12,7 +13,6 @@ class EjercicioResultadoScreen extends StatefulWidget {
 }
 
 class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
-  int _rating = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -185,30 +185,16 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
                         'Califícanos',
                         style: TextStyle(
                           fontFamily: 'Inter',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
                           color: Color(0xFF4DC130),
                         ),
                       ),
                       const SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(5, (index) {
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _rating = index + 1;
-                              });
-                            },
-                            child: Icon(
-                              Icons.star,
-                              size: 40,
-                              color: index < _rating
-                                  ? const Color(0xFFF6B55C)
-                                  : const Color(0xFFD9D9D9),
-                            ),
-                          );
-                        }),
+                      const StarsRatingWidget(
+                        showTitle: false,
+                        showSendButton: false,
+                        starSize: 40,
                       ),
                       const SizedBox(height: 40),
 
@@ -273,7 +259,7 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
             ],
           ),
 
-          const Positioned(
+          Positioned(
             bottom: 24,
             left: 20,
             right: 20,

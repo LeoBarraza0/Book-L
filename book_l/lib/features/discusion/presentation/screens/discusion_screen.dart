@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/comentario_input.dart';
 import '../widgets/comentario_tile.dart';
+import '../../../calificacion/presentation/widgets/stars_rating_widget.dart';
 
 class DiscusionScreen extends StatelessWidget {
   final bool showRating; // Algunas pantallas pueden no requerir la calificacion aquí
@@ -15,9 +16,18 @@ class DiscusionScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (showRating) ...[
+          Center(child: StarsRatingWidget()),
+          const SizedBox(height: 32),
+        ],
         const Text(
           'Comentarios',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 20,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w800,
+            color: Colors.black,
+          ),
         ),
         const SizedBox(height: 20),
         const ComentarioTile(
