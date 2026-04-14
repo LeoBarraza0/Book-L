@@ -121,7 +121,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                 child: Image.asset(
                   'assets/images/green_bg.png', // image 36 de Figma (local version)
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(color: Colors.grey[400]),
+                  errorBuilder: (_, _, _) => Container(color: Colors.grey[400]),
                 ),
               ),
             ),
@@ -557,7 +557,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
               width: 75,
               height: 75,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
+              errorBuilder: (_, _, _) =>
                   Container(width: 75, height: 75, color: Colors.grey),
             ),
           ),
