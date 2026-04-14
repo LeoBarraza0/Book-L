@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:book_l/shared/widgets/create_menu_modal.dart' as lib_modal;
 
 class SharedBottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -46,14 +47,24 @@ class SharedBottomNavBar extends StatelessWidget {
           ),
 
           // Botón Circular Central (+)
-          Container(
-            width: 50,
-            height: 50,
-            decoration: const BoxDecoration(
-              color: Color(0xFF4DC130),
-              shape: BoxShape.circle,
+          GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return const lib_modal.CreateMenuModal();
+                },
+              );
+            },
+            child: Container(
+              width: 50,
+              height: 50,
+              decoration: const BoxDecoration(
+                color: Color(0xFF4DC130),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
-            child: const Icon(Icons.add, color: Colors.white, size: 28),
           ),
 
           _buildNavItem(

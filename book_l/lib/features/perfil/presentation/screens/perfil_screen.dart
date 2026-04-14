@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart'; // Import from shared widgets
 import '../../../notificacion/presentation/screens/notificaciones_screen.dart';
+import 'package:book_l/shared/widgets/create_menu_modal.dart' as lib_modal;
 import 'editar_perfil.dart';
 
 class PerfilScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class _PerfilScreenState extends State<PerfilScreen>
     return Scaffold(
       backgroundColor: const Color(
         0xFFF4F7FB,
-      ), // Light bluish-white background matching Figma
+      ), 
       body: Stack(
         children: [
           // Background Gradient (Optional slight top blue blur as in Figma)
@@ -393,7 +394,12 @@ class _PerfilScreenState extends State<PerfilScreen>
 
           GestureDetector(
             onTap: () {
-              // Action for "Sumate al desarrollo..."
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return const lib_modal.CreateMenuModal();
+                },
+              );
             },
             child: const Text(
               'Sumate al desarrollo académico de la libre',

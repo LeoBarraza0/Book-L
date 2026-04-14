@@ -13,6 +13,10 @@ import 'features/busqueda/presentation/screens/busqueda_screen.dart';
 import 'features/busqueda/presentation/screens/resultado_screen.dart';
 import 'features/ejercicio/presentation/screens/teorico_screen.dart';
 import 'features/calificacion/presentation/screens/resultado_screen.dart';
+import 'features/curso/presentation/screens/publicar_curso_screen.dart';
+import 'features/leccion/presentation/screens/publicar_leccion_screen.dart';
+import 'features/ejercicio/presentation/screens/crear_ejercicio_teorico_screen.dart';
+import 'features/ejercicio/presentation/screens/crear_ejercicio_practico_screen.dart';
 
 class BookLApp extends StatelessWidget {
   const BookLApp({super.key});
@@ -43,6 +47,10 @@ class BookLApp extends StatelessWidget {
         '/resultado': (context) => const ResultadoScreen(),
         '/teorico': (context) => const TeoricoScreen(),
         '/calificacion': (context) => const EjercicioResultadoScreen(),
+        '/publicar_curso': (context) => const PublicarCursoScreen(),
+        '/publicar_leccion': (context) => const PublicarLeccionScreen(),
+        '/crear_ejercicio_teorico': (context) => const CrearEjercicioTeoricoScreen(),
+        '/crear_ejercicio_practico': (context) => const CrearEjercicioPracticoScreen(),
       },
     );
   }
