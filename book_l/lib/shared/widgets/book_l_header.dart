@@ -24,7 +24,7 @@ class BookLHeader extends StatelessWidget {
               _bgPath,
               fit: BoxFit.cover,
               alignment: Alignment.center,
-              errorBuilder: (_, __, ___) =>
+              errorBuilder: (_, _, _) =>
                   Container(color: const Color(0xFFF0F0F0)),
             ),
           ),

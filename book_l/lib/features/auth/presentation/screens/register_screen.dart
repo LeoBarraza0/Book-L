@@ -283,7 +283,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Image.network(
                   'http://localhost:3845/assets/c270ee2cfdb6c5fb68db02bf4810d35ed9ae8468.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Icon(
+                  errorBuilder: (_, _, _) => const Icon(
                     Icons.person,
                     size: 48,
                     color: Color(0xFF9E9E9E),

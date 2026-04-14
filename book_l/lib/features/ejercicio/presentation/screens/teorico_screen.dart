@@ -259,7 +259,7 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
               child: Image.asset(
                 'assets/images/Chatbot_Icon.png',
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) =>
+                errorBuilder: (_, _, _) =>
                     const Icon(Icons.smart_toy, color: Colors.white, size: 30),
               ),
             ),

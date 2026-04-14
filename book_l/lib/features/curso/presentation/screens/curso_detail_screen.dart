@@ -3,6 +3,9 @@ import '../../../../shared/widgets/nav_bar.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
+import '../../../leccion/presentation/screens/leccion_detail_screen.dart';
+import '../../../perfil/presentation/screens/perfil_screen.dart';
+import 'curso_editar_screen.dart';
 
 class CursoDetailScreen extends StatefulWidget {
   const CursoDetailScreen({super.key});
@@ -108,7 +111,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 child: Image.asset(
                   'assets/images/red_bg.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
+                  errorBuilder: (_, _, _) =>
                       Container(color: Colors.grey[400]),
                 ),
               ),
@@ -124,7 +127,17 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                     Icons.arrow_back,
                     () => Navigator.pop(context),
                   ),
-                  _buildCircularIconButton(Icons.share, () {}),
+                  Row(
+                    children: [
+                      _buildCircularIconButton(
+                        Icons.edit_rounded,
+                        () => Navigator.push(context, _slideRoute(const CursoEditarScreen())),
+                        color: const Color(0xFFFEB95C),
+                      ),
+                      const SizedBox(width: 10),
+                      _buildCircularIconButton(Icons.share, () {}),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -134,18 +147,42 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     );
   }
 
-  Widget _buildCircularIconButton(IconData icon, VoidCallback onTap) {
+  Widget _buildCircularIconButton(IconData icon, VoidCallback onTap,
+      {Color color = const Color(0xFF6BCA54)}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: const Color(0xFF6BCA54).withOpacity(0.9),
+          color: color.withOpacity(0.9),
           shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Icon(icon, color: Colors.white, size: 24),
       ),
+    );
+  }
+
+  /// Transición slide horizontal para navegaciones
+  Route _slideRoute(Widget page) {
+    return PageRouteBuilder(
+      pageBuilder: (_, animation, _) => page,
+      transitionsBuilder: (_, animation, _, child) {
+        final slide = Tween<Offset>(
+          begin: const Offset(1.0, 0),
+          end: Offset.zero,
+        ).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+        return SlideTransition(position: slide, child: child);
+      },
+      transitionDuration: const Duration(milliseconds: 380),
     );
   }
 
@@ -166,45 +203,56 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 12,
-                    backgroundColor: Color(0xFF6BCA54),
-                    child: Icon(Icons.person, color: Colors.white, size: 16),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Ema Nuel',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  _slideRoute(const PerfilScreen()),
+                ),
+                child: Row(
+                  children: [
+                    const CircleAvatar(
+                      radius: 12,
+                      backgroundColor: Color(0xFF6BCA54),
+                      child: Icon(Icons.person, color: Colors.white, size: 16),
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF79AC63),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'Estudiante',
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Ema Nuel',
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
                         fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        decoration: TextDecoration.underline,
+                        decorationColor: Color(0xFF6BCA54),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    '|  4.5',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
-                ],
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF79AC63),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Estudiante',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      '|  4.5',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
+                  ],
+                ),
               ),
             ],
           ),
@@ -444,7 +492,10 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     required String imageUrl,
   }) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, '/leccion_detail'),
+      onTap: () => Navigator.push(
+        context,
+        _slideRoute(const LeccionDetailScreen()),
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: 10,
@@ -464,7 +515,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 width: 74,
                 height: 74,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
+                errorBuilder: (_, _, _) =>
                     Container(width: 74, height: 74, color: Colors.grey),
               ),
             ),

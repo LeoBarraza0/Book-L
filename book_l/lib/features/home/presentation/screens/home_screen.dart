@@ -216,7 +216,7 @@ class HomeScreen extends StatelessWidget {
                 Image.asset(
                   'assets/images/racha.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
+                  errorBuilder: (_, _, _) =>
                       const Icon(Icons.pets, color: Colors.green, size: 40),
                 ),
               ],

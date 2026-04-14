@@ -464,7 +464,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
       content: StatefulBuilder(
         builder: (context, setStateModal) {
           return DropdownButtonFormField<String>(
-            value: opciones.contains(tempValue) ? tempValue : opciones.first,
+            initialValue: opciones.contains(tempValue) ? tempValue : opciones.first,
             icon: const Icon(
               Icons.keyboard_arrow_down_rounded,
               color: Colors.grey,

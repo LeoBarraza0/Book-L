@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/comentario_input.dart';
 import '../widgets/comentario_tile.dart';
 import '../../../calificacion/presentation/widgets/stars_rating_widget.dart';
 
