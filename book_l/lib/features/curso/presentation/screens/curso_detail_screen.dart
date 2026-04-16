@@ -111,7 +111,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 child: Image.asset(
                   'assets/images/red_bg.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) =>
+                  errorBuilder: (context, error, stackTrace) =>
                       Container(color: Colors.grey[400]),
                 ),
               ),
@@ -173,8 +173,8 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
   /// Transición slide horizontal para navegaciones
   Route _slideRoute(Widget page) {
     return PageRouteBuilder(
-      pageBuilder: (_, animation, _) => page,
-      transitionsBuilder: (_, animation, _, child) {
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final slide = Tween<Offset>(
           begin: const Offset(1.0, 0),
           end: Offset.zero,
@@ -515,7 +515,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 width: 74,
                 height: 74,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) =>
+                errorBuilder: (context, error, stackTrace) =>
                     Container(width: 74, height: 74, color: Colors.grey),
               ),
             ),

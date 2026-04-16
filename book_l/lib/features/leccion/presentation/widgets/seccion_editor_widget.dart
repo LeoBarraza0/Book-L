@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Modelo de datos de una sección (presentación solamente, sin lógica de dominio)
-// ─────────────────────────────────────────────────────────────────────────────
 class SeccionData {
   final TextEditingController tituloCtrl;
-  final TextEditingController cuerpoCtrl;
+  late final quill.QuillController cuerpoCtrl;
   bool tieneImagen;
   bool tieneVideo;
 
@@ -14,8 +12,22 @@ class SeccionData {
     String cuerpo = '',
     this.tieneImagen = false,
     this.tieneVideo = false,
-  })  : tituloCtrl = TextEditingController(text: titulo),
-        cuerpoCtrl = TextEditingController(text: cuerpo);
+  }) : tituloCtrl = TextEditingController(text: titulo) {
+    quill.Document doc;
+    try {
+      if (cuerpo.isNotEmpty) {
+        doc = quill.Document()..insert(0, '$cuerpo\n');
+      } else {
+        doc = quill.Document();
+      }
+    } catch (_) {
+      doc = quill.Document();
+    }
+    cuerpoCtrl = quill.QuillController(
+      document: doc,
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+  }
 
   void dispose() {
     tituloCtrl.dispose();
@@ -23,9 +35,6 @@ class SeccionData {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Widget principal: SeccionEditorWidget
-// ─────────────────────────────────────────────────────────────────────────────
 class SeccionEditorWidget extends StatefulWidget {
   final SeccionData data;
   final int index;
@@ -48,11 +57,6 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
   late Animation<double> _scaleAnim;
   late Animation<double> _fadeAnim;
 
-  // Estado del toolbar
-  bool _negrita = false;
-  bool _cursiva = false;
-  bool _subrayado = false;
-
   @override
   void initState() {
     super.initState();
@@ -60,7 +64,8 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
       vsync: this,
       duration: const Duration(milliseconds: 380),
     );
-    _scaleAnim = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+    _scaleAnim =
+        CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
     _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
   }
@@ -93,18 +98,12 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Cabecera de la sección ──────────────────────────────────
               _buildSectionHeader(),
-              // ── Toolbar de Formato ─────────────────────────────────────
-              _buildFormatToolbar(),
-              const Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE)),
-              // ── Campos editables ───────────────────────────────────────
               _buildTituloField(),
-              _buildCuerpoField(),
-              // ── Medios (imagen / video) ───────────────────────────────
+              const Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE)),
+              _buildQuillEditor(),
               if (widget.data.tieneImagen || widget.data.tieneVideo)
                 _buildMediaRow(),
-              // ── Botones de agregar medios ─────────────────────────────
               _buildMediaActions(),
             ],
           ),
@@ -113,7 +112,6 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
     );
   }
 
-  // ── Cabecera con número de sección y botón eliminar ──────────────────────
   Widget _buildSectionHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 12, 4),
@@ -140,11 +138,12 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
             child: Container(
               width: 32,
               height: 32,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFEBEB),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFEBEB),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, color: Color(0xFFD63030), size: 18),
+              child:
+                  const Icon(Icons.close, color: Color(0xFFD63030), size: 18),
             ),
           ),
         ],
@@ -152,108 +151,6 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
     );
   }
 
-  // ── Toolbar de formato de texto ───────────────────────────────────────────
-  Widget _buildFormatToolbar() {
-    return Container(
-      height: 44,
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _toolbarToggle(
-              label: 'B',
-              bold: true,
-              active: _negrita,
-              onTap: () => setState(() => _negrita = !_negrita),
-            ),
-            _toolbarToggle(
-              label: 'I',
-              italic: true,
-              active: _cursiva,
-              onTap: () => setState(() => _cursiva = !_cursiva),
-            ),
-            _toolbarToggle(
-              label: 'U',
-              underline: true,
-              active: _subrayado,
-              onTap: () => setState(() => _subrayado = !_subrayado),
-            ),
-            _toolbarDivider(),
-            _toolbarIcon(Icons.format_list_bulleted, onTap: () {}),
-            _toolbarIcon(Icons.format_align_left, onTap: () {}),
-            _toolbarIcon(Icons.format_align_center, onTap: () {}),
-            _toolbarDivider(),
-            _toolbarIcon(Icons.image_outlined, onTap: _agregarImagen, color: const Color(0xFF4DC130)),
-            _toolbarIcon(Icons.play_circle_outline, onTap: _agregarVideo, color: const Color(0xFFFF606F)),
-            _toolbarIcon(Icons.functions, onTap: () {}, color: const Color(0xFF5B8DEF)),
-            _toolbarIcon(Icons.link, onTap: () {}, color: const Color(0xFF9B59B6)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _toolbarToggle({
-    required String label,
-    bool bold = false,
-    bool italic = false,
-    bool underline = false,
-    required bool active,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        margin: const EdgeInsets.symmetric(horizontal: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: active ? const Color(0xFF4DC130) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14,
-            fontWeight: bold ? FontWeight.w900 : FontWeight.w500,
-            fontStyle: italic ? FontStyle.italic : FontStyle.normal,
-            decoration: underline ? TextDecoration.underline : TextDecoration.none,
-            decorationColor: active ? Colors.white : Colors.black87,
-            color: active ? Colors.white : const Color(0xFF444444),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _toolbarIcon(IconData icon,
-      {required VoidCallback onTap, Color color = const Color(0xFF555555)}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5),
-        child: Icon(icon, size: 20, color: color),
-      ),
-    );
-  }
-
-  Widget _toolbarDivider() {
-    return Container(
-      height: 20,
-      width: 1,
-      margin: const EdgeInsets.symmetric(horizontal: 6),
-      color: const Color(0xFFDDDDDD),
-    );
-  }
-
-  // ── Campo de Título ────────────────────────────────────────────────────────
   Widget _buildTituloField() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -281,39 +178,61 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
     );
   }
 
-  // ── Campo de Cuerpo ───────────────────────────────────────────────────────
-  Widget _buildCuerpoField() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-      child: TextField(
-        controller: widget.data.cuerpoCtrl,
-        maxLines: null,
-        minLines: 3,
-        keyboardType: TextInputType.multiline,
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 14,
-          color: const Color(0xFF787878),
-          fontStyle: _cursiva ? FontStyle.italic : FontStyle.normal,
-          fontWeight: _negrita ? FontWeight.w700 : FontWeight.w400,
-          decoration: _subrayado ? TextDecoration.underline : TextDecoration.none,
-        ),
-        decoration: InputDecoration(
-          hintText: 'Escribe el contenido de esta sección...',
-          hintStyle: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14,
-            color: Colors.black.withOpacity(0.22),
+  Widget _buildQuillEditor() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Toolbar: QuillSimpleToolbar con controller directo
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF5F5F5),
+            borderRadius: BorderRadius.circular(10),
           ),
-          border: InputBorder.none,
-          isDense: true,
-          contentPadding: EdgeInsets.zero,
+          child: quill.QuillSimpleToolbar(
+            controller: widget.data.cuerpoCtrl,
+            config: const quill.QuillSimpleToolbarConfig(
+              showFontFamily: false,
+              showFontSize: false,
+              showColorButton: false,
+              showBackgroundColorButton: false,
+              showListCheck: false,
+              showAlignmentButtons: true,
+              showSearchButton: false,
+              showIndent: false,
+              multiRowsDisplay: false,
+            ),
+          ),
         ),
-      ),
+        // Editor: QuillEditor.basic con controller directo
+        Container(
+          constraints: const BoxConstraints(minHeight: 120),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: quill.QuillEditor.basic(
+            controller: widget.data.cuerpoCtrl,
+            config: quill.QuillEditorConfig(
+              placeholder: 'Escribe el contenido de esta sección...',
+              customStyles: quill.DefaultStyles(
+                paragraph: quill.DefaultTextBlockStyle(
+                  const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    color: Color(0xFF787878),
+                    fontWeight: FontWeight.w400,
+                  ),
+                  const quill.HorizontalSpacing(0, 0),
+                  const quill.VerticalSpacing(0, 0),
+                  const quill.VerticalSpacing(0, 0),
+                  null,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  // ── Fila de medios (imagen + video si están habilitados) ──────────────────
   Widget _buildMediaRow() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -396,7 +315,6 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
     );
   }
 
-  // ── Botones inferiores para añadir imagen / video ─────────────────────────
   Widget _buildMediaActions() {
     final bool ambos = widget.data.tieneImagen && widget.data.tieneVideo;
     if (ambos) return const SizedBox(height: 8);
@@ -449,10 +367,7 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
+                  fontSize: 12, fontWeight: FontWeight.w600, color: color),
             ),
           ],
         ),

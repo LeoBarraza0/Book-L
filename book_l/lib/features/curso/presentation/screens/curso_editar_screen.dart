@@ -115,13 +115,14 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _headerFadeAnim =
-        CurvedAnimation(parent: _headerAnimCtrl, curve: Curves.easeOut);
+    _headerFadeAnim = CurvedAnimation(
+      parent: _headerAnimCtrl,
+      curve: Curves.easeOut,
+    );
     _headerSlideAnim = Tween<Offset>(
       begin: const Offset(0, -0.08),
       end: Offset.zero,
-    ).animate(
-        CurvedAnimation(parent: _headerAnimCtrl, curve: Curves.easeOut));
+    ).animate(CurvedAnimation(parent: _headerAnimCtrl, curve: Curves.easeOut));
 
     // Guardar: scale-in
     _guardarAnimCtrl = AnimationController(
@@ -139,11 +140,13 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
     );
 
     // Sección inicial por defecto
-    _secciones.add(SeccionData(
-      titulo: 'Introducción',
-      cuerpo:
-          'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean.',
-    ));
+    _secciones.add(
+      SeccionData(
+        titulo: 'Introducción',
+        cuerpo:
+            'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean.',
+      ),
+    );
   }
 
   @override
@@ -197,8 +200,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
         ),
         backgroundColor: const Color(0xFFC13030),
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
         duration: const Duration(seconds: 2),
       ),
@@ -297,7 +299,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
                 child: Image.asset(
                   'assets/images/red_bg.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) =>
+                  errorBuilder: (context, error, stackTrace) =>
                       Container(color: const Color(0xFFFF606F)),
                 ),
               ),
@@ -334,8 +336,10 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
             right: 0,
             child: Center(
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.93),
                   borderRadius: BorderRadius.circular(20),
@@ -349,8 +353,11 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.edit_note_rounded,
-                        size: 16, color: Color(0xFFFF606F)),
+                    Icon(
+                      Icons.edit_note_rounded,
+                      size: 16,
+                      color: Color(0xFFFF606F),
+                    ),
                     SizedBox(width: 6),
                     Text(
                       'Modo Edición',
@@ -370,8 +377,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
           // Botones nav
           SafeArea(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -568,8 +574,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
           curve: Curves.easeInOut,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color:
-                isSelected ? const Color(0xFF4DC130) : Colors.transparent,
+            color: isSelected ? const Color(0xFF4DC130) : Colors.transparent,
             borderRadius: BorderRadius.circular(21),
             boxShadow: isSelected
                 ? [
@@ -586,8 +591,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
             style: TextStyle(
               fontFamily: 'Inter',
               color: isSelected ? Colors.white : Colors.black87,
-              fontWeight:
-                  isSelected ? FontWeight.bold : FontWeight.w600,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
               fontSize: 13,
             ),
           ),
@@ -705,12 +709,15 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
   /// Transición slide horizontal para el pusgh de LeccionEditarScreen
   Route _slideRoute(Widget page) {
     return PageRouteBuilder(
-      pageBuilder: (_, animation, _) => page,
-      transitionsBuilder: (_, animation, _, child) {
-        final slide = Tween<Offset>(
-          begin: const Offset(1.0, 0),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final slide =
+            Tween<Offset>(
+              begin: const Offset(1.0, 0),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+            );
         return SlideTransition(position: slide, child: child);
       },
       transitionDuration: const Duration(milliseconds: 380),
@@ -788,7 +795,7 @@ class _LeccionEditableCardState extends State<_LeccionEditableCard>
                   width: 74,
                   height: 74,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) =>
+                  errorBuilder: (context, error, stackTrace) =>
                       Container(width: 74, height: 74, color: Colors.grey[300]),
                 ),
               ),
@@ -802,7 +809,10 @@ class _LeccionEditableCardState extends State<_LeccionEditableCard>
                     // Categorías
                     Row(
                       children: [
-                        _CategoryChip(label: l.category, color: l.categoryColor),
+                        _CategoryChip(
+                          label: l.category,
+                          color: l.categoryColor,
+                        ),
                         if (l.category2 != null) ...[
                           const SizedBox(width: 6),
                           _CategoryChip(
@@ -834,8 +844,11 @@ class _LeccionEditableCardState extends State<_LeccionEditableCard>
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.star,
-                            color: Color(0xFFF6B55C), size: 14),
+                        const Icon(
+                          Icons.star,
+                          color: Color(0xFFF6B55C),
+                          size: 14,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           l.rating,
@@ -1030,9 +1043,10 @@ class _ActionButtonState extends State<_ActionButton>
       duration: const Duration(milliseconds: 90),
       reverseDuration: const Duration(milliseconds: 180),
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.82).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeIn),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.82,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeIn));
   }
 
   @override
@@ -1100,9 +1114,10 @@ class _GuardarButtonState extends State<_GuardarButton>
       duration: const Duration(milliseconds: 100),
       reverseDuration: const Duration(milliseconds: 200),
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.96).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.96,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override

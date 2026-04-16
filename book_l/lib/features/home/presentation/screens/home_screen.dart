@@ -216,7 +216,7 @@ class HomeScreen extends StatelessWidget {
                 Image.asset(
                   'assets/images/racha.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) =>
+                  errorBuilder: (context, error, stackTrace) =>
                       const Icon(Icons.pets, color: Colors.green, size: 40),
                 ),
               ],
@@ -298,119 +298,119 @@ class HomeScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.pushNamed(context, '/leccion_detail'),
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Contenedor de Imagen con Labels
-        Container(
-          height: 180,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: const Color(0xFFD9D9D9), // Placeholder color
-            image: DecorationImage(
-              image: NetworkImage(imageUrl),
-              fit: BoxFit.cover,
-              colorFilter: ColorFilter.mode(
-                Colors.black.withOpacity(0.05),
-                BlendMode.darken,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Contenedor de Imagen con Labels
+          Container(
+            height: 180,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: const Color(0xFFD9D9D9), // Placeholder color
+              image: DecorationImage(
+                image: NetworkImage(imageUrl),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                  Colors.black.withOpacity(0.05),
+                  BlendMode.darken,
+                ),
               ),
             ),
-          ),
-          child: Stack(
-            children: [
-              // Categoría (Top Left)
-              Positioned(
-                top: 12,
-                left: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4DC130),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    categoryLabel,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              // Badge (Top Right)
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: badgeColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    badgeLabel,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              // Icono Favorito (Bottom Right)
-              const Positioned(
-                bottom: 12,
-                right: 12,
-                child: Icon(
-                  Icons.favorite_border,
-                  color: Color(0xFFFF606F),
-                  size: 28,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-
-        // Título y Rating
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const Row(
+            child: Stack(
               children: [
-                Icon(Icons.star, color: Color(0xFFF6B55C), size: 18),
-                SizedBox(width: 4),
-                Text(
-                  '4.9',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                // Categoría (Top Left)
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4DC130),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      categoryLabel,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                // Badge (Top Right)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: badgeColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      badgeLabel,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                // Icono Favorito (Bottom Right)
+                const Positioned(
+                  bottom: 12,
+                  right: 12,
+                  child: Icon(
+                    Icons.favorite_border,
+                    color: Color(0xFFFF606F),
+                    size: 28,
                   ),
                 ),
               ],
             ),
-          ],
-        ),
-      ],
+          ),
+          const SizedBox(height: 10),
+
+          // Título y Rating
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Row(
+                children: [
+                  Icon(Icons.star, color: Color(0xFFF6B55C), size: 18),
+                  SizedBox(width: 4),
+                  Text(
+                    '4.9',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
