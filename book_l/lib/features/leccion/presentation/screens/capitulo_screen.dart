@@ -196,7 +196,7 @@ class CapituloScreen extends StatelessWidget {
                 child: Image.asset(
                   'assets/images/green_bg.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(color: Colors.grey[400]),
+                  errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey[400]),
                 ),
               ),
             ),

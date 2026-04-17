@@ -208,7 +208,6 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
               ),
             ],
           ),
-
           const Positioned(
             bottom: 24,
             left: 20,
@@ -221,15 +220,12 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
   }
 
   Widget _buildFeedbackBox(bool isCorrect) {
-    final bgColor = isCorrect
-        ? const Color(0xFFC7EBB8)
-        : const Color(0xFFF4BDBE);
-    final iconBgColor = isCorrect
-        ? const Color(0xFF4DC130)
-        : const Color(0xFFD63030);
-    final titleTextColor = isCorrect
-        ? const Color(0xFF4DC130)
-        : const Color(0xFFD63030);
+    final bgColor =
+        isCorrect ? const Color(0xFFC7EBB8) : const Color(0xFFF4BDBE);
+    final iconBgColor =
+        isCorrect ? const Color(0xFF4DC130) : const Color(0xFFD63030);
+    final titleTextColor =
+        isCorrect ? const Color(0xFF4DC130) : const Color(0xFFD63030);
 
     final title = isCorrect ? '¡Correcto!' : '¡Incorrecto!';
     final subtitle = isCorrect
@@ -259,7 +255,7 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
               child: Image.asset(
                 'assets/images/Chatbot_Icon.png',
                 fit: BoxFit.contain,
-                errorBuilder: (_, _, _) =>
+                errorBuilder: (context, error, stackTrace) =>
                     const Icon(Icons.smart_toy, color: Colors.white, size: 30),
               ),
             ),

@@ -212,7 +212,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
                 child: Image.asset(
                   'assets/images/green_bg.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) =>
+                  errorBuilder: (context, error, stackTrace) =>
                       Container(color: const Color(0xFF4DC130)),
                 ),
               ),
