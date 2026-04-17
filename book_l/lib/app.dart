@@ -17,6 +17,8 @@ import 'features/curso/presentation/screens/publicar_curso_screen.dart';
 import 'features/leccion/presentation/screens/publicar_leccion_screen.dart';
 import 'features/ejercicio/presentation/screens/crear_ejercicio_teorico_screen.dart';
 import 'features/ejercicio/presentation/screens/crear_ejercicio_practico_screen.dart';
+import 'features/home/presentation/screens/admin_home_screen.dart';
+import 'features/leccion/presentation/screens/admin_leccion_screen.dart';
 
 class BookLApp extends StatelessWidget {
   const BookLApp({super.key});
@@ -49,8 +51,12 @@ class BookLApp extends StatelessWidget {
         '/calificacion': (context) => const EjercicioResultadoScreen(),
         '/publicar_curso': (context) => const PublicarCursoScreen(),
         '/publicar_leccion': (context) => const PublicarLeccionScreen(),
-        '/crear_ejercicio_teorico': (context) => const CrearEjercicioTeoricoScreen(),
-        '/crear_ejercicio_practico': (context) => const CrearEjercicioPracticoScreen(),
+        '/crear_ejercicio_teorico': (context) =>
+            const CrearEjercicioTeoricoScreen(),
+        '/crear_ejercicio_practico': (context) =>
+            const CrearEjercicioPracticoScreen(),
+        '/admin_Home': (context) => const AdminHomeScreen(),
+        '/admin_leccion': (context) => const AdminLeccionScreen(),
       },
     );
   }
