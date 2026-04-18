@@ -15,7 +15,8 @@ class CapituloScreen extends StatelessWidget {
               SliverToBoxAdapter(child: _buildHeaderImage(context)),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -58,8 +59,8 @@ class CapituloScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Center(
-                          child:
-                              Icon(Icons.play_circle_fill, size: 48, color: Colors.black54),
+                          child: Icon(Icons.play_circle_fill,
+                              size: 48, color: Colors.black54),
                         ),
                       ),
                       const SizedBox(height: 36),

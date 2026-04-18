@@ -12,8 +12,6 @@ class CapituloEditarScreen extends StatefulWidget {
 
 class _CapituloEditarScreenState extends State<CapituloEditarScreen>
     with TickerProviderStateMixin {
-  int _selectedTab = 0; // 0: Contenido, 1: Ejercicios, 2: Discusión
-  final _tituloCtrl = TextEditingController(text: 'Ejemplo De Lección');
   final _scrollCtrl = ScrollController();
   final List<SeccionData> _secciones = [];
 
@@ -74,7 +72,6 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
 
   @override
   void dispose() {
-    _tituloCtrl.dispose();
     _scrollCtrl.dispose();
     _headerAnimCtrl.dispose();
     _guardarAnimCtrl.dispose();
@@ -128,46 +125,18 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
-                    vertical: 20,
+                    vertical: 24,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildTituloEditable(),
-                      const SizedBox(height: 24),
-                      _buildTabs(),
-                      const SizedBox(height: 24),
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (child, animation) =>
-                            FadeTransition(opacity: animation, child: child),
-                        child: _selectedTab == 0
-                            ? Container(
-                                key: const ValueKey(0),
-                                child: _buildContenidoEditor(),
-                              )
-                            : _selectedTab == 1
-                                ? Container(
-                                    key: const ValueKey(1),
-                                    child: _buildProximamente('Ejercicios'),
-                                  )
-                                : Container(
-                                    key: const ValueKey(2),
-                                    child: _buildProximamente('Discusión'),
-                                  ),
-                      ),
+                      _buildContenidoEditor(),
                       const SizedBox(height: 120),
                     ],
                   ),
                 ),
               ),
             ],
-          ),
-          const Positioned(
-            bottom: 24,
-            left: 20,
-            right: 20,
-            child: SharedBottomNavBar(selectedIndex: -1),
           ),
         ],
       ),
@@ -299,157 +268,7 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
     );
   }
 
-  Widget _buildTituloEditable() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x18000000),
-                blurRadius: 6,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _tituloCtrl,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF363333),
-                  ),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                    hintText: 'Título de la lección...',
-                  ),
-                ),
-              ),
-              const Icon(Icons.edit, size: 16, color: Color(0xFFAAAAAA)),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: const BoxDecoration(
-                color: Color(0xFF60A144),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.person, color: Colors.white, size: 18),
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'Emanuel Barranco',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: const Color(0xFF79AC63),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text(
-                'Estudiante',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const Spacer(),
-            const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
-            const SizedBox(width: 3),
-            const Text(
-              '4.5',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
-  Widget _buildTabs() {
-    return Container(
-      height: 42,
-      decoration: BoxDecoration(
-        color: const Color(0xFFD9D9D9),
-        borderRadius: BorderRadius.circular(21),
-      ),
-      child: Row(
-        children: [
-          _buildTabItem('Contenido', 0),
-          _buildTabItem('Ejercicios', 1),
-          _buildTabItem('Discusión', 2),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabItem(String label, int index) {
-    final isSelected = _selectedTab == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedTab = index),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeInOut,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color:
-                isSelected ? const Color(0xFF4DC130) : Colors.transparent,
-            borderRadius: BorderRadius.circular(21),
-            boxShadow: isSelected
-                ? [
-                    const BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              color: isSelected ? Colors.white : Colors.black87,
-              fontWeight:
-                  isSelected ? FontWeight.bold : FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildContenidoEditor() {
     return Column(
@@ -635,35 +454,6 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
     );
   }
 
-  Widget _buildProximamente(String tab) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 60),
-        child: Column(
-          children: [
-            Icon(
-              tab == 'Ejercicios'
-                  ? Icons.quiz_outlined
-                  : Icons.forum_outlined,
-              size: 54,
-              color: Colors.black26,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'La sección de $tab se muestra\ndesde la vista del estudiante o se configura aquí.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                color: Colors.black45,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildGuardarButton() {
     return ScaleTransition(
