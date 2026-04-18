@@ -63,8 +63,10 @@ class BookLApp extends StatelessWidget {
         '/calificacion': (context) => const EjercicioResultadoScreen(),
         '/publicar_curso': (context) => const PublicarCursoScreen(),
         '/publicar_leccion': (context) => const PublicarLeccionScreen(),
-        '/crear_ejercicio_teorico': (context) => const CrearEjercicioTeoricoScreen(),
-        '/crear_ejercicio_practico': (context) => const CrearEjercicioPracticoScreen(),
+        '/crear_ejercicio_teorico': (context) =>
+            const CrearEjercicioTeoricoScreen(),
+        '/crear_ejercicio_practico': (context) =>
+            const CrearEjercicioPracticoScreen(),
       },
     );
   }

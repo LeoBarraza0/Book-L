@@ -285,8 +285,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
           // Botones de navegación
           SafeArea(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -394,8 +393,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
             ),
             const SizedBox(width: 8),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: const Color(0xFF79AC63),
                 borderRadius: BorderRadius.circular(4),
@@ -455,8 +453,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
           curve: Curves.easeInOut,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color:
-                isSelected ? const Color(0xFF4DC130) : Colors.transparent,
+            color: isSelected ? const Color(0xFF4DC130) : Colors.transparent,
             borderRadius: BorderRadius.circular(21),
             boxShadow: isSelected
                 ? [
@@ -473,8 +470,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
             style: TextStyle(
               fontFamily: 'Inter',
               color: isSelected ? Colors.white : Colors.black87,
-              fontWeight:
-                  isSelected ? FontWeight.bold : FontWeight.w600,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
               fontSize: 13,
             ),
           ),
@@ -519,9 +515,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
         child: Column(
           children: [
             Icon(
-              tab == 'Ejercicios'
-                  ? Icons.quiz_outlined
-                  : Icons.forum_outlined,
+              tab == 'Ejercicios' ? Icons.quiz_outlined : Icons.forum_outlined,
               size: 54,
               color: Colors.black26,
             ),

@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'dart:convert';
 import '../domain/models/curso_model.dart';
 import '../domain/models/leccion_model.dart';
+import '../domain/models/capitulo_model.dart';
+import 'local_db_service.dart';
 
 /// Singleton in-memory repository for locally created courses.
 /// Uses [ValueNotifier] so widgets can reactively rebuild only
@@ -22,12 +22,10 @@ class CourseRepository {
 
   bool get hasCourses => coursesNotifier.value.isNotEmpty;
 
-  /// Loads initial dummy data from local JSON.
+  /// Loads initial dummy data from LocalDB (or fallback to assets/data).
   Future<void> loadInitialCourses() async {
     try {
-      final String jsonString = await rootBundle.loadString('assets/data/mis_cursos.json');
-      final List<dynamic> jsonMap = jsonDecode(jsonString);
-      final initialCourses = jsonMap.map((json) => CursoModel.fromJson(json)).toList();
+      final initialCourses = await LocalDbService.instance.loadCourses();
       coursesNotifier.value = initialCourses;
     } catch (e) {
       if (kDebugMode) {
@@ -36,8 +34,13 @@ class CourseRepository {
     }
   }
 
+  Future<void> _saveToLocalDB() async {
+    await LocalDbService.instance.saveCourses(coursesNotifier.value);
+  }
+
   void addCourse(CursoModel course) {
     coursesNotifier.value = [...coursesNotifier.value, course];
+    _saveToLocalDB();
   }
 
   void addLessonToCourse(String courseId, LeccionModel lesson) {
@@ -51,15 +54,66 @@ class CourseRepository {
       final newList = List<CursoModel>.from(list);
       newList[index] = updatedCourse;
       coursesNotifier.value = newList;
+      _saveToLocalDB();
     }
+  }
+
+  void updateLessonInCourse(String courseId, LeccionModel updatedLesson) {
+    final list = coursesNotifier.value;
+    final index = list.indexWhere((c) => c.id == courseId);
+    if (index != -1) {
+      final course = list[index];
+      final lessonIndex = course.lecciones.indexWhere((l) => l.id == updatedLesson.id);
+      if (lessonIndex != -1) {
+        final newLessons = List<LeccionModel>.from(course.lecciones);
+        newLessons[lessonIndex] = updatedLesson;
+        
+        final updatedCourse = course.copyWith(lecciones: newLessons);
+        final newList = List<CursoModel>.from(list);
+        newList[index] = updatedCourse;
+        coursesNotifier.value = newList;
+        _saveToLocalDB();
+      }
+    }
+  }
+
+  void addChapterToLesson(String courseId, String lessonId, CapituloModel chapter) {
+    final list = coursesNotifier.value;
+    final index = list.indexWhere((c) => c.id == courseId);
+    if (index != -1) {
+      final course = list[index];
+      final lessonIndex = course.lecciones.indexWhere((l) => l.id == lessonId);
+      if (lessonIndex != -1) {
+        final lesson = course.lecciones[lessonIndex];
+        final updatedLesson = lesson.copyWith(
+          capitulos: [...lesson.capitulos, chapter],
+        );
+        final newLessons = List<LeccionModel>.from(course.lecciones);
+        newLessons[lessonIndex] = updatedLesson;
+        
+        final updatedCourse = course.copyWith(lecciones: newLessons);
+        final newList = List<CursoModel>.from(list);
+        newList[index] = updatedCourse;
+        coursesNotifier.value = newList;
+        _saveToLocalDB();
+      }
+    }
+  }
+
+  void updateCourseState() {
+     // A handy method when nested things are mutated
+     coursesNotifier.value = List.from(coursesNotifier.value);
+     _saveToLocalDB();
   }
 
   void removeCourse(String id) {
     coursesNotifier.value =
         coursesNotifier.value.where((c) => c.id != id).toList();
+    _saveToLocalDB();
   }
 
   void clear() {
     coursesNotifier.value = [];
+    _saveToLocalDB();
   }
 }
