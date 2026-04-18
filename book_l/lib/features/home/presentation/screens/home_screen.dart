@@ -1,9 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../leccion/presentation/controller/leccion_controller.dart';
+import '../../../leccion/domain/entities/leccion.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _leccionCtrl = LeccionController();
+
+  @override
+  void initState() {
+    super.initState();
+    _leccionCtrl.cargarLecciones();
+  }
+
+  @override
+  void dispose() {
+    _leccionCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,39 +71,36 @@ class HomeScreen extends StatelessWidget {
                       _buildRachaCard(),
                       const SizedBox(height: 24),
 
-                      // Lista de Materiales
-                      _buildMaterialCard(
-                        context: context,
-                        title: 'Vectores Bidimencionales',
-                        categoryLabel: 'Cálculo diferencial',
-                        badgeLabel: 'Nuevo',
-                        badgeColor: const Color(0xFFF6B55C),
-                        imageUrl:
-                            'http://localhost:3845/assets/8c82a4b652fc817b4e269031a428e684d5d7d999.png',
+                      // Lecciones desde el servicio JSON
+                      ListenableBuilder(
+                        listenable: _leccionCtrl,
+                        builder: (context, _) {
+                          final state = _leccionCtrl.state;
+                          if (state.isLoading) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                  color: Color(0xFF4DC130)),
+                            );
+                          }
+                          final lecciones = state.items
+                              .where((l) => l.estado == 'activa')
+                              .toList();
+                          if (lecciones.isEmpty) {
+                            return const SizedBox();
+                          }
+                          return Column(
+                            children: lecciones
+                                .map((l) => Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 20),
+                                      child: _buildLeccionCard(
+                                          context: context, leccion: l),
+                                    ))
+                                .toList(),
+                          );
+                        },
                       ),
-                      const SizedBox(height: 20),
-                      _buildMaterialCard(
-                        context: context,
-                        title: 'Tipo de leyes en Colombia',
-                        categoryLabel: 'Derecho',
-                        badgeLabel: 'Derecho',
-                        badgeColor: const Color(0xFFFF606F),
-                        imageUrl:
-                            'http://localhost:3845/assets/c2656cc2eff92737828dbe3c8a53f7a960cf56d3.png',
-                      ),
-                      const SizedBox(height: 20),
-                      _buildMaterialCard(
-                        context: context,
-                        title: 'Vectores Bidimencionales',
-                        categoryLabel: 'Cálculo diferencial',
-                        badgeLabel: 'Nuevo',
-                        badgeColor: const Color(0xFFF6B55C),
-                        imageUrl:
-                            'http://localhost:3845/assets/8c82a4b652fc817b4e269031a428e684d5d7d999.png',
-                      ),
-                      const SizedBox(
-                        height: 100,
-                      ), // Espacio para el bottom nav bar
+                      const SizedBox(height: 100),
                     ],
                   ),
                 ),
@@ -285,129 +303,97 @@ class HomeScreen extends StatelessWidget {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Tarjeta de Material (Cursos)
+  // Tarjeta de Lección (datos reales del servicio)
   // ─────────────────────────────────────────────────────────────────────────
-  Widget _buildMaterialCard({
+  Widget _buildLeccionCard({
     required BuildContext context,
-    required String title,
-    required String categoryLabel,
-    required String badgeLabel,
-    required Color badgeColor,
-    required String imageUrl,
+    required Leccion leccion,
   }) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, '/leccion_detail'),
+      onTap: () => Navigator.pushNamed(
+        context,
+        '/leccion_detail',
+        arguments: leccion.idLeccion,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Contenedor de Imagen con Labels
           Container(
             height: 180,
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              color: const Color(0xFFD9D9D9), // Placeholder color
-              image: DecorationImage(
-                image: NetworkImage(imageUrl),
-                fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                  Colors.black.withOpacity(0.05),
-                  BlendMode.darken,
-                ),
-              ),
+              color: const Color(0xFFD9D9D9),
             ),
             child: Stack(
               children: [
-                // Categoría (Top Left)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF4DC130), Color(0xFF3AAA26)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(Icons.menu_book_rounded,
+                        color: Colors.white.withOpacity(0.25), size: 80),
+                  ),
+                ),
+                // Estado badge
                 Positioned(
                   top: 12,
                   left: 12,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
+                        horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFF4DC130),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      categoryLabel,
+                      leccion.estado ?? 'Lección',
                       style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
-                // Badge (Top Right)
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: badgeColor,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      badgeLabel,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                // Icono Favorito (Bottom Right)
                 const Positioned(
                   bottom: 12,
                   right: 12,
-                  child: Icon(
-                    Icons.favorite_border,
-                    color: Color(0xFFFF606F),
-                    size: 28,
-                  ),
+                  child: Icon(Icons.favorite_border,
+                      color: Color(0xFFFF606F), size: 28),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 10),
-
-          // Título y Rating
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Text(
-                  title,
+                  leccion.nombre,
                   style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Row(
-                children: [
-                  Icon(Icons.star, color: Color(0xFFF6B55C), size: 18),
-                  SizedBox(width: 4),
-                  Text(
-                    '4.9',
+              const Row(children: [
+                Icon(Icons.star, color: Color(0xFFF6B55C), size: 18),
+                SizedBox(width: 4),
+                Text('4.9',
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87)),
+              ]),
             ],
           ),
         ],

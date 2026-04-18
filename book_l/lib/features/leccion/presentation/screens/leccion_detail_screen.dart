@@ -3,11 +3,16 @@ import '../../../../shared/widgets/nav_bar.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
+import '../controller/leccion_controller.dart';
+import '../../domain/entities/capitulo.dart';
 
 enum CapituloStatus { completed, inProgress, locked }
 
 class LeccionDetailScreen extends StatefulWidget {
-  const LeccionDetailScreen({super.key});
+  /// ID de la lección a mostrar. Si es null muestra datos placeholder.
+  final int? idLeccion;
+
+  const LeccionDetailScreen({super.key, this.idLeccion});
 
   @override
   State<LeccionDetailScreen> createState() => _LeccionDetailScreenState();
@@ -15,6 +20,22 @@ class LeccionDetailScreen extends StatefulWidget {
 
 class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
   int _selectedTab = 0; // 0: Contenido, 1: Ejercicios, 2: Discusión
+  final LeccionController _ctrl = LeccionController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.idLeccion != null) {
+      _ctrl.seleccionarLeccion(widget.idLeccion!);
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -359,24 +380,33 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
         const Text('Capítulos',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 14),
-        _buildCapituloItem(
-          status: CapituloStatus.completed,
-          title: '¿Qué son las derivadas?',
-          duration: '15 minutos',
-        ),
-        const SizedBox(height: 12),
-        _buildCapituloItem(
-          status: CapituloStatus.inProgress,
-          title: '¿Qué son las derivadas?',
-          duration: '15 minutos',
-          number: 3,
-        ),
-        const SizedBox(height: 12),
-        _buildCapituloItem(
-          status: CapituloStatus.locked,
-          title: '¿Qué son las derivadas?',
-          duration: '15 minutos',
-          number: 4,
+        ListenableBuilder(
+          listenable: _ctrl,
+          builder: (context, _) {
+            final caps = _ctrl.capitulosDeLeccion;
+            if (caps.isEmpty) {
+              // Placeholder visual mientras no hay lección seleccionada
+              return _buildCapitulosPlaceholder();
+            }
+            return Column(
+              children: [
+                for (int i = 0; i < caps.length; i++) ...[
+                  _buildCapituloItem(
+                    status: i == 0
+                        ? CapituloStatus.completed
+                        : i == 1
+                            ? CapituloStatus.inProgress
+                            : CapituloStatus.locked,
+                    title: caps[i].nombre,
+                    duration: _formatDuracion(caps[i].tiempoTotal),
+                    number: i + 1,
+                    capitulo: caps[i],
+                  ),
+                  if (i < caps.length - 1) const SizedBox(height: 12),
+                ],
+              ],
+            );
+          },
         ),
         const SizedBox(height: 32),
 
@@ -405,11 +435,38 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
     );
   }
 
+  // Convierte segundos a texto legible (ej: 900 → "15 min")
+  String _formatDuracion(int segundos) {
+    if (segundos < 60) return '$segundos seg';
+    final mins = segundos ~/ 60;
+    if (mins < 60) return '$mins min';
+    final horas = mins ~/ 60;
+    final resto = mins % 60;
+    return resto == 0 ? '${horas}h' : '${horas}h ${resto}min';
+  }
+
+  // Placeholder cuando la lección aún no se ha cargado
+  Widget _buildCapitulosPlaceholder() {
+    return Column(
+      children: List.generate(3, (i) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Container(
+          height: 72,
+          decoration: BoxDecoration(
+            color: const Color(0xFFD9D9D9),
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      )),
+    );
+  }
+
   Widget _buildCapituloItem({
     required CapituloStatus status,
     required String title,
     required String duration,
     int? number,
+    Capitulo? capitulo,
   }) {
     bool isLocked = status == CapituloStatus.locked;
     bool isInProgress = status == CapituloStatus.inProgress;

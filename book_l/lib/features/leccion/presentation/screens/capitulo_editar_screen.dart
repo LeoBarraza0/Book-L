@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import '../widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
+import '../controller/leccion_controller.dart';
+import '../../domain/entities/capitulo.dart';
 
 class CapituloEditarScreen extends StatefulWidget {
-  const CapituloEditarScreen({super.key});
+  /// ID del capítulo a editar. Si es null se crea uno nuevo.
+  final int? idCapitulo;
+  /// ID de la lección padre (requerido si se crea un capítulo nuevo).
+  final int? idLeccion;
+
+  const CapituloEditarScreen({super.key, this.idCapitulo, this.idLeccion});
 
   @override
   State<CapituloEditarScreen> createState() => _CapituloEditarScreenState();
@@ -13,6 +20,10 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
     with TickerProviderStateMixin {
   final _scrollCtrl = ScrollController();
   final List<SeccionData> _secciones = [];
+  final _nombreCtrl = TextEditingController();
+  final _ctrl = LeccionController();
+  Capitulo? _capituloActual;
+  bool _guardando = false;
 
   // Animación de entrada del header
   late AnimationController _headerAnimCtrl;
@@ -26,6 +37,18 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
   @override
   void initState() {
     super.initState();
+
+    // Cargar datos del capítulo si viene un ID
+    if (widget.idCapitulo != null) {
+      _ctrl.obtenerCapitulo(widget.idCapitulo!).then((cap) {
+        if (cap != null && mounted) {
+          setState(() {
+            _capituloActual = cap;
+            _nombreCtrl.text = cap.nombre;
+          });
+        }
+      });
+    }
 
     // Header: fade + slide desde arriba
     _headerAnimCtrl = AnimationController(
@@ -72,6 +95,8 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
   @override
   void dispose() {
     _scrollCtrl.dispose();
+    _nombreCtrl.dispose();
+    _ctrl.dispose();
     _headerAnimCtrl.dispose();
     _guardarAnimCtrl.dispose();
     for (final s in _secciones) {
@@ -456,40 +481,64 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
       child: SizedBox(
         width: double.infinity,
         child: _GuardarButton(
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.white),
-                    SizedBox(width: 10),
-                    Text(
-                      'Capítulo guardado exitosamente',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                backgroundColor: const Color(0xFF4DC130),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          },
+          onTap: _guardando ? null : _guardar,
         ),
       ),
     );
   }
+
+  Future<void> _guardar() async {
+    final nombre = _nombreCtrl.text.trim().isNotEmpty
+        ? _nombreCtrl.text.trim()
+        : (_capituloActual?.nombre ?? 'Capítulo sin nombre');
+
+    setState(() => _guardando = true);
+    try {
+      if (_capituloActual != null) {
+        // Edición
+        await _ctrl.editarCapitulo(
+          _capituloActual!.copyWith(nombre: nombre),
+        );
+      } else {
+        // Creación nueva
+        final idLeccion = widget.idLeccion ?? 1;
+        await _ctrl.agregarCapitulo(
+          idLeccion: idLeccion,
+          nombre: nombre,
+        );
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 10),
+                Text(
+                  'Capítulo guardado exitosamente',
+                  style: TextStyle(
+                      fontFamily: 'Inter', fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF4DC130),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } finally {
+      if (mounted) setState(() => _guardando = false);
+    }
+  }
 }
 
 class _GuardarButton extends StatefulWidget {
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   const _GuardarButton({required this.onTap});
 
   @override
@@ -523,12 +572,14 @@ class _GuardarButtonState extends State<_GuardarButton>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) => _ctrl.forward(),
-      onTapUp: (_) {
-        _ctrl.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _ctrl.reverse(),
+      onTapDown: widget.onTap != null ? (_) => _ctrl.forward() : null,
+      onTapUp: widget.onTap != null
+          ? (_) {
+              _ctrl.reverse();
+              widget.onTap!();
+            }
+          : null,
+      onTapCancel: widget.onTap != null ? () => _ctrl.reverse() : null,
       child: ScaleTransition(
         scale: _scale,
         child: Container(

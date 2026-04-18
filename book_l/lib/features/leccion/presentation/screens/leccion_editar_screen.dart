@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
+import '../controller/leccion_controller.dart';
+import '../../domain/entities/leccion.dart';
 
 class LeccionEditarScreen extends StatefulWidget {
-  const LeccionEditarScreen({super.key});
+  final int? idLeccion;
+  const LeccionEditarScreen({super.key, this.idLeccion});
 
   @override
   State<LeccionEditarScreen> createState() => _LeccionEditarScreenState();
@@ -14,9 +17,12 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
     with TickerProviderStateMixin {
   // ── Estado ─────────────────────────────────────────────────────────────────
   int _selectedTab = 0; // 0: Contenido, 1: Ejercicios, 2: Discusión
-  final _tituloCtrl = TextEditingController(text: 'Ejemplo De Lección');
+  final _tituloCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   final List<SeccionData> _secciones = [];
+  final _leccionCtrl = LeccionController();
+  Leccion? _leccionActual;
+  bool _guardando = false;
 
   // Animación de entrada del header
   late AnimationController _headerAnimCtrl;
@@ -30,6 +36,19 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
   @override
   void initState() {
     super.initState();
+
+    // Cargar lección existente si viene ID
+    if (widget.idLeccion != null) {
+      _leccionCtrl.seleccionarLeccion(widget.idLeccion!).then((_) {
+        final l = _leccionCtrl.state.selected;
+        if (l != null && mounted) {
+          setState(() {
+            _leccionActual = l;
+            _tituloCtrl.text = l.nombre;
+          });
+        }
+      });
+    }
 
     // Header: fade + slide desde arriba
     _headerAnimCtrl = AnimationController(
@@ -72,6 +91,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
   void dispose() {
     _tituloCtrl.dispose();
     _scrollCtrl.dispose();
+    _leccionCtrl.dispose();
     _headerAnimCtrl.dispose();
     _guardarAnimCtrl.dispose();
     for (final s in _secciones) {
@@ -549,35 +569,45 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
       child: SizedBox(
         width: double.infinity,
         child: _GuardarButton(
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.white),
-                    SizedBox(width: 10),
-                    Text(
-                      'Lección guardada exitosamente',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                backgroundColor: const Color(0xFF4DC130),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          },
+          onTap: _guardando ? null : _guardar,
         ),
       ),
     );
+  }
+
+  Future<void> _guardar() async {
+    final nombre = _tituloCtrl.text.trim();
+    if (nombre.isEmpty) return;
+    setState(() => _guardando = true);
+    try {
+      if (_leccionActual != null) {
+        await _leccionCtrl.editarLeccion(
+          _leccionActual!.copyWith(nombre: nombre),
+        );
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text('Lección guardada exitosamente',
+                  style: TextStyle(
+                      fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+            ]),
+            backgroundColor: const Color(0xFF4DC130),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } finally {
+      if (mounted) setState(() => _guardando = false);
+    }
   }
 }
 
@@ -585,7 +615,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
 // Botón Guardar con animación de press propia
 // ─────────────────────────────────────────────────────────────────────────────
 class _GuardarButton extends StatefulWidget {
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   const _GuardarButton({required this.onTap});
 
   @override
@@ -619,12 +649,14 @@ class _GuardarButtonState extends State<_GuardarButton>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) => _ctrl.forward(),
-      onTapUp: (_) {
-        _ctrl.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _ctrl.reverse(),
+      onTapDown: widget.onTap != null ? (_) => _ctrl.forward() : null,
+      onTapUp: widget.onTap != null
+          ? (_) {
+              _ctrl.reverse();
+              widget.onTap!();
+            }
+          : null,
+      onTapCancel: widget.onTap != null ? () => _ctrl.reverse() : null,
       child: ScaleTransition(
         scale: _scale,
         child: Container(

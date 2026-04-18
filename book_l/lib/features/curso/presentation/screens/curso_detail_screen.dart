@@ -5,17 +5,34 @@ import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
 import '../../../leccion/presentation/screens/leccion_detail_screen.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
+import '../controller/curso_controller.dart';
 import 'curso_editar_screen.dart';
 
 class CursoDetailScreen extends StatefulWidget {
-  const CursoDetailScreen({super.key});
+  final int? idCurso;
+  const CursoDetailScreen({super.key, this.idCurso});
 
   @override
   State<CursoDetailScreen> createState() => _CursoDetailScreenState();
 }
 
 class _CursoDetailScreenState extends State<CursoDetailScreen> {
-  int _selectedTab = 0; // 0: Lecciones, 1: Ejercicios, 2: Discusión
+  int _selectedTab = 0;
+  final CursoController _ctrl = CursoController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.idCurso != null) {
+      _ctrl.seleccionarCurso(widget.idCurso!);
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -441,39 +458,40 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        _buildLeccionCard(
-          category: 'Cálculo diferencial',
-          categoryColor: const Color(0xFF6BC654),
-          title: 'Derivadas',
-          duration: '1 Hora',
-          rating: '4.9',
-          students: '1.200 estudiantes',
-          progress: 0.2, // 20%
-          imageUrl: 'https://picsum.photos/150/150?random=10', // Placeholder
-        ),
-        const SizedBox(height: 12),
-        _buildLeccionCard(
-          category: 'JAVA',
-          categoryColor: const Color(0xFF4DC130).withOpacity(0.8),
-          category2: 'P.O.O',
-          categoryColor2: const Color(0xFFFF606F).withOpacity(0.74),
-          title: 'Herencia',
-          duration: '1 Hora',
-          rating: '4.9',
-          students: '1.200 estudiantes',
-          progress: 0.2,
-          imageUrl: 'https://picsum.photos/150/150?random=11',
-        ),
-        const SizedBox(height: 12),
-        _buildLeccionCard(
-          category: 'Cálculo diferencial',
-          categoryColor: const Color(0xFFF6B55C).withOpacity(0.69),
-          title: 'Derivadas',
-          duration: '1 Hora',
-          rating: '4.9',
-          students: '1.200 estudiantes',
-          progress: 0.2,
-          imageUrl: 'https://picsum.photos/150/150?random=12',
+        ListenableBuilder(
+          listenable: _ctrl,
+          builder: (context, _) {
+            final lecciones = _ctrl.leccionesDeCurso;
+            if (lecciones.isEmpty) {
+              // Placeholder mientras carga o sin datos
+              return _buildLeccionCard(
+                category: 'Sin lecciones',
+                title: 'Aún no hay lecciones',
+                duration: '--',
+                rating: '--',
+                students: '--',
+                progress: 0,
+                imageUrl: '',
+              );
+            }
+            return Column(
+              children: [
+                for (final l in lecciones) ...[
+                  _buildLeccionCard(
+                    category: 'Lección',
+                    title: l.nombre,
+                    duration: '--',
+                    rating: '--',
+                    students: '--',
+                    progress: 0,
+                    imageUrl: '',
+                    idLeccion: l.idLeccion,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ],
+            );
+          },
         ),
       ],
     );
@@ -490,11 +508,12 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     required String students,
     required double progress,
     required String imageUrl,
+    int? idLeccion,
   }) {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        _slideRoute(const LeccionDetailScreen()),
+        _slideRoute(LeccionDetailScreen(idLeccion: idLeccion)),
       ),
       child: Container(
         padding: const EdgeInsets.symmetric(
