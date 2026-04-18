@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:book_l/shared/widgets/custom_button.dart';
 import 'package:book_l/shared/widgets/custom_text_field.dart';
+import 'package:book_l/shared/data/course_repository.dart';
+import 'package:book_l/shared/domain/models/curso_model.dart';
+import 'package:book_l/shared/domain/models/leccion_model.dart';
 
 class PublicarCursoScreen extends StatefulWidget {
   const PublicarCursoScreen({super.key});
@@ -14,6 +17,7 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
   final TextEditingController nombreController = TextEditingController();
   final TextEditingController descController = TextEditingController();
   final TextEditingController leccionesController = TextEditingController();
+  String? selectedCourseId; // NULL means new course
 
   @override
   void dispose() {
@@ -149,12 +153,24 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Lecciones Dropdown mockup
-                    CustomTextField(
-                      controller: leccionesController,
-                      label: 'Lecciones',
-                      hint: 'Seleccionar...',
-                      suffixIcon: const Icon(Icons.arrow_drop_down),
+                    // Lecciones Count Display (Real-time)
+                    ValueListenableBuilder<List<CursoModel>>(
+                      valueListenable: CourseRepository.instance.coursesNotifier,
+                      builder: (context, courses, _) {
+                        // Find the selected course
+                        final course = selectedCourseId != null 
+                            ? courses.firstWhere((c) => c.id == selectedCourseId)
+                            : null;
+                        final count = course?.lecciones.length ?? 0;
+                        
+                        return CustomTextField(
+                          controller: TextEditingController(text: selectedCourseId == null ? 'Sin lecciones' : '$count lecciones'),
+                          label: 'Lecciones',
+                          hint: 'Seleccionar...',
+                          readOnly: true,
+                          suffixIcon: const Icon(Icons.list),
+                        );
+                      },
                     ),
                     const SizedBox(height: 12),
 
@@ -230,10 +246,81 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
                     ),
                     const SizedBox(height: 40),
 
+                    // Selection for Existing Course
+                    const Text(
+                      'Asignar a Curso (Opcional)',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF858484),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    ValueListenableBuilder<List<CursoModel>>(
+                      valueListenable: CourseRepository.instance.coursesNotifier,
+                      builder: (context, courses, _) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9F9F9),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFEEEEEE)),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: selectedCourseId,
+                              hint: const Text('Nuevo Curso'),
+                              isExpanded: true,
+                              items: [
+                                const DropdownMenuItem(
+                                  value: null,
+                                  child: Text('Crear Nuevo Curso'),
+                                ),
+                                ...courses.map((c) => DropdownMenuItem(
+                                  value: c.id,
+                                  child: Text(c.titulo),
+                                )),
+                              ],
+                              onChanged: (val) => setState(() => selectedCourseId = val),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 40),
+
                     // Botón Publicar
                     CustomButton(
                       label: 'Publicar',
                       onPressed: () {
+                        final titulo = nombreController.text.trim();
+                        if (titulo.isEmpty) return;
+ 
+                        if (selectedCourseId == null) {
+                          // Create NEW Course
+                          final nuevoCurso = CursoModel(
+                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                            titulo: titulo,
+                            descripcion: descController.text.trim(),
+                            tags: const ['JAVA', 'OOP'],
+                            rating: 4.9,
+                            duracion: '1 Hora',
+                            estudiantes: 1200,
+                            progreso: 0.2,
+                            esNuevo: true,
+                            lecciones: [],
+                          );
+                          CourseRepository.instance.addCourse(nuevoCurso);
+                        } else {
+                          // Add LESSON to Existing Course
+                          final nuevaLeccion = LeccionModel(
+                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                            titulo: titulo,
+                            contenido: descController.text.trim(),
+                          );
+                          CourseRepository.instance.addLessonToCourse(selectedCourseId!, nuevaLeccion);
+                        }
+                        
                         Navigator.pushNamed(context, '/perfil');
                       },
                     ),

@@ -10,15 +10,28 @@ class CrearEjercicioPracticoScreen extends StatefulWidget {
   State<CrearEjercicioPracticoScreen> createState() => _CrearEjercicioPracticoScreenState();
 }
 
+class QuestionData {
+  final TextEditingController descController = TextEditingController();
+  final TextEditingController responseController = TextEditingController();
+  final TextEditingController correctOptionController = TextEditingController();
+
+  void dispose() {
+    descController.dispose();
+    responseController.dispose();
+    correctOptionController.dispose();
+  }
+}
+
 class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScreen> {
   final TextEditingController reqController = TextEditingController();
-  
-  // Dynamic question counts
-  int questionCount = 1;
+  List<QuestionData> questions = [QuestionData()];
 
   @override
   void dispose() {
     reqController.dispose();
+    for (var q in questions) {
+      q.dispose();
+    }
     super.dispose();
   }
 
@@ -91,13 +104,13 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                     const SizedBox(height: 30),
 
                     // Dynamic Question Blocks
-                    ...List.generate(questionCount, (index) => _buildQuestionBlock(index + 1)),
+                    ...List.generate(questions.length, (index) => _buildQuestionBlock(index)),
 
                     // Añadir Pregunta Dashed Box
                     GestureDetector(
                       onTap: () {
                         setState(() {
-                          questionCount++;
+                          questions.add(QuestionData());
                         });
                       },
                       child: Container(
@@ -165,14 +178,14 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
     );
   }
 
-  Widget _buildQuestionBlock(int number) {
+  Widget _buildQuestionBlock(int index) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 30.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Pregunta $number',
+            'Pregunta ${index + 1}',
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -195,9 +208,10 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                 ),
               ],
             ),
-            child: const TextField(
+            child: TextField(
+              controller: questions[index].descController,
               maxLines: null,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Descripción...',
                 hintStyle: TextStyle(color: Color(0xFF858484), fontWeight: FontWeight.bold),
                 border: InputBorder.none,
@@ -221,9 +235,10 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                 ),
               ],
             ),
-            child: const TextField(
+            child: TextField(
+              controller: questions[index].responseController,
               maxLines: null,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Respuesta...',
                 hintStyle: TextStyle(color: Color(0xFF858484), fontWeight: FontWeight.bold),
                 border: InputBorder.none,
@@ -266,9 +281,10 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                     ),
                   ),
                 ),
-                const Expanded(
+                Expanded(
                   child: TextField(
-                    decoration: InputDecoration(
+                    controller: questions[index].correctOptionController,
+                    decoration: const InputDecoration(
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(horizontal: 12),
                     ),

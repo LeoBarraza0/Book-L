@@ -3,6 +3,8 @@ import '../../../../shared/widgets/nav_bar.dart'; // Import from shared widgets
 import '../../../notificacion/presentation/screens/notificaciones_screen.dart';
 import 'package:book_l/shared/widgets/create_menu_modal.dart' as lib_modal;
 import 'editar_perfil.dart';
+import 'seguidores_screen.dart';
+import '../widgets/mis_cursos_section.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -30,9 +32,7 @@ class _PerfilScreenState extends State<PerfilScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFF4F7FB,
-      ), 
+      backgroundColor: const Color(0xFFF4F7FB),
       body: Stack(
         children: [
           // Background Gradient (Optional slight top blue blur as in Figma)
@@ -112,7 +112,8 @@ class _PerfilScreenState extends State<PerfilScreen>
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const NotificacionScreen(),
+                                    builder: (context) =>
+                                        const NotificacionScreen(),
                                   ),
                                 );
                               },
@@ -246,9 +247,30 @@ class _PerfilScreenState extends State<PerfilScreen>
                       children: [
                         _buildStatItem('Publicaciones', '0'),
                         Container(width: 1, height: 35, color: Colors.black12),
-                        _buildStatItem('Seguidores', '77'),
+                        _buildStatItem(
+                          'Seguidores',
+                          '77',
+                          // Working on followers and following UI
+
+                          //onTap: () => Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => const SeguidoresScreen(),
+                          //   ),
+                          // ),
+                        ),
                         Container(width: 1, height: 35, color: Colors.black12),
-                        _buildStatItem('Seguidos', '777'),
+                        _buildStatItem(
+                          'Seguidos',
+                          '777',
+                          // Please, be careful. Men are working on this building
+                          // onTap: () => Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => const SeguidoresScreen(),
+                          //   ),
+                          // ),
+                        ),
                       ],
                     ),
                   ),
@@ -307,8 +329,8 @@ class _PerfilScreenState extends State<PerfilScreen>
                   child: TabBarView(
                     controller: _tabController,
                     children: [
-                      // Grid Tab content (Empty state)
-                      _buildEmptyState(),
+                      // Tab 1: Access to Courses
+                      _buildCoursesAccess(),
                       // Favorite Tab
                       const Center(
                         child: Text(
@@ -337,86 +359,40 @@ class _PerfilScreenState extends State<PerfilScreen>
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Colors.black,
-          ),
-        ),
-      ],
+  Widget _buildCoursesAccess() {
+    return MisCursosSection(
+      onMisCursosTap: () {
+        Navigator.pushNamed(context, '/publicar_curso');
+      },
     );
   }
 
-  Widget _buildEmptyState() {
-    return SingleChildScrollView(
+  Widget _buildStatItem(String label, String value, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 30),
-          // Using an icon to mimic the teacher graphic
-          const Icon(
-            Icons.co_present_outlined,
-            size: 90,
-            color: Colors.black38,
-          ),
-          const SizedBox(height: 24),
-
-          const Text(
-            'Comparte conocimiento',
-            style: TextStyle(
-              fontSize: 22,
+          Text(
+            label,
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
               color: Colors.black,
             ),
           ),
-          const SizedBox(height: 12),
-
-          const Text(
-            'Cuando compartes algún dato, aparecerán en tu perfil',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.black87),
-          ),
-          const SizedBox(height: 16),
-
-          GestureDetector(
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return const lib_modal.CreateMenuModal();
-                },
-              );
-            },
-            child: const Text(
-              'Sumate al desarrollo académico de la libre',
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF4DC130), // Main green
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-                decorationColor: Color(0xFF4DC130),
-              ),
-            ),
-          ),
-
-          // Bottom padding to ensure the floating nav bar doesn't cover content
-          const SizedBox(height: 120),
         ],
       ),
     );
   }
+
 }

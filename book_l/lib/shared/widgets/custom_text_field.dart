@@ -11,6 +11,7 @@ class CustomTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final String? helperText;
   final bool isRequired;
+  final bool readOnly;
 
   const CustomTextField({
     super.key,
@@ -22,6 +23,7 @@ class CustomTextField extends StatelessWidget {
     this.suffixIcon,
     this.helperText,
     this.isRequired = false,
+    this.readOnly = false,
   });
 
   @override
@@ -72,6 +74,7 @@ class CustomTextField extends StatelessWidget {
           ),
           child: TextField(
             controller: controller,
+            readOnly: readOnly,
             keyboardType: keyboardType,
             obscureText: obscureText,
             style: const TextStyle(

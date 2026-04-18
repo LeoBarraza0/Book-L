@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:book_l/shared/widgets/custom_button.dart';
 import 'package:book_l/shared/widgets/custom_text_field.dart';
+import 'package:book_l/shared/domain/models/curso_model.dart';
+import 'package:book_l/shared/domain/models/leccion_model.dart';
+import 'package:book_l/shared/data/course_repository.dart';
 
 class PublicarLeccionScreen extends StatefulWidget {
   const PublicarLeccionScreen({super.key});
@@ -13,9 +16,8 @@ class PublicarLeccionScreen extends StatefulWidget {
 class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController descController = TextEditingController();
-  final TextEditingController cursoController = TextEditingController();
-  final TextEditingController savedExController = TextEditingController();
-
+  final TextEditingController cursoController = TextEditingController(); // Not used anymore
+  String? selectedCourseId;
   int chapterCount = 1;
 
   @override
@@ -23,7 +25,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
     nameController.dispose();
     descController.dispose();
     cursoController.dispose();
-    savedExController.dispose();
     super.dispose();
   }
 
@@ -170,11 +171,39 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
                     const SizedBox(height: 20),
 
                     // Combobox Curso
-                    CustomTextField(
-                      controller: cursoController,
-                      label: 'Curso',
-                      hint: 'Elige una opción...',
-                      suffixIcon: const Icon(Icons.arrow_drop_down),
+                    const Text(
+                      'Curso',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF858484),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    ValueListenableBuilder<List<CursoModel>>(
+                      valueListenable: CourseRepository.instance.coursesNotifier,
+                      builder: (context, courses, _) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9F9F9),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFEEEEEE)),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: selectedCourseId,
+                              hint: const Text('Elige una opción...'),
+                              isExpanded: true,
+                              items: courses.map((c) => DropdownMenuItem(
+                                value: c.id,
+                                child: Text(c.titulo),
+                              )).toList(),
+                              onChanged: (val) => setState(() => selectedCourseId = val),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 30),
                     // Dynamic Chapters
@@ -358,9 +387,10 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
 
                     // Ejercicios guardados
                     CustomTextField(
-                      controller: savedExController,
+                      controller: TextEditingController(),
                       label: 'Ejercicios guardados',
                       hint: 'Elige una opción...',
+                      readOnly: true,
                       suffixIcon: const Icon(Icons.arrow_drop_down),
                     ),
                     const SizedBox(height: 40),
@@ -368,7 +398,26 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
                     // Botón Final
                     CustomButton(
                       label: '¡Subir ya!',
-                      onPressed: () => Navigator.pushNamed(context, '/perfil'),
+                      onPressed: () {
+                        if (selectedCourseId == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Selecciona un curso')),
+                          );
+                          return;
+                        }
+                        
+                        final name = nameController.text.trim();
+                        if (name.isEmpty) return;
+
+                        final lesson = LeccionModel(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          titulo: name,
+                          contenido: descController.text.trim(),
+                        );
+
+                        CourseRepository.instance.addLessonToCourse(selectedCourseId!, lesson);
+                        Navigator.pushReplacementNamed(context, '/perfil');
+                      },
                     ),
                   ],
                 ),

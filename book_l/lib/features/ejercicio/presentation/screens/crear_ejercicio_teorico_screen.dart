@@ -238,6 +238,13 @@ class _CrearEjercicioTeoricoScreenState
               border: Border.all(color: const Color(0xFFEEEEEE)),
             ),
             child: TextField(
+              controller: letter == 'A'
+                  ? questions[questionIndex].optionAController
+                  : letter == 'B'
+                      ? questions[questionIndex].optionBController
+                      : letter == 'C'
+                          ? questions[questionIndex].optionCController
+                          : questions[questionIndex].optionDController,
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                 border: InputBorder.none,

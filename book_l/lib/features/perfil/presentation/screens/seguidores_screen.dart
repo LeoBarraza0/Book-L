@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'usuario_perfil_screen.dart';
 
 class SeguidoresScreen extends StatelessWidget {
   const SeguidoresScreen({super.key});
@@ -47,6 +48,7 @@ class SeguidoresScreen extends StatelessWidget {
                 itemCount: 15, // Followers Placeholder
                 itemBuilder: (context, index) {
                   return _buildSeguidorItem(
+                    context: context,
                     name: 'Usuario ${index + 1}',
                     username: '@user${index + 1}',
                     imageUrl:
@@ -63,87 +65,102 @@ class SeguidoresScreen extends StatelessWidget {
   }
 
   Widget _buildSeguidorItem({
+    required BuildContext context,
     required String name,
     required String username,
     required String imageUrl,
     required bool isFollowing,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            spreadRadius: 2,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            padding: const EdgeInsets.all(2), // Border
-            decoration: const BoxDecoration(
-              color: Color(0xFF4DC130), // Green border of image
-              shape: BoxShape.circle,
-            ),
-            child: CircleAvatar(
-              radius: 25,
-              backgroundColor: Colors.white,
-              backgroundImage: NetworkImage(imageUrl),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UsuarioPerfilScreen(
+              name: name,
+              username: username,
+              imageUrl: imageUrl,
             ),
           ),
-          const SizedBox(width: 15),
-
-          // Nombres
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
-                ),
-                Text(
-                  username,
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
-                ),
-              ],
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.08),
+              spreadRadius: 2,
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-
-          // Action Button
-          ElevatedButton(
-            onPressed: () {
-              // Logic to follow or unfollow
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isFollowing
-                  ? const Color(0xFFE3EFFC)
-                  : const Color(0xFF4DC130),
-              foregroundColor: isFollowing ? Colors.black87 : Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Avatar
+            Container(
+              padding: const EdgeInsets.all(2), // Border
+              decoration: const BoxDecoration(
+                color: Color(0xFF4DC130), // Green border of image
+                shape: BoxShape.circle,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-              minimumSize: const Size(0, 36),
+              child: CircleAvatar(
+                radius: 25,
+                backgroundColor: Colors.white,
+                backgroundImage: NetworkImage(imageUrl),
+              ),
             ),
-            child: Text(
-              isFollowing ? 'Siguiendo' : 'Seguir',
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            const SizedBox(width: 15),
+
+            // Nombres
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  Text(
+                    username,
+                    style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+
+            // Action Button
+            ElevatedButton(
+              onPressed: () {
+                // Logic to follow or unfollow
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isFollowing
+                    ? const Color(0xFFE3EFFC)
+                    : const Color(0xFF4DC130),
+                foregroundColor: isFollowing ? Colors.black87 : Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                minimumSize: const Size(0, 36),
+              ),
+              child: Text(
+                isFollowing ? 'Siguiendo' : 'Seguir',
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
