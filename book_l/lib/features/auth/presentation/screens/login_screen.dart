@@ -106,10 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 35),
 
           // Botón Ingresar — usa widget compartido
-          CustomButton(
-            label: 'Ingresar',
-            onPressed: _onLogin,
-          ),
+          CustomButton(label: 'Ingresar', onPressed: _onLogin),
           const SizedBox(height: 25),
 
           // ¿Olvidaste la contraseña?

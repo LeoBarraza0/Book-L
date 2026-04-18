@@ -3,8 +3,13 @@ import 'package:book_l/shared/widgets/create_menu_modal.dart' as lib_modal;
 
 class SharedBottomNavBar extends StatelessWidget {
   final int selectedIndex;
+  final String role;
 
-  const SharedBottomNavBar({super.key, this.selectedIndex = -1});
+  const SharedBottomNavBar({
+    super.key,
+    this.selectedIndex = -1,
+    this.role = 'user',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +36,11 @@ class SharedBottomNavBar extends StatelessWidget {
             isSelected: selectedIndex == 0,
             onTap: () {
               if (selectedIndex != 0) {
-                Navigator.pushReplacementNamed(context, '/home');
+                if (role == 'admin') {
+                  Navigator.pushReplacementNamed(context, '/admin_home');
+                } else {
+                  Navigator.pushReplacementNamed(context, '/home');
+                }
               }
             },
           ),
@@ -41,7 +50,12 @@ class SharedBottomNavBar extends StatelessWidget {
             isSelected: selectedIndex == 1,
             onTap: () {
               if (selectedIndex != 1) {
-                Navigator.pushReplacementNamed(context, '/busqueda');
+                if (role == 'admin') {
+                  // Aún no hay pantalla de búsqueda para admin, hacemos print o nada
+                  debugPrint('Buscar admin clickeado');
+                } else {
+                  Navigator.pushReplacementNamed(context, '/busqueda');
+                }
               }
             },
           ),
@@ -49,12 +63,17 @@ class SharedBottomNavBar extends StatelessWidget {
           // Botón Circular Central (+)
           GestureDetector(
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return const lib_modal.CreateMenuModal();
-                },
-              );
+              if (role == 'admin') {
+                 // Acciones de creación para admin si las hay
+                 debugPrint('Crear admin clickeado');
+              } else {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return const lib_modal.CreateMenuModal();
+                  },
+                );
+              }
             },
             child: Container(
               width: 50,
@@ -73,17 +92,25 @@ class SharedBottomNavBar extends StatelessWidget {
             isSelected: selectedIndex == 2,
             onTap: () {
               if (selectedIndex != 2) {
-                Navigator.pushReplacementNamed(context, '/perfil');
+                if (role == 'admin') {
+                  debugPrint('Perfil admin clickeado');
+                } else {
+                  Navigator.pushReplacementNamed(context, '/perfil');
+                }
               }
             },
           ),
           _buildNavItem(
             icon: Icons.bookmark_outline,
-            label: 'Booki',
+            label: 'Booki', // O tal vez Notificaciones/Guardados para admin
             isSelected: selectedIndex == 3,
             onTap: () {
               if (selectedIndex != 3) {
-                Navigator.pushReplacementNamed(context, '/chatbot');
+                if (role == 'admin') {
+                  debugPrint('Booki/Guardados admin clickeado');
+                } else {
+                  Navigator.pushReplacementNamed(context, '/chatbot');
+                }
               }
             },
           ),
@@ -115,11 +142,11 @@ class SharedBottomNavBar extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: isSelected
-                  ? const Color(0xFF4DC130)
-                  : const Color(0xFF676767),
+               fontSize: 11,
+               fontWeight: FontWeight.bold,
+               color: isSelected
+                   ? const Color(0xFF4DC130)
+                   : const Color(0xFF676767),
             ),
           ),
         ],
