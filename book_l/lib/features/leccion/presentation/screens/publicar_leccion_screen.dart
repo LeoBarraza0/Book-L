@@ -15,7 +15,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController descController = TextEditingController();
   final TextEditingController cursoController = TextEditingController();
-  final TextEditingController savedExController = TextEditingController();
 
   final List<String> _capitulos = ['Capítulo 1 - Introducción'];
 
@@ -24,159 +23,9 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
     nameController.dispose();
     descController.dispose();
     cursoController.dispose();
-    savedExController.dispose();
     super.dispose();
   }
 
-  void _mostrarOpcionesPrueba(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 48,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Agregar Prueba',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '¿Qué tipo de ejercicio deseas agregar?',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: Color(0xFF676767),
-                ),
-              ),
-              const SizedBox(height: 24),
-              _buildOpcionBottomSheet(
-                icon: Icons.quiz_outlined,
-                title: 'Crear Ejercicio Teórico',
-                subtitle: 'Opción múltiple, completar, verdadero/falso',
-                color: const Color(0xFF4DC130),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.pushNamed(context, '/crear_ejercicio_teorico');
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildOpcionBottomSheet(
-                icon: Icons.code,
-                title: 'Crear Ejercicio Práctico',
-                subtitle: 'Escribir y validar código',
-                color: const Color(0xFFFF606F),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.pushNamed(context, '/crear_ejercicio_practico');
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildOpcionBottomSheet(
-                icon: Icons.file_present_rounded,
-                title: 'Adjuntar Ejercicio Existente',
-                subtitle: 'Seleccionar del banco de ejercicios',
-                color: const Color(0xFFF6B55C),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Abriendo banco de ejercicios...'),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildOpcionBottomSheet({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                      color: Color(0xFF676767),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: color),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -391,31 +240,7 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
                     ),
                     const SizedBox(height: 40),
 
-                    // Añadir Ejercicio general de la lección
-                    const Text(
-                      'Añadir ejercicio',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    AgregarSeccionButton(
-                      titulo: 'Añadir Ejercicio',
-                      onTap: () => _mostrarOpcionesPrueba(context),
-                    ),
 
-                    const SizedBox(height: 30),
-
-                    // Ejercicios guardados
-                    CustomTextField(
-                      controller: savedExController,
-                      label: 'Ejercicios guardados',
-                      hint: 'Elige una opción...',
-                      suffixIcon: const Icon(Icons.arrow_drop_down),
-                    ),
                     const SizedBox(height: 40),
 
                     // Botón Final

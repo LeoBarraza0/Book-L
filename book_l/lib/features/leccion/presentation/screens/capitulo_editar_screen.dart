@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/widgets/nav_bar.dart';
 import '../widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
 
@@ -227,8 +226,7 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
           ),
           SafeArea(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -267,8 +265,6 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
       ),
     );
   }
-
-
 
   Widget _buildContenidoEditor() {
     return Column(
@@ -453,7 +449,6 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
       ),
     );
   }
-
 
   Widget _buildGuardarButton() {
     return ScaleTransition(
