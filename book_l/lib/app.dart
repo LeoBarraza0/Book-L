@@ -25,7 +25,6 @@ import 'features/curso/presentation/screens/curso_editar_screen.dart';
 import 'features/leccion/presentation/screens/leccion_editar_screen.dart';
 import 'features/leccion/presentation/screens/capitulo_editar_screen.dart';
 import 'features/usuarios/presentation/screens/usuarios_screen.dart';
-import 'features/usuarios/presentation/screens/edit_usuario_screen.dart';
 
 import 'core/storage/local_storage.dart';
 

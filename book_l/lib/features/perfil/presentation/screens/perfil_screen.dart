@@ -438,64 +438,6 @@ class _PerfilScreenState extends State<PerfilScreen>
     );
   }
 
-  Widget _buildEmptyState() {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 30),
-          // Using an icon to mimic the teacher graphic
-          const Icon(
-            Icons.co_present_outlined,
-            size: 90,
-            color: Colors.black38,
-          ),
-          const SizedBox(height: 24),
-
-          const Text(
-            'Comparte conocimiento',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          const Text(
-            'Cuando compartes algún dato, aparecerán en tu perfil',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.black87),
-          ),
-          const SizedBox(height: 16),
-
-          GestureDetector(
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return const lib_modal.CreateMenuModal();
-                },
-              );
-            },
-            child: const Text(
-              'Sumate al desarrollo académico de la libre',
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF4DC130), // Main green
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-                decorationColor: Color(0xFF4DC130),
-              ),
-            ),
-          ),
-
-          // Bottom padding to ensure the floating nav bar doesn't cover content
-          const SizedBox(height: 120),
-        ],
-      ),
-    );
-  }
 
 }
 
