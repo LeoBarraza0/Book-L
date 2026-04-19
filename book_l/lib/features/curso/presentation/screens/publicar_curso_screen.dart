@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/storage/local_storage.dart';
 import 'package:book_l/shared/widgets/custom_button.dart';
 import 'package:book_l/shared/widgets/custom_text_field.dart';
 import '../controller/curso_controller.dart';
@@ -260,6 +261,7 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
     setState(() => _guardando = true);
     try {
       await _cursoCtrl.agregarCurso(
+        idUsuario: AppSession().usuarioId ?? 1,
         nombre: nombre,
         introduccion: descController.text.trim().isEmpty
             ? null

@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/leccion.dart';
+import '../../../../shared/widgets/search_filter_bar.dart';
 
 class AdminLeccionScreen extends StatefulWidget {
   const AdminLeccionScreen({super.key});
@@ -16,7 +17,7 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
   final _leccionCtrl = LeccionController();
   String _query = '';
 
-  final List<String> _filtros = ['Todas', 'Recientes', 'Calificación', '...'];
+  final List<String> _filtros = ['Todas', 'Recientes', 'Calificación', 'Populares', 'Duración'];
   int _filtroSeleccionado = 0;
 
   @override
@@ -108,8 +109,20 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    _buildSearchBar(),
-                    _buildFiltros(),
+                    SearchFilterBar(
+                      searchController: _searchController,
+                      query: _query,
+                      onQueryChanged: (v) => setState(() => _query = v),
+                      onClear: () {
+                        setState(() {
+                          _searchController.clear();
+                          _query = '';
+                        });
+                      },
+                      filtros: _filtros,
+                      filtroSeleccionado: _filtroSeleccionado,
+                      onFiltroChanged: (index) => setState(() => _filtroSeleccionado = index),
+                    ),
                     Expanded(
                       child: ListenableBuilder(
                         listenable: _leccionCtrl,
@@ -164,105 +177,6 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
             child: SharedBottomNavBar(selectedIndex: -1),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFFD9D9D9),
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: const Color(0xFFD9D9D9)),
-              ),
-              child: TextField(
-                controller: _searchController,
-                cursorColor: const Color(0xFF5AB639),
-                style: const TextStyle(fontSize: 15),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  hintText: 'Buscar lección...',
-                  hintStyle: const TextStyle(color: Color(0xFF888888)),
-                  suffixIcon: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _searchController.clear();
-                        _query = '';
-                      });
-                    },
-                    child: const Icon(
-                      Icons.close,
-                      color: Color(0xFF888888),
-                      size: 18,
-                    ),
-                  ),
-                ),
-                onChanged: (v) => setState(() => _query = v),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFF5AB639),
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF5AB639), width: 2),
-            ),
-            child: const Icon(Icons.search, color: Colors.white, size: 22),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFiltros() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        children: _filtros.asMap().entries.map((entry) {
-          final index = entry.key;
-          final label = entry.value;
-          final isSelected = index == _filtroSeleccionado;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _filtroSeleccionado = index),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                height: 34,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? const Color(0xFF5AB639)
-                      : const Color(0xFFD9D9D9),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : const Color.fromARGB(255, 0, 0, 0),
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
       ),
     );
   }

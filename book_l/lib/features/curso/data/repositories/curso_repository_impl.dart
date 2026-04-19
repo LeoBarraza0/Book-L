@@ -42,6 +42,7 @@ class CursoRepositoryImpl implements CursoRepository {
   Future<void> addCurso(Curso curso) async {
     final nuevo = curso.copyWith(idCurso: _service.nextCursoId());
     _service.cursos.add(nuevo);
+    _service.notifyDataChanged();
   }
 
   // ── UPDATE ─────────────────────────────────────────────────────────────────
@@ -50,7 +51,10 @@ class CursoRepositoryImpl implements CursoRepository {
   Future<void> updateCurso(Curso curso) async {
     final index =
         _service.cursos.indexWhere((c) => c.idCurso == curso.idCurso);
-    if (index != -1) _service.cursos[index] = curso;
+    if (index != -1) {
+      _service.cursos[index] = curso;
+      _service.notifyDataChanged();
+    }
   }
 
   // ── DELETE ─────────────────────────────────────────────────────────────────
@@ -60,6 +64,7 @@ class CursoRepositoryImpl implements CursoRepository {
     _service.cursos.removeWhere((c) => c.idCurso == id);
     // Limpiar pivote
     _service.leccionesCursos.removeWhere((e) => e['id_curso'] == id);
+    _service.notifyDataChanged();
   }
 
   // ── PIVOTE M:N ────────────────────────────────────────────────────────────

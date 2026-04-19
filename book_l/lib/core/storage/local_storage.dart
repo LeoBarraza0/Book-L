@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Singleton de sesión activa — ÚNICA clase del proyecto que usa SharedPreferences.
@@ -21,6 +22,8 @@ class AppSession {
   static const _kPrograma = 'programa';
   static const _kTemaOscuro = 'tema_oscuro';
   static const _kIdioma = 'idioma';
+  static const _kSavedCursos = 'saved_cursos';
+  static const _kSavedLecciones = 'saved_lecciones';
 
   // ── Campos en memoria (cargados desde disco en init) ───────────────────────
   String? token;
@@ -34,6 +37,10 @@ class AppSession {
   late SharedPreferences _prefs;
   bool _initialized = false;
 
+  // Reactividad para los Favoritos
+  final ValueNotifier<Set<int>> savedCursos = ValueNotifier<Set<int>>({});
+  final ValueNotifier<Set<int>> savedLecciones = ValueNotifier<Set<int>>({});
+
   // ── Inicialización ─────────────────────────────────────────────────────────
   Future<void> init() async {
     if (_initialized) return;
@@ -46,6 +53,12 @@ class AppSession {
     programa = _prefs.getString(_kPrograma);
     temaOscuro = _prefs.getBool(_kTemaOscuro) ?? false;
     idioma = _prefs.getString(_kIdioma) ?? 'es';
+
+    final loadedCursos = _prefs.getStringList(_kSavedCursos) ?? [];
+    savedCursos.value = loadedCursos.map((e) => int.tryParse(e) ?? -1).where((id) => id != -1).toSet();
+
+    final loadedLecciones = _prefs.getStringList(_kSavedLecciones) ?? [];
+    savedLecciones.value = loadedLecciones.map((e) => int.tryParse(e) ?? -1).where((id) => id != -1).toSet();
 
     _initialized = true;
   }
@@ -90,6 +103,30 @@ class AppSession {
     }
   }
 
+  // ── Modificadores de Favoritos ─────────────────────────────────────────────
+  
+  void toggleSavedCurso(int idCurso) {
+    final current = Set<int>.from(savedCursos.value);
+    if (current.contains(idCurso)) {
+      current.remove(idCurso);
+    } else {
+      current.add(idCurso);
+    }
+    savedCursos.value = current;
+    _prefs.setStringList(_kSavedCursos, current.map((e) => e.toString()).toList());
+  }
+
+  void toggleSavedLeccion(int idLeccion) {
+    final current = Set<int>.from(savedLecciones.value);
+    if (current.contains(idLeccion)) {
+      current.remove(idLeccion);
+    } else {
+      current.add(idLeccion);
+    }
+    savedLecciones.value = current;
+    _prefs.setStringList(_kSavedLecciones, current.map((e) => e.toString()).toList());
+  }
+
   // ── Cerrar sesión ──────────────────────────────────────────────────────────
   Future<void> cerrarSesion() async {
     token = null;
@@ -102,5 +139,9 @@ class AppSession {
     await _prefs.remove(_kNombreCompleto);
     await _prefs.remove(_kRol);
     await _prefs.remove(_kPrograma);
+    await _prefs.remove(_kSavedCursos);
+    await _prefs.remove(_kSavedLecciones);
+    savedCursos.value = {};
+    savedLecciones.value = {};
   }
 }

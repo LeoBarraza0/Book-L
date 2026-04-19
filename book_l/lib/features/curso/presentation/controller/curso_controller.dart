@@ -69,14 +69,14 @@ class CursoController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── CREATE ─────────────────────────────────────────────────────────────────
-
   Future<void> agregarCurso({
+    required int idUsuario,
     required String nombre,
     String? introduccion,
   }) async {
     final nuevo = Curso(
       idCurso: 0, // el impl asigna el ID real
+      idUsuarioFk: idUsuario,
       nombre: nombre,
       introduccion: introduccion,
       estado: 'activo',

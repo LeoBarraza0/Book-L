@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../shared/widgets/book_l_header.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
+import '../controller/auth_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,18 +14,43 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _ctrl = AuthController();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
-  void _onLogin() {
-    // Te lleva directamente al HomeScreen por ahora
-    Navigator.pushReplacementNamed(context, '/home');
+  Future<void> _onLogin() async {
+    final correo = _emailController.text.trim();
+    final pass = _passwordController.text;
+
+    if (correo.isEmpty || pass.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Completa todos los campos')),
+      );
+      return;
+    }
+
+    final ok = await _ctrl.iniciarSesion(correo, pass);
+
+    if (!mounted) return;
+
+    if (ok) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_ctrl.errorMessage ?? 'Error al iniciar sesión'),
+          backgroundColor: const Color(0xFFFF5252),
+        ),
+      );
+      _ctrl.clearError();
+    }
   }
 
   @override
@@ -34,10 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ── Header reutilizable con logo ───────────────────────────
             const BookLHeader(height: 400),
-
-            // ── Formulario de login ────────────────────────────────────
             _buildForm(context),
           ],
         ),
@@ -64,7 +87,6 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Título
           const Text(
             'Iniciar Sesión',
             style: TextStyle(
@@ -78,7 +100,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 35),
 
-          // Campo correo — usa widget compartido
           CustomTextField(
             controller: _emailController,
             label: 'Ingresa tu correo:',
@@ -87,7 +108,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 22),
 
-          // Campo contraseña — usa widget compartido
           CustomTextField(
             controller: _passwordController,
             label: 'Ingrese su contraseña:',
@@ -105,11 +125,16 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 35),
 
-          // Botón Ingresar — usa widget compartido
-          CustomButton(label: 'Ingresar', onPressed: _onLogin),
+          // ── Botón Ingresar con estado de carga ─────────────────────────
+          ListenableBuilder(
+            listenable: _ctrl,
+            builder: (context, _) => CustomButton(
+              label: _ctrl.isLoading ? 'Ingresando...' : 'Ingresar',
+              onPressed: _ctrl.isLoading ? null : _onLogin,
+            ),
+          ),
           const SizedBox(height: 25),
 
-          // ¿Olvidaste la contraseña?
           const Text(
             '¿Olvidaste la contraseña?',
             style: TextStyle(
@@ -123,9 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 2),
 
           GestureDetector(
-            onTap: () {
-              // TODO: navegar a recuperar contraseña
-            },
+            onTap: () {},
             child: const Text(
               'Recuperar contraseña',
               style: TextStyle(
@@ -140,7 +163,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 28),
 
-          // ¿Aún no tienes cuenta? Regístrate
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
