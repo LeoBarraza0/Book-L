@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../domain/entities/usuarios.dart';
 
-class EditUsuarioScreen extends StatefulWidget {
-  final Usuario usuario;
-
-  const EditUsuarioScreen({super.key, required this.usuario});
+class AddUsuarioScreen extends StatefulWidget {
+  const AddUsuarioScreen({super.key});
 
   @override
-  State<EditUsuarioScreen> createState() => _EditUsuarioScreenState();
+  State<AddUsuarioScreen> createState() => _AddUsuarioScreenState();
 }
 
-class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
+class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
   late TextEditingController _nombreController;
   late TextEditingController _usernameController;
   late TextEditingController _correoController;
@@ -39,15 +37,12 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
   @override
   void initState() {
     super.initState();
-    _nombreController = TextEditingController(text: widget.usuario.nombreCompleto);
-    _usernameController = TextEditingController(text: widget.usuario.username);
-    _correoController = TextEditingController(text: widget.usuario.correo);
-    _passwordController = TextEditingController(text: widget.usuario.password);
-    _celularController = TextEditingController(text: widget.usuario.celular?.toString() ?? '');
-    _preferenciasController = TextEditingController(text: widget.usuario.preferencias ?? '');
-    _selectedDate = widget.usuario.nacimiento;
-    _selectedPrograma = widget.usuario.programa;
-    _selectedSemestre = widget.usuario.semestre;
+    _nombreController = TextEditingController();
+    _usernameController = TextEditingController();
+    _correoController = TextEditingController();
+    _passwordController = TextEditingController();
+    _celularController = TextEditingController();
+    _preferenciasController = TextEditingController();
   }
 
   @override
@@ -135,7 +130,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                         top: 80,
                         child: Center(
                           child: Text(
-                            'Editar Usuario',
+                            'Añadir Usuario',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 32,
@@ -308,8 +303,8 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
-                              final updatedUser = Usuario(
-                                idUsuario: widget.usuario.idUsuario,
+                              final newUser = Usuario(
+                                idUsuario: DateTime.now().millisecondsSinceEpoch,
                                 nombreCompleto: _nombreController.text,
                                 username: _usernameController.text,
                                 correo: _correoController.text,
@@ -319,11 +314,10 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                                 programa: _selectedPrograma,
                                 semestre: _selectedSemestre,
                                 preferencias: _preferenciasController.text,
-                                activo: widget.usuario.activo,
-                                rol: widget.usuario.rol,
-                                avatarUrl: widget.usuario.avatarUrl,
+                                activo: true,
+                                rol: 'User',
                               );
-                              Navigator.pop(context, updatedUser);
+                              Navigator.pop(context, newUser);
                             },
                             borderRadius: BorderRadius.circular(24.50),
                             child: Container(
@@ -402,6 +396,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
             child: DropdownButton<String>(
               isExpanded: true,
               value: value,
+              hint: const Text('Seleccionar...', style: TextStyle(fontSize: 14)),
               items: items.map((String item) {
                 return DropdownMenuItem<String>(
                   value: item,

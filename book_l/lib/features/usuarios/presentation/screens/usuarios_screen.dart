@@ -4,6 +4,7 @@ import '../widgets/search_bar_widget.dart';
 import '../widgets/filters_widget.dart';
 import '../../domain/entities/usuarios.dart';
 import 'edit_usuario_screen.dart';
+import 'add_usuario_screen.dart';
 
 class UsuariosScreen extends StatefulWidget {
   const UsuariosScreen({super.key});
@@ -216,7 +217,19 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
         padding: const EdgeInsets.only(
             bottom: 80.0), // Padding to avoid covering the nav bar
         child: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () async {
+            final newUser = await Navigator.push<Usuario>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AddUsuarioScreen(),
+              ),
+            );
+            if (newUser != null) {
+              setState(() {
+                _usuarios.add(newUser);
+              });
+            }
+          },
           backgroundColor: const Color(0xFF44BD32),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
@@ -354,13 +367,21 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                     const Color(0xFFF6B55C), // Naranja para editar en usuarios
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
-                  onTap: () {
-                    Navigator.push(
+                  onTap: () async {
+                    final updatedUser = await Navigator.push<Usuario>(
                       context,
                       MaterialPageRoute(
                         builder: (context) => EditUsuarioScreen(usuario: user),
                       ),
                     );
+                    if (updatedUser != null) {
+                      setState(() {
+                        final index = _usuarios.indexWhere((u) => u.idUsuario == user.idUsuario);
+                        if (index != -1) {
+                          _usuarios[index] = updatedUser;
+                        }
+                      });
+                    }
                   },
                   borderRadius: BorderRadius.circular(14),
                   splashColor: Colors.black.withValues(alpha: 0.18),
