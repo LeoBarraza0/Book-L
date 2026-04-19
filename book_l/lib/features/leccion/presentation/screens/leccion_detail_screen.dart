@@ -26,7 +26,9 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
   void initState() {
     super.initState();
     if (widget.idLeccion != null) {
-      _ctrl.seleccionarLeccion(widget.idLeccion!);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _ctrl.seleccionarLeccion(widget.idLeccion!);
+      });
     }
   }
 
@@ -51,60 +53,68 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
 
               // 2. Cuerpo del detalle
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 20,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTitleAndProgress(),
-                      const SizedBox(height: 24),
-                      
-                      _buildCursosAsociados(),
-                      const SizedBox(height: 28),
-                      
-                      _buildTabs(),
-                      const SizedBox(height: 24),
-                      
-                      // Render Dinámico según la Pestaña animado
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (child, animation) {
-                          return FadeTransition(opacity: animation, child: child);
-                        },
-                        child: _selectedTab == 0
-                            ? Container(key: const ValueKey(0), child: _buildContenido())
-                            : _selectedTab == 1
-                                  ? const EjerciciosScreen(key: ValueKey(1))
-                                  : Container(
-                                      key: const ValueKey(2),
-                                      child: const DiscusionScreen(showRating: true),
-                                    ),
+                child: ListenableBuilder(
+                  listenable: _ctrl,
+                  builder: (context, _) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 20,
                       ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildTitleAndProgress(),
+                          const SizedBox(height: 24),
+                          
+                          _buildCursosAsociados(),
+                          const SizedBox(height: 28),
+                          
+                          _buildTabs(),
+                          const SizedBox(height: 24),
+                          
+                          // Render Dinámico según la Pestaña animado
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder: (child, animation) {
+                              return FadeTransition(opacity: animation, child: child);
+                            },
+                            child: _selectedTab == 0
+                                ? Container(key: const ValueKey(0), child: _buildContenido())
+                                : _selectedTab == 1
+                                      ? const EjerciciosScreen(key: ValueKey(1))
+                                      : Container(
+                                          key: const ValueKey(2),
+                                          child: const DiscusionScreen(showRating: true),
+                                        ),
+                          ),
 
-                      const SizedBox(
-                        height: 100,
-                      ), // Espacio extra para el NavBar Flotante
-                    ],
-                  ),
+                          const SizedBox(
+                            height: 100,
+                          ), // Espacio extra para el NavBar Flotante
+                        ],
+                      ),
+                    );
+                  }
                 ),
               ),
             ],
           ),
 
           // ── Input de Comentarios Flotante (Solo en pestaña Discusión) ──
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.fastOutSlowIn,
-            bottom: _selectedTab == 2 ? 110 : -60,
-            left: 20,
-            right: 20,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 400),
-              opacity: _selectedTab == 2 ? 1.0 : 0.0,
-              child: const ComentarioInput(),
+          ListenableBuilder(
+            listenable: _ctrl,
+            builder: (context, _) => AnimatedPositioned(
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.fastOutSlowIn,
+              bottom: _selectedTab == 2 ? 110 : -60,
+              left: 20,
+              right: 20,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 400),
+                opacity: _selectedTab == 2 ? 1.0 : 0.0,
+                child: const ComentarioInput(),
+              ),
             ),
           ),
 
@@ -182,6 +192,9 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
   }
 
   Widget _buildTitleAndProgress() {
+    final leccion = _ctrl.state.selected;
+    final titulo = leccion?.nombre ?? 'Cargando...';
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -190,9 +203,9 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Ejemplo De Lección',
-                style: TextStyle(
+              Text(
+                titulo,
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
@@ -207,7 +220,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                     child: Icon(Icons.person, color: Colors.white, size: 16),
                   ),
                   const SizedBox(width: 8),
-                  const Text('Ema Nuel',
+                  const Text('Autor_id', // TODO: Cargar autor real
                       style: TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 13)),
                   const SizedBox(width: 8),
@@ -217,7 +230,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                     decoration: BoxDecoration(
                         color: const Color(0xFF79AC63),
                         borderRadius: BorderRadius.circular(4)),
-                    child: const Text('Estudiante',
+                    child: const Text('Comunidad',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 9,

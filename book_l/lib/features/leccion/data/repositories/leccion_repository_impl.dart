@@ -37,6 +37,7 @@ class LeccionRepositoryImpl implements LeccionRepository {
   Future<void> addLeccion(Leccion leccion) async {
     final nueva = leccion.copyWith(idLeccion: _service.nextLeccionId());
     _service.lecciones.add(nueva);
+    _service.notifyDataChanged();
   }
 
   // ── UPDATE ─────────────────────────────────────────────────────────────────
@@ -45,7 +46,10 @@ class LeccionRepositoryImpl implements LeccionRepository {
   Future<void> updateLeccion(Leccion leccion) async {
     final index =
         _service.lecciones.indexWhere((l) => l.idLeccion == leccion.idLeccion);
-    if (index != -1) _service.lecciones[index] = leccion;
+    if (index != -1) {
+      _service.lecciones[index] = leccion;
+      _service.notifyDataChanged();
+    }
   }
 
   // ── DELETE ─────────────────────────────────────────────────────────────────
@@ -56,5 +60,6 @@ class LeccionRepositoryImpl implements LeccionRepository {
     // Cascada: eliminar capítulos y pivote asociados
     _service.capitulos.removeWhere((c) => c.idLeccion == id);
     _service.leccionesCursos.removeWhere((e) => e['id_leccion'] == id);
+    _service.notifyDataChanged();
   }
 }

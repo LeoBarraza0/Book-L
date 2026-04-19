@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/widgets/nav_bar.dart'; // Import from shared widgets
+import '../../../../shared/widgets/nav_bar.dart';
 import '../../../notificacion/presentation/screens/notificaciones_screen.dart';
 import 'package:book_l/shared/widgets/create_menu_modal.dart' as lib_modal;
 import 'editar_perfil.dart';
+import '../../../../core/services/bookl_service.dart';
+import '../../../../core/storage/local_storage.dart';
+import '../widgets/mis_contenidos_tab_widget.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -52,274 +55,290 @@ class _PerfilScreenState extends State<PerfilScreen>
 
           SafeArea(
             bottom: false,
-            child: Column(
-              children: [
-                const SizedBox(height: 10),
-                // Custom App Bar / Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Back button
-                      Container(
-                        decoration: const BoxDecoration(
-                          color: Color(
-                            0xFF88D288,
-                          ), // Lighter green for header buttons
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                          onPressed: () {
-                            if (Navigator.canPop(context)) {
-                              Navigator.pop(context);
-                            } else {
-                              Navigator.pushReplacementNamed(context, '/home');
-                            }
-                          },
-                        ),
-                      ),
-
-                      const Text(
-                        '@Manu7u7',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-
-                      // Notification bell with badge
-                      Stack(
-                        children: [
-                          Container(
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF88D288),
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              icon: const Icon(
-                                Icons.notifications_none,
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const NotificacionScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          Positioned(
-                            top: 4,
-                            right: 4,
-                            child: Container(
-                              width: 14,
-                              height: 14,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFA8E9E), // Pink dot
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(0xFFF4F7FB),
-                                  width: 2,
-                                ), // Matching background border
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                // Profile Information (Photo + Text)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Profile image with green border and + badge
-                      Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(
-                              5,
-                            ), // Border thickness
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF4DC130), // Solid green border
-                              shape: BoxShape.circle,
-                            ),
-                            child: CircleAvatar(
-                              radius: 45,
-                              backgroundColor: Colors.white,
-                              backgroundImage: NetworkImage(
-                                'https://i.pravatar.cc/150?img=11',
-                              ), // Placeholder photo
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 2,
-                            right: 2,
-                            child: Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE8AB52), // Orange yellow badge
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.add,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(width: 20),
-
-                      // Name and details
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Emanuel Barranco',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                            const Text(
-                              'Ing. Sistemas',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '"Natty my love, Sharay my universe ✨ "\npsdt. Freddy mala paga',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                // Stats Box
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(
-                        0xFF9CD19A,
-                      ), // Muted green matching the stats background
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      crossAxisAlignment: CrossAxisAlignment.center,
+            child: NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return <Widget>[
+                  SliverToBoxAdapter(
+                    child: Column(
                       children: [
-                        _buildStatItem('Publicaciones', '0'),
-                        Container(width: 1, height: 35, color: Colors.black12),
-                        _buildStatItem('Seguidores', '77'),
-                        Container(width: 1, height: 35, color: Colors.black12),
-                        _buildStatItem('Seguidos', '777'),
+                        const SizedBox(height: 10),
+                        // Custom App Bar / Header
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF88D288),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.arrow_back,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                  onPressed: () {
+                                    if (Navigator.canPop(context)) {
+                                      Navigator.pop(context);
+                                    } else {
+                                      Navigator.pushReplacementNamed(context, '/home');
+                                    }
+                                  },
+                                ),
+                              ),
+                              Text(
+                                '@${AppSession().nombreCompleto?.replaceAll(" ", "").toLowerCase() ?? 'usuario'}',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              // Notification bell with badge
+                              Stack(
+                                children: [
+                                  Container(
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF88D288),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.notifications_none,
+                                        color: Colors.white,
+                                        size: 28,
+                                      ),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const NotificacionScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 4,
+                                    right: 4,
+                                    child: Container(
+                                      width: 14,
+                                      height: 14,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFA8E9E), // Pink dot
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: const Color(0xFFF4F7FB),
+                                          width: 2,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+                        // Profile Information (Photo + Text)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF4DC130), // Solid green border
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const CircleAvatar(
+                                      radius: 45,
+                                      backgroundColor: Colors.white,
+                                      backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11'),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 2,
+                                    right: 2,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFE8AB52), // Orange yellow badge
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.add, color: Colors.white, size: 16),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 20),
+                              // Name and details
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      AppSession().nombreCompleto ?? 'Usuario',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    Text(
+                                      AppSession().programa ?? 'Estudiante',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '"Natty my love, Sharay my universe ✨ "\npsdt. Freddy mala paga',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                        height: 1.3,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+                        // Stats Box
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF9CD19A),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                _buildStatItem('Publicaciones', '0'),
+                                Container(width: 1, height: 35, color: Colors.black12),
+                                _buildStatItem('Seguidores', '77'),
+                                Container(width: 1, height: 35, color: Colors.black12),
+                                _buildStatItem('Seguidos', '777'),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        // Editar perfil button
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const EditarPerfil(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF9BCE97), // Light green
+                            foregroundColor: Colors.black,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 12,
+                            ),
+                          ),
+                          child: const Text(
+                            'Editar perfil',
+                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                          ),
+                        ),
+                        const SizedBox(height: 25),
                       ],
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Editar perfil button
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const EditarPerfil(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9BCE97), // Light green
-                    foregroundColor: Colors.black,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 12,
-                    ),
-                  ),
-                  child: const Text(
-                    'Editar perfil',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                // Tab Bar
-                TabBar(
-                  controller: _tabController,
-                  indicatorColor: const Color(0xFF4DC130),
-                  indicatorWeight: 4,
-                  labelColor: const Color(0xFF4DC130),
-                  unselectedLabelColor: Colors.grey,
-                  tabs: const [
-                    Tab(icon: Icon(Icons.grid_on, size: 30)),
-                    Tab(icon: Icon(Icons.favorite_border, size: 30)),
-                  ],
-                ),
-
-                // Divider under tabs
-                const Divider(height: 1, color: Colors.black12),
-
-                // Tab Views
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      // Grid Tab content (Empty state)
-                      _buildEmptyState(),
-                      // Favorite Tab
-                      const Center(
-                        child: Text(
-                          'Favoritos',
-                          style: TextStyle(color: Colors.grey),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _SliverAppBarDelegate(
+                      minHeight: 75.0,
+                      maxHeight: 75.0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF4F7FB),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, -4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            // Pestañita para arrastrar
+                            Center(
+                              child: Container(
+                                margin: const EdgeInsets.only(top: 10, bottom: 6),
+                                width: 40,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[400],
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                            // Tab Bar
+                            TabBar(
+                              controller: _tabController,
+                              indicatorColor: const Color(0xFF4DC130),
+                              indicatorWeight: 4,
+                              labelColor: const Color(0xFF4DC130),
+                              unselectedLabelColor: Colors.grey,
+                              tabs: const [
+                                Tab(icon: Icon(Icons.grid_on, size: 30)),
+                                Tab(icon: Icon(Icons.favorite_border, size: 30)),
+                              ],
+                            ),
+                            // Divider under tabs
+                            const Divider(height: 1, color: Colors.black12, thickness: 1),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
+                ];
+              },
+              body: Container(
+                color: const Color(0xFFF4F7FB),
+                child: TabBarView(
+                  controller: _tabController,
+                  children: const [
+                    // Grid Tab content
+                    MisContenidosTabWidget(),
+                    // Favorite Tab
+                    Center(
+                      child: Text(
+                        'Favoritos',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
 
@@ -419,4 +438,36 @@ class _PerfilScreenState extends State<PerfilScreen>
       ),
     );
   }
+
 }
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double maxHeight;
+  final double minHeight;
+
+  _SliverAppBarDelegate({
+    required this.child,
+    required this.maxHeight,
+    required this.minHeight,
+  });
+
+  @override
+  double get minExtent => minHeight;
+  
+  @override
+  double get maxExtent => maxHeight;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return maxHeight != oldDelegate.maxHeight ||
+        minHeight != oldDelegate.minHeight ||
+        child != oldDelegate.child;
+  }
+}
+

@@ -3,9 +3,30 @@
     "name": "Book-L",
     "version": "1.0.0"
   },
+  "usuarios": [
+    {
+      "id_usuario": 1,
+      "nombre_completo": "Emanuel Barranco",
+      "correo": "emanuel@bookl.com",
+      "contrasena": "1234",
+      "rol": "Profesor",
+      "programa": "Ingeniería de Sistemas",
+      "activo": true
+    },
+    {
+      "id_usuario": 2,
+      "nombre_completo": "Ana Lucía Torres",
+      "correo": "ana@bookl.com",
+      "contrasena": "1234",
+      "rol": "Estudiante",
+      "programa": "Ingeniería de Sistemas",
+      "activo": true
+    }
+  ],
   "cursos": [
     {
       "id_curso": 1,
+      "id_usuario_fk": 1,
       "nombre": "Matemáticas Discretas",
       "introduccion": "Fundamentos de lógica, conjuntos, combinatoria y grafos aplicados a la computación.",
       "estado": "activo",
@@ -14,6 +35,7 @@
     },
     {
       "id_curso": 2,
+      "id_usuario_fk": 1,
       "nombre": "Algoritmos y Programación",
       "introduccion": "Diseño, análisis e implementación de algoritmos fundamentales.",
       "estado": "activo",

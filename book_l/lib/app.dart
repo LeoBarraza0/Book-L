@@ -26,6 +26,8 @@ import 'features/leccion/presentation/screens/leccion_editar_screen.dart';
 import 'features/leccion/presentation/screens/capitulo_editar_screen.dart';
 
 
+import 'core/storage/local_storage.dart';
+
 class BookLApp extends StatelessWidget {
   const BookLApp({super.key});
 
@@ -51,7 +53,7 @@ class BookLApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4DC130)),
         useMaterial3: true,
       ),
-      initialRoute: '/login',
+      initialRoute: AppSession().estaLogueado ? '/home' : '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),

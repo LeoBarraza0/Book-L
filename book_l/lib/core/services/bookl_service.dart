@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 
+import '../../features/auth/data/dto/usuario_dto.dart';
+import '../../features/auth/domain/entities/usuario.dart';
 import '../../features/curso/data/dto/curso_dto.dart';
 import '../../features/curso/domain/entities/curso.dart';
 import '../../features/leccion/data/dto/capitulo_dto.dart';
@@ -16,16 +19,22 @@ import '../../features/leccion/domain/entities/material_educativo.dart';
 // Nunca importarlo directamente desde presentation/ ni desde domain/.
 //
 // Actúa como "base de datos en memoria" hasta migrar a API REST.
-class BooklService {
+class BooklService extends ChangeNotifier {
   // ── Singleton ──────────────────────────────────────────────────────────────
   static final BooklService _instance = BooklService._internal();
   factory BooklService() => _instance;
   BooklService._internal();
 
+  void notifyDataChanged() {
+    notifyListeners();
+  }
+
   // ── Estado ─────────────────────────────────────────────────────────────────
   bool _loaded = false;
 
   // ── "Tablas" en memoria ────────────────────────────────────────────────────
+  List<UsuarioDto> usuariosDto = []; // con contraseña — solo para auth
+  List<Usuario> usuarios = [];       // sin contraseña — exposición pública
   List<Curso> cursos = [];
   List<Leccion> lecciones = [];
   List<Capitulo> capitulos = [];
@@ -41,6 +50,11 @@ class BooklService {
 
     final raw = await rootBundle.loadString('assets/data/bookl_data.json');
     final data = json.decode(raw) as Map<String, dynamic>;
+
+    usuariosDto = (data['usuarios'] as List)
+        .map((e) => UsuarioDto.fromJson(e as Map<String, dynamic>))
+        .toList();
+    usuarios = usuariosDto.map((d) => d.toEntity()).toList();
 
     cursos = (data['cursos'] as List)
         .map((e) => CursoDto.fromJson(e as Map<String, dynamic>))
@@ -78,4 +92,5 @@ class BooklService {
   int nextLeccionId() => _nextId(lecciones, (l) => (l as Leccion).idLeccion);
   int nextCapituloId() =>
       _nextId(capitulos, (c) => (c as Capitulo).idCapitulo);
+  int nextUsuarioId() => _nextId(usuarios, (u) => (u as Usuario).idUsuario);
 }
