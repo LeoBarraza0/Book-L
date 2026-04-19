@@ -5,6 +5,7 @@ import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
+import '../../../../core/storage/local_storage.dart';
 
 enum CapituloStatus { completed, inProgress, locked }
 
@@ -52,51 +53,69 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
               SliverToBoxAdapter(child: _buildHeaderImage(context)),
 
               // 2. Cuerpo del detalle
+              // 2. Cuerpo del detalle superior a los tabs
               SliverToBoxAdapter(
                 child: ListenableBuilder(
-                  listenable: _ctrl,
-                  builder: (context, _) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 20,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildTitleAndProgress(),
-                          const SizedBox(height: 24),
-                          
-                          _buildCursosAsociados(),
-                          const SizedBox(height: 28),
-                          
-                          _buildTabs(),
-                          const SizedBox(height: 24),
-                          
-                          // Render Dinámico según la Pestaña animado
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            transitionBuilder: (child, animation) {
-                              return FadeTransition(opacity: animation, child: child);
-                            },
-                            child: _selectedTab == 0
-                                ? Container(key: const ValueKey(0), child: _buildContenido())
-                                : _selectedTab == 1
+                    listenable: _ctrl,
+                    builder: (context, _) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildTitleAndProgress(),
+                            const SizedBox(height: 24),
+                            _buildCursosAsociados(),
+                            const SizedBox(height: 28),
+                          ],
+                        ),
+                      );
+                    }),
+              ),
+              // 3. Tabs (Persistent Header)
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SliverAppBarDelegate(
+                  minHeight: 80.0, // 42 (tab height) + 24 (bottom padding) + top padding
+                  maxHeight: 80.0,
+                  child: Container(
+                    color: const Color(0xFFECEBEB),
+                    padding: const EdgeInsets.only(top: 14.0, bottom: 24.0, left: 20, right: 20),
+                    child: _buildTabs(),
+                  ),
+                ),
+              ),
+              // 4. Cuerpo dinámico debajo de los tabs
+              SliverToBoxAdapter(
+                child: ListenableBuilder(
+                    listenable: _ctrl,
+                    builder: (context, _) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          children: [
+                            // Render Dinámico según la Pestaña animado
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              transitionBuilder: (child, animation) {
+                                return FadeTransition(opacity: animation, child: child);
+                              },
+                              child: _selectedTab == 0
+                                  ? Container(key: const ValueKey(0), child: _buildContenido())
+                                  : _selectedTab == 1
                                       ? const EjerciciosScreen(key: ValueKey(1))
                                       : Container(
                                           key: const ValueKey(2),
                                           child: const DiscusionScreen(showRating: true),
                                         ),
-                          ),
-
-                          const SizedBox(
-                            height: 100,
-                          ), // Espacio extra para el NavBar Flotante
-                        ],
-                      ),
-                    );
-                  }
-                ),
+                            ),
+                            const SizedBox(
+                              height: 100,
+                            ), // Espacio extra para el NavBar Flotante
+                          ],
+                        ),
+                      );
+                    }),
               ),
             ],
           ),
@@ -166,7 +185,31 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                 children: [
                   _buildCircularIconButton(
                       Icons.arrow_back, () => Navigator.pop(context)),
-                  _buildCircularIconButton(Icons.share, () {}),
+                  Row(
+                    children: [
+                      ListenableBuilder(
+                        listenable: _ctrl,
+                        builder: (context, _) {
+                          final leccion = _ctrl.state.selected;
+                          if (leccion != null && leccion.idUsuarioFk == AppSession().usuarioId) {
+                            return Row(
+                              children: [
+                                _buildCircularIconButton(
+                                  Icons.edit_rounded,
+                                  () {
+                                    Navigator.pushNamed(context, '/editar_leccion', arguments: leccion.idLeccion);
+                                  },
+                                ),
+                                const SizedBox(width: 10),
+                              ],
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                      _buildCircularIconButton(Icons.share, () {}),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -185,6 +228,13 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFF6BCA54).withOpacity(0.9), // Más visible sobre imagen
           shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Icon(icon, color: Colors.white, size: 24),
       ),
@@ -653,5 +703,36 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
         ],
       ),
     );
+  }
+}
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final double minHeight;
+  final double maxHeight;
+  final Widget child;
+
+  _SliverAppBarDelegate({
+    required this.minHeight,
+    required this.maxHeight,
+    required this.child,
+  });
+
+  @override
+  double get minExtent => minHeight;
+
+  @override
+  double get maxExtent => maxHeight;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return maxHeight != oldDelegate.maxHeight ||
+        minHeight != oldDelegate.minHeight ||
+        child != oldDelegate.child;
   }
 }

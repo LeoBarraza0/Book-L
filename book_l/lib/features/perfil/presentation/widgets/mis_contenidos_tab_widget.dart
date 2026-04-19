@@ -136,7 +136,7 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
   Widget _buildLeccionCard(dynamic leccion, BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, '/editar_leccion', arguments: leccion.idLeccion);
+        Navigator.pushNamed(context, '/leccion_detail', arguments: leccion.idLeccion);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -255,7 +255,7 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
   Widget _buildCursoCard(dynamic curso, BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, '/editar_curso', arguments: curso.idCurso);
+        Navigator.pushNamed(context, '/curso_detail', arguments: curso.idCurso);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),

@@ -7,6 +7,7 @@ import '../../../leccion/presentation/screens/leccion_detail_screen.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
 import '../controller/curso_controller.dart';
 import 'curso_editar_screen.dart';
+import '../../../../core/storage/local_storage.dart';
 
 class CursoDetailScreen extends StatefulWidget {
   final int? idCurso;
@@ -45,22 +46,35 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
               SliverToBoxAdapter(child: _buildHeaderImage(context)),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 20,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildTitleAndProgress(),
                       const SizedBox(height: 24),
-
                       _buildStatsRow(),
                       const SizedBox(height: 24),
-
-                      _buildTabs(),
-                      const SizedBox(height: 24),
-
+                    ],
+                  ),
+                ),
+              ),
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SliverAppBarDelegate(
+                  minHeight: 80.0, // 42 tab height + 24 bottom padding + SafeArea/top padding
+                  maxHeight: 80.0,
+                  child: Container(
+                    color: const Color(0xFFECEBEB),
+                    padding: const EdgeInsets.only(top: 14.0, bottom: 24.0, left: 20, right: 20),
+                    child: _buildTabs(),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
                       // Render Dinámico según la Pestaña
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
@@ -71,14 +85,11 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                                 key: const ValueKey(0),
                                 child: _buildLeccionesContent(),
                               )
-                            : _selectedTab == 1
-                            ? const EjerciciosScreen(key: ValueKey(1))
                             : Container(
-                                key: const ValueKey(2),
+                                key: const ValueKey(1),
                                 child: _buildDiscusionContent(),
                               ),
                       ),
-
                       const SizedBox(height: 100), // Espacio para NavBar
                     ],
                   ),
@@ -90,12 +101,12 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           AnimatedPositioned(
             duration: const Duration(milliseconds: 500),
             curve: Curves.fastOutSlowIn,
-            bottom: _selectedTab == 2 ? 110 : -60,
+            bottom: _selectedTab == 1 ? 110 : -60,
             left: 20,
             right: 20,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 400),
-              opacity: _selectedTab == 2 ? 1.0 : 0.0,
+              opacity: _selectedTab == 1 ? 1.0 : 0.0,
               child: const ComentarioInput(),
             ),
           ),
@@ -146,12 +157,27 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                   ),
                   Row(
                     children: [
-                      _buildCircularIconButton(
-                        Icons.edit_rounded,
-                        () => Navigator.push(context, _slideRoute(const CursoEditarScreen())),
-                        color: const Color(0xFFFEB95C),
+                      ListenableBuilder(
+                        listenable: _ctrl,
+                        builder: (context, _) {
+                          final isOwner = _ctrl.state.selected?.idUsuarioFk == AppSession().usuarioId;
+                          if (isOwner) {
+                            return Row(
+                              children: [
+                                _buildCircularIconButton(
+                                  Icons.edit_rounded,
+                                  () => Navigator.push(context, _slideRoute(const CursoEditarScreen(
+                                    // TODO: pasar idCurso a la pantalla de edición si admite parámetro
+                                  ))),
+                                  color: const Color(0xFFFEB95C),
+                                ),
+                                const SizedBox(width: 10),
+                              ],
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
                       ),
-                      const SizedBox(width: 10),
                       _buildCircularIconButton(Icons.share, () {}),
                     ],
                   ),
@@ -386,8 +412,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
       child: Row(
         children: [
           _buildTabItem('Lecciones', 0),
-          _buildTabItem('Ejercicios', 1),
-          _buildTabItem('Discusión', 2),
+          _buildTabItem('Discusión', 1),
         ],
       ),
     );
@@ -681,3 +706,35 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     );
   }
 }
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final double minHeight;
+  final double maxHeight;
+  final Widget child;
+
+  _SliverAppBarDelegate({
+    required this.minHeight,
+    required this.maxHeight,
+    required this.child,
+  });
+
+  @override
+  double get minExtent => minHeight;
+
+  @override
+  double get maxExtent => maxHeight;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return maxHeight != oldDelegate.maxHeight ||
+        minHeight != oldDelegate.minHeight ||
+        child != oldDelegate.child;
+  }
+}
+
