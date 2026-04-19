@@ -8,6 +8,8 @@ class LeccionDto {
       nombre: json['nombre'] as String,
       contenido: (json['contenido'] as List<dynamic>?),
       estado: json['estado'] as String? ?? 'activa',
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
     );
   }
 
@@ -18,6 +20,8 @@ class LeccionDto {
       'nombre': leccion.nombre,
       'contenido': leccion.contenido,
       'estado': leccion.estado,
+      'created_at': leccion.createdAt?.toIso8601String(),
+      'updated_at': leccion.updatedAt?.toIso8601String(),
     };
   }
 }

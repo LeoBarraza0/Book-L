@@ -8,8 +8,11 @@ import '../../../../core/storage/local_storage.dart';
 import '../widgets/mis_contenidos_tab_widget.dart';
 import '../widgets/mis_favoritos_tab_widget.dart';
 
+import '../../../auth/domain/entities/usuario.dart';
+
 class PerfilScreen extends StatefulWidget {
-  const PerfilScreen({super.key});
+  final int? idUsuario;
+  const PerfilScreen({super.key, this.idUsuario});
 
   @override
   State<PerfilScreen> createState() => _PerfilScreenState();
@@ -18,11 +21,39 @@ class PerfilScreen extends StatefulWidget {
 class _PerfilScreenState extends State<PerfilScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  Usuario? _user;
+  bool _isOwnProfile = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadUserData();
+  }
+
+  void _loadUserData() {
+    final session = AppSession();
+    if (widget.idUsuario == null || widget.idUsuario == session.usuarioId) {
+      _isOwnProfile = true;
+      // Convert current session to a temporary Usuario object for UI consistency
+      _user = Usuario(
+        idUsuario: session.usuarioId ?? 0,
+        nombreCompleto: session.nombreCompleto ?? 'Usuario',
+        correo: '',
+        rol: session.rol ?? 'Estudiante',
+        programa: session.programa,
+        activo: true,
+      );
+    } else {
+      _isOwnProfile = false;
+      try {
+        _user = BooklService().usuarios.firstWhere(
+          (u) => u.idUsuario == widget.idUsuario,
+        );
+      } catch (e) {
+        _user = null;
+      }
+    }
   }
 
   @override
@@ -90,7 +121,7 @@ class _PerfilScreenState extends State<PerfilScreen>
                                 ),
                               ),
                               Text(
-                                '@${AppSession().nombreCompleto?.replaceAll(" ", "").toLowerCase() ?? 'usuario'}',
+                                '@${(_user?.nombreCompleto ?? 'usuario').replaceAll(" ", "").toLowerCase()}',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -186,7 +217,7 @@ class _PerfilScreenState extends State<PerfilScreen>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      AppSession().nombreCompleto ?? 'Usuario',
+                                      _user?.nombreCompleto ?? 'Usuario',
                                       style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
@@ -194,7 +225,7 @@ class _PerfilScreenState extends State<PerfilScreen>
                                       ),
                                     ),
                                     Text(
-                                      AppSession().programa ?? 'Estudiante',
+                                      _user?.programa ?? _user?.rol ?? 'Estudiante',
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey,
@@ -203,7 +234,9 @@ class _PerfilScreenState extends State<PerfilScreen>
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      '"Natty my love, Sharay my universe ✨ "\npsdt. Freddy mala paga',
+                                      _isOwnProfile 
+                                        ? '"Natty my love, Sharay my universe ✨ "\npsdt. Freddy mala paga'
+                                        : 'Bienvenido a mi perfil académico en Book-L.',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey[600],
@@ -226,47 +259,76 @@ class _PerfilScreenState extends State<PerfilScreen>
                               color: const Color(0xFF9CD19A),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                _buildStatItem('Publicaciones', '0'),
-                                Container(width: 1, height: 35, color: Colors.black12),
-                                _buildStatItem('Seguidores', '77'),
-                                Container(width: 1, height: 35, color: Colors.black12),
-                                _buildStatItem('Seguidos', '777'),
-                              ],
+                            child: ListenableBuilder(
+                              listenable: BooklService(),
+                              builder: (context, _) {
+                                final pubs = BooklService().cursos.where(
+                                  (c) => c.idUsuarioFk == _user?.idUsuario
+                                ).length;
+                                return Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    _buildStatItem('Publicaciones', pubs.toString()),
+                                    Container(width: 1, height: 35, color: Colors.black12),
+                                    _buildStatItem('Seguidores', '77'),
+                                    Container(width: 1, height: 35, color: Colors.black12),
+                                    _buildStatItem('Seguidos', '777'),
+                                  ],
+                                );
+                              },
                             ),
                           ),
                         ),
                         const SizedBox(height: 20),
                         // Editar perfil button
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const EditarPerfil(),
+                        if (_isOwnProfile)
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const EditarPerfil(),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF9BCE97), // Light green
+                              foregroundColor: Colors.black,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF9BCE97), // Light green
-                            foregroundColor: Colors.black,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 12,
+                              ),
                             ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32,
-                              vertical: 12,
+                            child: const Text(
+                              'Editar perfil',
+                              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                            ),
+                          )
+                        else
+                          ElevatedButton(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4DC130),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 12,
+                              ),
+                            ),
+                            child: const Text(
+                              'Seguir',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                             ),
                           ),
-                          child: const Text(
-                            'Editar perfil',
-                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                          ),
-                        ),
                         const SizedBox(height: 25),
                       ],
                     ),

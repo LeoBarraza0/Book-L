@@ -10,6 +10,8 @@ class CursoDto {
       nombre: json['nombre'] as String,
       contenido: (json['contenido'] as List<dynamic>?),
       estado: json['estado'] as String? ?? 'activo',
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
     );
   }
 
@@ -20,6 +22,8 @@ class CursoDto {
       'nombre': curso.nombre,
       'contenido': curso.contenido,
       'estado': curso.estado,
+      'created_at': curso.createdAt?.toIso8601String(),
+      'updated_at': curso.updatedAt?.toIso8601String(),
     };
   }
 }
