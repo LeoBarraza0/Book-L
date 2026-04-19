@@ -117,12 +117,11 @@ class AdminHomeScreen extends StatelessWidget {
           icon: Icons.menu_book,
           onTap: () => Navigator.pushNamed(context, '/admin_leccion'),
         ),
-        _buildActionCard(
-          context,
-          title: 'Usuarios',
-          color: const Color(0xFFFFB84E),
-          icon: Icons.person_outline,
-        ),
+        _buildActionCard(context,
+            title: 'Usuarios',
+            color: const Color(0xFFFFB84E),
+            icon: Icons.person_outline,
+            onTap: () => Navigator.pushNamed(context, '/users_admin')),
         _buildActionCard(
           context,
           title: 'Configuración',

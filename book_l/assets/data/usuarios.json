@@ -1,0 +1,44 @@
+[
+  {
+    "idUsuario": 1,
+    "nombreCompleto": "Arthur Barraza",
+    "correo": "arthurbr@gmail.com",
+    "password": "hashed_password_1",
+    "username": "arthurbr",
+    "celular": 3001234567,
+    "semestre": 8,
+    "nacimiento": "1998-05-15",
+    "programa": "Ingenieria de Sistemas",
+    "preferencias": "Me gusta la inteligencia artificial y el desarrollo móvil.",
+    "activo": true,
+    "avatarUrl": "https://i.pravatar.cc/150?u=1"
+  },
+  {
+    "idUsuario": 2,
+    "nombreCompleto": "Maria Lopez",
+    "correo": "marialopez@correo.unilibre.edu.co",
+    "password": "hashed_password_2",
+    "username": "mlopez",
+    "celular": 3109876543,
+    "semestre": 4,
+    "nacimiento": "2002-11-20",
+    "programa": "Psicologia",
+    "preferencias": "Interesada en psicología clínica y refuerzo académico.",
+    "activo": true,
+    "avatarUrl": "https://i.pravatar.cc/150?u=2"
+  },
+  {
+    "idUsuario": 3,
+    "nombreCompleto": "Juan Perez",
+    "correo": "jperez@gmail.com",
+    "password": "hashed_password_3",
+    "username": "jperez",
+    "celular": 3201112233,
+    "semestre": 10,
+    "nacimiento": "1997-01-05",
+    "programa": "Derecho",
+    "preferencias": "Enfoque en derecho penal y debates.",
+    "activo": false,
+    "avatarUrl": "https://i.pravatar.cc/150?u=3"
+  }
+]
