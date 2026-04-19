@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/widgets/nav_bar.dart';
 import '../widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
+import '../controller/leccion_controller.dart';
+import '../../domain/entities/capitulo.dart';
 
 class CapituloEditarScreen extends StatefulWidget {
-  const CapituloEditarScreen({super.key});
+  /// ID del capítulo a editar. Si es null se crea uno nuevo.
+  final int? idCapitulo;
+  /// ID de la lección padre (requerido si se crea un capítulo nuevo).
+  final int? idLeccion;
+
+  const CapituloEditarScreen({super.key, this.idCapitulo, this.idLeccion});
 
   @override
   State<CapituloEditarScreen> createState() => _CapituloEditarScreenState();
@@ -14,6 +20,10 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
     with TickerProviderStateMixin {
   final _scrollCtrl = ScrollController();
   final List<SeccionData> _secciones = [];
+  final _nombreCtrl = TextEditingController();
+  final _ctrl = LeccionController();
+  Capitulo? _capituloActual;
+  bool _guardando = false;
 
   // Animación de entrada del header
   late AnimationController _headerAnimCtrl;
@@ -27,6 +37,27 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
   @override
   void initState() {
     super.initState();
+
+    // Cargar datos del capítulo si viene un ID
+    if (widget.idCapitulo != null) {
+      _ctrl.obtenerCapitulo(widget.idCapitulo!).then((cap) {
+        if (cap != null && mounted) {
+          setState(() {
+            _capituloActual = cap;
+            _nombreCtrl.text = cap.nombre;
+
+            _secciones.clear();
+            if (cap.contenido != null && cap.contenido!.isNotEmpty) {
+              for (final s in cap.contenido!) {
+                _secciones.add(SeccionData.fromJson(s));
+              }
+            } else {
+              _secciones.add(SeccionData(titulo: 'Introducción'));
+            }
+          });
+        }
+      });
+    }
 
     // Header: fade + slide desde arriba
     _headerAnimCtrl = AnimationController(
@@ -57,22 +88,18 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
       () => _guardarAnimCtrl.forward(),
     );
 
-    // Secciones iniciales según Figma
-    _secciones.add(SeccionData(
-      titulo: 'Introducción',
-      cuerpo:
-          'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada .',
-    ));
-    _secciones.add(SeccionData(
-      titulo: '¿Qué son las derivadas?',
-      cuerpo:
-          'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean.',
-    ));
+    // Secciones iniciales si es nuevo
+    if (widget.idCapitulo == null) {
+      _secciones.add(SeccionData(
+        titulo: 'Introducción',
+      ));
+    }
   }
 
   @override
   void dispose() {
     _scrollCtrl.dispose();
+    _nombreCtrl.dispose();
     _headerAnimCtrl.dispose();
     _guardarAnimCtrl.dispose();
     for (final s in _secciones) {
@@ -227,8 +254,7 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
           ),
           SafeArea(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -267,8 +293,6 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
       ),
     );
   }
-
-
 
   Widget _buildContenidoEditor() {
     return Column(
@@ -454,47 +478,74 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
     );
   }
 
-
   Widget _buildGuardarButton() {
     return ScaleTransition(
       scale: _guardarScaleAnim,
       child: SizedBox(
         width: double.infinity,
         child: _GuardarButton(
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.white),
-                    SizedBox(width: 10),
-                    Text(
-                      'Capítulo guardado exitosamente',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                backgroundColor: const Color(0xFF4DC130),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          },
+          onTap: _guardando ? null : _guardar,
         ),
       ),
     );
   }
+
+  Future<void> _guardar() async {
+    final nombre = _nombreCtrl.text.trim().isNotEmpty
+        ? _nombreCtrl.text.trim()
+        : (_capituloActual?.nombre ?? 'Capítulo sin nombre');
+
+    setState(() => _guardando = true);
+    try {
+      if (_capituloActual != null) {
+        // Edición
+        await _ctrl.editarCapitulo(
+          _capituloActual!.copyWith(
+            nombre: nombre,
+            contenido: _secciones.map((s) => s.toJson()).toList(),
+          ),
+        );
+      } else {
+        // Creación nueva
+        final idLeccion = widget.idLeccion ?? 1;
+        await _ctrl.agregarCapitulo(
+          idLeccion: idLeccion,
+          nombre: nombre,
+          contenido: _secciones.map((s) => s.toJson()).toList(),
+        );
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 10),
+                Text(
+                  'Capítulo guardado exitosamente',
+                  style: TextStyle(
+                      fontFamily: 'Inter', fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF4DC130),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } finally {
+      if (mounted) setState(() => _guardando = false);
+    }
+  }
 }
 
 class _GuardarButton extends StatefulWidget {
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   const _GuardarButton({required this.onTap});
 
   @override
@@ -521,19 +572,20 @@ class _GuardarButtonState extends State<_GuardarButton>
 
   @override
   void dispose() {
-    _ctrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) => _ctrl.forward(),
-      onTapUp: (_) {
-        _ctrl.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _ctrl.reverse(),
+      onTapDown: widget.onTap != null ? (_) => _ctrl.forward() : null,
+      onTapUp: widget.onTap != null
+          ? (_) {
+              _ctrl.reverse();
+              widget.onTap!();
+            }
+          : null,
+      onTapCancel: widget.onTap != null ? () => _ctrl.reverse() : null,
       child: ScaleTransition(
         scale: _scale,
         child: Container(

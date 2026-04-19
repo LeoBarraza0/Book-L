@@ -1,0 +1,354 @@
+import 'package:flutter/material.dart';
+import '../../../../shared/widgets/nav_bar.dart';
+import '../../domain/entities/usuarios.dart';
+
+class EditUsuarioScreen extends StatefulWidget {
+  final Usuario usuario;
+
+  const EditUsuarioScreen({super.key, required this.usuario});
+
+  @override
+  State<EditUsuarioScreen> createState() => _EditUsuarioScreenState();
+}
+
+class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
+  late TextEditingController _nombreController;
+  late TextEditingController _correoController;
+  late TextEditingController _passwordController;
+  late TextEditingController _celularController;
+  late TextEditingController _preferenciasController;
+  
+  DateTime? _selectedDate;
+  String? _selectedPrograma;
+  int? _selectedSemestre;
+
+  final List<String> _programas = [
+    'Ingenieria de Sistemas',
+    'Ingenieria Industrial',
+    'Ingenieria Civil',
+    'Contaduria Publica',
+    'Administracion de Empresas',
+    'Derecho',
+    'Medicina',
+    'Psicologia',
+    'Enfermeria',
+    'Arquitectura'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _nombreController = TextEditingController(text: widget.usuario.nombreCompleto);
+    _correoController = TextEditingController(text: widget.usuario.correo);
+    _passwordController = TextEditingController(text: widget.usuario.password);
+    _celularController = TextEditingController(text: widget.usuario.celular?.toString() ?? '');
+    _preferenciasController = TextEditingController(text: widget.usuario.preferencias ?? '');
+    _selectedDate = widget.usuario.nacimiento;
+    _selectedPrograma = widget.usuario.programa;
+    _selectedSemestre = widget.usuario.semestre;
+  }
+
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _correoController.dispose();
+    _passwordController.dispose();
+    _celularController.dispose();
+    _preferenciasController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime(2000),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFFF1B440), // Yellow color from palette
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFECEBEB),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                // ── HEADER ────────────────────────────────────────────────
+                SizedBox(
+                  height: 200,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Image.asset(
+                          'assets/images/yellow_bg.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: topPadding + 8,
+                        left: 20,
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.arrow_back, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                      const Positioned(
+                        left: 0,
+                        right: 0,
+                        top: 80,
+                        child: Center(
+                          child: Text(
+                            'Editar Usuario',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontFamily: 'Baloo',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── CONTENIDO ─────────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      // Perfil: Avatar + Nombre
+                      Row(
+                        children: [
+                          Stack(
+                            children: [
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.person, size: 50, color: Colors.grey),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF44BD32),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.add, color: Colors.white, size: 16),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 15),
+                          Expanded(
+                            child: _buildTextField('Nombre *', _nombreController),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Fila 2: Fecha Nacimiento & Email
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => _selectDate(context),
+                              child: AbsorbPointer(
+                                child: _buildTextField(
+                                  'Fecha de nac.',
+                                  TextEditingController(
+                                    text: _selectedDate == null 
+                                      ? '' 
+                                      : "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}"
+                                  ),
+                                  suffixIcon: Icons.calendar_today,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 15),
+                          Expanded(child: _buildTextField('Email *', _correoController)),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Fila 3: Contraseña & Celular
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField('Contraseña', _passwordController, obscureText: true)),
+                          const SizedBox(width: 15),
+                          Expanded(child: _buildTextField('Celular', _celularController, keyboardType: TextInputType.phone)),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Fila 4: Programa & Semestre
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDropdownField('Programa', _programas, _selectedPrograma, (val) {
+                              setState(() => _selectedPrograma = val);
+                            }),
+                          ),
+                          const SizedBox(width: 15),
+                          Expanded(
+                            child: _buildDropdownField(
+                              'Semestre', 
+                              List.generate(10, (i) => (i + 1).toString()), 
+                              _selectedSemestre?.toString(), 
+                              (val) {
+                                setState(() => _selectedSemestre = int.tryParse(val!));
+                              }
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Preferencias
+                      _buildTextField('Preferencias', _preferenciasController, maxLines: 4),
+                      
+                      const SizedBox(height: 30),
+
+                      // Botones
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: () {},
+                          child: const Text(
+                            'Restablecer contraseña',
+                            style: TextStyle(
+                              color: Color(0xFFF1B440),
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF1B440),
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text('Guardar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(height: 100), // Espacio para la navbar
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── BOTTOM NAV BAR ─────────────────────────────────────────────
+          const Positioned(
+            left: 20,
+            right: 20,
+            bottom: 24,
+            child: SharedBottomNavBar(selectedIndex: -1),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller, {bool obscureText = false, IconData? suffixIcon, TextInputType? keyboardType, int maxLines = 1}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 5),
+        TextField(
+          controller: controller,
+          obscureText: obscureText,
+          keyboardType: keyboardType,
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: Colors.white,
+            suffixIcon: suffixIcon != null ? Icon(suffixIcon, color: Colors.grey, size: 20) : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownField(String label, List<String> items, String? value, ValueChanged<String?> onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 5),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              isExpanded: true,
+              value: value,
+              items: items.map((String item) {
+                return DropdownMenuItem<String>(
+                  value: item,
+                  child: Text(item, style: const TextStyle(fontSize: 14)),
+                );
+              }).toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

@@ -1,13 +1,22 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
+import '../controller/leccion_controller.dart';
+import '../../domain/entities/capitulo.dart';
+import '../../../../core/storage/local_storage.dart';
+import '../../../../shared/widgets/quill_read_only_view.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 enum CapituloStatus { completed, inProgress, locked }
 
 class LeccionDetailScreen extends StatefulWidget {
-  const LeccionDetailScreen({super.key});
+  /// ID de la lección a mostrar. Si es null muestra datos placeholder.
+  final int? idLeccion;
+
+  const LeccionDetailScreen({super.key, this.idLeccion});
 
   @override
   State<LeccionDetailScreen> createState() => _LeccionDetailScreenState();
@@ -15,6 +24,23 @@ class LeccionDetailScreen extends StatefulWidget {
 
 class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
   int _selectedTab = 0; // 0: Contenido, 1: Ejercicios, 2: Discusión
+  final LeccionController _ctrl = LeccionController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.idLeccion != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _ctrl.seleccionarLeccion(widget.idLeccion!);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -29,61 +55,87 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
               SliverToBoxAdapter(child: _buildHeaderImage(context)),
 
               // 2. Cuerpo del detalle
+              // 2. Cuerpo del detalle superior a los tabs
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 20,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTitleAndProgress(),
-                      const SizedBox(height: 24),
-                      
-                      _buildCursosAsociados(),
-                      const SizedBox(height: 28),
-                      
-                      _buildTabs(),
-                      const SizedBox(height: 24),
-                      
-                      // Render Dinámico según la Pestaña animado
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (child, animation) {
-                          return FadeTransition(opacity: animation, child: child);
-                        },
-                        child: _selectedTab == 0
-                            ? Container(key: const ValueKey(0), child: _buildContenido())
-                            : _selectedTab == 1
-                                  ? const EjerciciosScreen(key: ValueKey(1))
-                                  : Container(
-                                      key: const ValueKey(2),
-                                      child: const DiscusionScreen(showRating: true),
-                                    ),
-                      ),
-
-                      const SizedBox(
-                        height: 100,
-                      ), // Espacio extra para el NavBar Flotante
-                    ],
+                child: ListenableBuilder(
+                    listenable: _ctrl,
+                    builder: (context, _) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildTitleAndProgress(),
+                            const SizedBox(height: 24),
+                            _buildCursosAsociados(),
+                            const SizedBox(height: 28),
+                          ],
+                        ),
+                      );
+                    }),
+              ),
+              // 3. Tabs (Persistent Header)
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SliverAppBarDelegate(
+                  minHeight: 80.0, // 42 (tab height) + 24 (bottom padding) + top padding
+                  maxHeight: 80.0,
+                  child: Container(
+                    color: const Color(0xFFECEBEB),
+                    padding: const EdgeInsets.only(top: 14.0, bottom: 24.0, left: 20, right: 20),
+                    child: _buildTabs(),
                   ),
                 ),
+              ),
+              // 4. Cuerpo dinámico debajo de los tabs
+              SliverToBoxAdapter(
+                child: ListenableBuilder(
+                    listenable: _ctrl,
+                    builder: (context, _) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          children: [
+                            // Render Dinámico según la Pestaña animado
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              transitionBuilder: (child, animation) {
+                                return FadeTransition(opacity: animation, child: child);
+                              },
+                              child: _selectedTab == 0
+                                  ? Container(key: const ValueKey(0), child: _buildContenido())
+                                  : _selectedTab == 1
+                                      ? const EjerciciosScreen(key: ValueKey(1))
+                                      : Container(
+                                          key: const ValueKey(2),
+                                          child: const DiscusionScreen(showRating: true),
+                                        ),
+                            ),
+                            const SizedBox(
+                              height: 100,
+                            ), // Espacio extra para el NavBar Flotante
+                          ],
+                        ),
+                      );
+                    }),
               ),
             ],
           ),
 
           // ── Input de Comentarios Flotante (Solo en pestaña Discusión) ──
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.fastOutSlowIn,
-            bottom: _selectedTab == 2 ? 110 : -60,
-            left: 20,
-            right: 20,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 400),
-              opacity: _selectedTab == 2 ? 1.0 : 0.0,
-              child: const ComentarioInput(),
+          ListenableBuilder(
+            listenable: _ctrl,
+            builder: (context, _) => AnimatedPositioned(
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.fastOutSlowIn,
+              bottom: _selectedTab == 2 ? 110 : -60,
+              left: 20,
+              right: 20,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 400),
+                opacity: _selectedTab == 2 ? 1.0 : 0.0,
+                child: const ComentarioInput(),
+              ),
             ),
           ),
 
@@ -135,7 +187,47 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                 children: [
                   _buildCircularIconButton(
                       Icons.arrow_back, () => Navigator.pop(context)),
-                  _buildCircularIconButton(Icons.share, () {}),
+                  Row(
+                    children: [
+                      ListenableBuilder(
+                        listenable: _ctrl,
+                        builder: (context, _) {
+                          final leccion = _ctrl.state.selected;
+                          if (leccion != null && leccion.idUsuarioFk == AppSession().usuarioId) {
+                            return Row(
+                              children: [
+                                _buildCircularIconButton(
+                                  Icons.edit_rounded,
+                                  () {
+                                    Navigator.pushNamed(context, '/editar_leccion', arguments: leccion.idLeccion);
+                                  },
+                                ),
+                                const SizedBox(width: 10),
+                              ],
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                      ListenableBuilder(
+                        listenable: AppSession().savedLecciones,
+                        builder: (context, _) {
+                          final isSaved = widget.idLeccion != null && AppSession().savedLecciones.value.contains(widget.idLeccion!);
+                          return _buildCircularIconButton(
+                            isSaved ? Icons.favorite : Icons.favorite_border,
+                            () {
+                              if (widget.idLeccion != null) {
+                                AppSession().toggleSavedLeccion(widget.idLeccion!);
+                              }
+                            },
+                            color: isSaved ? Colors.redAccent.withOpacity(0.9) : const Color(0xFF6BCA54).withOpacity(0.9),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 10),
+                      _buildCircularIconButton(Icons.share, () {}),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -145,15 +237,22 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
     );
   }
 
-  Widget _buildCircularIconButton(IconData icon, VoidCallback onTap) {
+  Widget _buildCircularIconButton(IconData icon, VoidCallback onTap, {Color? color}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: const Color(0xFF6BCA54).withOpacity(0.9), // Más visible sobre imagen
+          color: color ?? const Color(0xFF6BCA54).withOpacity(0.9), // Más visible sobre imagen
           shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Icon(icon, color: Colors.white, size: 24),
       ),
@@ -161,6 +260,9 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
   }
 
   Widget _buildTitleAndProgress() {
+    final leccion = _ctrl.state.selected;
+    final titulo = leccion?.nombre ?? 'Cargando...';
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -169,9 +271,9 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Ejemplo De Lección',
-                style: TextStyle(
+              Text(
+                titulo,
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
@@ -186,7 +288,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                     child: Icon(Icons.person, color: Colors.white, size: 16),
                   ),
                   const SizedBox(width: 8),
-                  const Text('Ema Nuel',
+                  const Text('Autor_id', // TODO: Cargar autor real
                       style: TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 13)),
                   const SizedBox(width: 8),
@@ -196,7 +298,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                     decoration: BoxDecoration(
                         color: const Color(0xFF79AC63),
                         borderRadius: BorderRadius.circular(4)),
-                    child: const Text('Estudiante',
+                    child: const Text('Comunidad',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 9,
@@ -336,22 +438,104 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
     );
   }
 
+  Widget _buildMediaItem(IconData icon, String label, Color color) {
+    return Container(
+      height: 140,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F0F0),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color.withOpacity(0.7), size: 36),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildContenido() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Introducción ──
-        const Text('Introducción',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 10),
-        const Text(
-          'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada lacinia integer nunc posuere ut hendrerit.',
-          style: TextStyle(
-            fontSize: 13,
-            color: Color(0xFF787878),
-            height: 1.5,
-            fontWeight: FontWeight.w500,
-          ),
+        ListenableBuilder(
+          listenable: _ctrl,
+          builder: (context, _) {
+            final contenido = _ctrl.state.selected?.contenido;
+            if (contenido == null || contenido.isEmpty) {
+              return const Text(
+                'Aún no hay introducción disponible para esta lección.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF787878),
+                  fontWeight: FontWeight.w500,
+                  height: 1.5,
+                ),
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: contenido.map((s) {
+                final titulo = s['titulo'] as String? ?? '';
+                final deltaData = s['cuerpo_delta'] as List<dynamic>?;
+                final bool tieneImagen = s['tiene_imagen'] == true;
+                final bool tieneVideo = s['tiene_video'] == true;
+                final String? imagenPath = s['imagen_path'];
+                
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (titulo.isNotEmpty) ...[
+                        Text(
+                          titulo,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      QuillReadOnlyView(
+                        delta: deltaData,
+                        fontSize: 16,
+                        color: const Color(0xFF787878),
+                      ),
+                      if (tieneImagen) ...[
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: (imagenPath != null && imagenPath.isNotEmpty)
+                              ? (imagenPath.startsWith('http') || imagenPath.startsWith('assets/'))
+                                  ? Image.network(imagenPath, width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
+                                  : Image.file(File(imagenPath), width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
+                              : _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)),
+                        ),
+                      ],
+                      if (tieneVideo) ...[
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: _buildMediaItem(Icons.play_circle_filled, 'Video adjunto', const Color(0xFFFF606F)),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }).toList(),
+            );
+          },
         ),
         const SizedBox(height: 28),
 
@@ -359,24 +543,33 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
         const Text('Capítulos',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 14),
-        _buildCapituloItem(
-          status: CapituloStatus.completed,
-          title: '¿Qué son las derivadas?',
-          duration: '15 minutos',
-        ),
-        const SizedBox(height: 12),
-        _buildCapituloItem(
-          status: CapituloStatus.inProgress,
-          title: '¿Qué son las derivadas?',
-          duration: '15 minutos',
-          number: 3,
-        ),
-        const SizedBox(height: 12),
-        _buildCapituloItem(
-          status: CapituloStatus.locked,
-          title: '¿Qué son las derivadas?',
-          duration: '15 minutos',
-          number: 4,
+        ListenableBuilder(
+          listenable: _ctrl,
+          builder: (context, _) {
+            final caps = _ctrl.capitulosDeLeccion;
+            if (caps.isEmpty) {
+              // Placeholder visual mientras no hay lección seleccionada
+              return _buildCapitulosPlaceholder();
+            }
+            return Column(
+              children: [
+                for (int i = 0; i < caps.length; i++) ...[
+                  _buildCapituloItem(
+                    status: i == 0
+                        ? CapituloStatus.completed
+                        : i == 1
+                            ? CapituloStatus.inProgress
+                            : CapituloStatus.locked,
+                    title: caps[i].nombre,
+                    duration: _formatDuracion(caps[i].tiempoTotal),
+                    number: i + 1,
+                    capitulo: caps[i],
+                  ),
+                  if (i < caps.length - 1) const SizedBox(height: 12),
+                ],
+              ],
+            );
+          },
         ),
         const SizedBox(height: 32),
 
@@ -405,11 +598,38 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
     );
   }
 
+  // Convierte segundos a texto legible (ej: 900 → "15 min")
+  String _formatDuracion(int segundos) {
+    if (segundos < 60) return '$segundos seg';
+    final mins = segundos ~/ 60;
+    if (mins < 60) return '$mins min';
+    final horas = mins ~/ 60;
+    final resto = mins % 60;
+    return resto == 0 ? '${horas}h' : '${horas}h ${resto}min';
+  }
+
+  // Placeholder cuando la lección aún no se ha cargado
+  Widget _buildCapitulosPlaceholder() {
+    return Column(
+      children: List.generate(3, (i) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Container(
+          height: 72,
+          decoration: BoxDecoration(
+            color: const Color(0xFFD9D9D9),
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      )),
+    );
+  }
+
   Widget _buildCapituloItem({
     required CapituloStatus status,
     required String title,
     required String duration,
     int? number,
+    Capitulo? capitulo,
   }) {
     bool isLocked = status == CapituloStatus.locked;
     bool isInProgress = status == CapituloStatus.inProgress;
@@ -583,5 +803,36 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
         ],
       ),
     );
+  }
+}
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final double minHeight;
+  final double maxHeight;
+  final Widget child;
+
+  _SliverAppBarDelegate({
+    required this.minHeight,
+    required this.maxHeight,
+    required this.child,
+  });
+
+  @override
+  double get minExtent => minHeight;
+
+  @override
+  double get maxExtent => maxHeight;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return maxHeight != oldDelegate.maxHeight ||
+        minHeight != oldDelegate.minHeight ||
+        child != oldDelegate.child;
   }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../controller/leccion_controller.dart';
+import '../../domain/entities/leccion.dart';
+import '../../../../shared/widgets/search_filter_bar.dart';
 
 class AdminLeccionScreen extends StatefulWidget {
   const AdminLeccionScreen({super.key});
@@ -11,73 +14,17 @@ class AdminLeccionScreen extends StatefulWidget {
 
 class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final _leccionCtrl = LeccionController();
+  String _query = '';
 
-  final List<String> _filtros = ['Todas', 'Recientes', 'Calificación', '...'];
+  final List<String> _filtros = ['Todas', 'Recientes', 'Calificación', 'Populares', 'Duración'];
   int _filtroSeleccionado = 0;
 
-  final List<Map<String, dynamic>> _lecciones = [
-    {
-      'tags': [
-        {
-          'text': 'POO',
-          'color': const Color(0xFF67C947),
-          'textColor': Colors.white,
-        },
-      ],
-      'titulo': 'Ejemplo de lección 1',
-      'capitulos': '3 Capítulos',
-      'calificacion': '4.9',
-      'estudiantes': '1.200',
-      'imageColor': const Color(0xFF7BC85A),
-    },
-    {
-      'tags': [
-        {
-          'text': 'IEEE',
-          'color': const Color(0xFFFA8E9E),
-          'textColor': Colors.white,
-        },
-      ],
-      'titulo': 'Ejemplo de lección 2',
-      'capitulos': '10 capítulos',
-      'calificacion': '4.9',
-      'estudiantes': '1.200',
-      'imageColor': const Color(0xFFFF6B8B),
-    },
-    {
-      'tags': [
-        {
-          'text': 'POO',
-          'color': const Color(0xFF67C947),
-          'textColor': Colors.white,
-        },
-        {
-          'text': 'IA',
-          'color': const Color(0xFFF6B55C),
-          'textColor': Colors.white,
-        },
-      ],
-      'titulo': 'Ejemplo de lección 3',
-      'capitulos': '7 Capítulos',
-      'calificacion': '4.9',
-      'estudiantes': '1.200',
-      'imageColor': const Color(0xFFFFB347),
-    },
-    {
-      'tags': [
-        {
-          'text': 'POO',
-          'color': const Color(0xFF67C947),
-          'textColor': Colors.white,
-        },
-      ],
-      'titulo': 'Ejemplo de lección 4',
-      'capitulos': '8 Capítulos',
-      'calificacion': '4.9',
-      'estudiantes': '1.200',
-      'imageColor': const Color(0xFFFFB347),
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _leccionCtrl.cargarLecciones();
+  }
 
   @override
   void dispose() {
@@ -161,19 +108,57 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    _buildSearchBar(),
-                    _buildFiltros(),
+                    SearchFilterBar(
+                      searchController: _searchController,
+                      query: _query,
+                      onQueryChanged: (v) => setState(() => _query = v),
+                      onClear: () {
+                        setState(() {
+                          _searchController.clear();
+                          _query = '';
+                        });
+                      },
+                      filtros: _filtros,
+                      filtroSeleccionado: _filtroSeleccionado,
+                      onFiltroChanged: (index) => setState(() => _filtroSeleccionado = index),
+                    ),
                     Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.only(
-                          left: 16,
-                          right: 16,
-                          top: 8,
-                          bottom: 100,
-                        ),
-                        itemCount: _lecciones.length,
-                        itemBuilder: (context, index) {
-                          return _buildLeccionCard(_lecciones[index]);
+                      child: ListenableBuilder(
+                        listenable: _leccionCtrl,
+                        builder: (context, _) {
+                          final state = _leccionCtrl.state;
+                          if (state.isLoading) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                  color: Color(0xFF4DC130)),
+                            );
+                          }
+                          var lecciones = state.items.toList();
+                          if (_query.isNotEmpty) {
+                            lecciones = lecciones
+                                .where((l) => l.nombre
+                                    .toLowerCase()
+                                    .contains(_query.toLowerCase()))
+                                .toList();
+                          }
+                          if (lecciones.isEmpty) {
+                            return const Center(
+                                child: Text('No hay lecciones disponibles',
+                                    style: TextStyle(
+                                        color: Color(0xFF888888))));
+                          }
+                          return ListView.builder(
+                            padding: const EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              top: 8,
+                              bottom: 100,
+                            ),
+                            itemCount: lecciones.length,
+                            itemBuilder: (context, index) {
+                              return _buildLeccionCard(lecciones[index]);
+                            },
+                          );
                         },
                       ),
                     ),
@@ -195,109 +180,8 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Row(
-        children: [
-          // Campo de búsqueda en pill gris
-          Expanded(
-            child: Container(
-              height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFFD9D9D9),
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: const Color(0xFFD9D9D9)),
-              ),
-              child: TextField(
-                controller: _searchController,
-                cursorColor: const Color(0xFF5AB639),
-                style: const TextStyle(fontSize: 15),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  hintText: '|',
-                  hintStyle: const TextStyle(color: Color(0xFF888888)),
-                  suffixIcon: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _searchController.clear();
-                      });
-                    },
-                    child: const Icon(
-                      Icons.close,
-                      color: Color(0xFF888888),
-                      size: 18,
-                    ),
-                  ),
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-
-          // Botón lupa circular VERDE con borde blanco
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFF5AB639),
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF5AB639), width: 2),
-            ),
-            child: const Icon(Icons.search, color: Colors.white, size: 22),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFiltros() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        children: _filtros.asMap().entries.map((entry) {
-          final index = entry.key;
-          final label = entry.value;
-          final isSelected = index == _filtroSeleccionado;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _filtroSeleccionado = index),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                height: 34,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? const Color(0xFF5AB639)
-                      : const Color(0xFFD9D9D9),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : const Color.fromARGB(255, 0, 0, 0),
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildLeccionCard(Map<String, dynamic> item) {
-    final List<Map<String, dynamic>> tags = item['tags'];
+  Widget _buildLeccionCard(Leccion item) {
+    final nCapitulos = _leccionCtrl.capitulosDe(item.idLeccion).length;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -316,52 +200,47 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ── Thumbnail de color sólido ─────────────────────────────
+          // Thumbnail
           Container(
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: item['imageColor'],
+              color: const Color(0xFF7BC85A),
               borderRadius: BorderRadius.circular(10),
             ),
+            child: const Icon(Icons.menu_book_rounded,
+                color: Colors.white, size: 32),
           ),
           const SizedBox(width: 12),
 
-          // ── Info central ─────────────────────────────────────────
+          // Info central
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Tags
-                Wrap(
-                  spacing: 5,
-                  runSpacing: 4,
-                  children: tags.map((tag) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: tag['color'],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        tag['text'],
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: tag['textColor'],
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                // Estado badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: item.estado == 'activa'
+                        ? const Color(0xFF67C947)
+                        : const Color(0xFF888888),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    item.estado ?? 'lección',
+                    style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
                 ),
                 const SizedBox(height: 5),
 
                 // Título
                 Text(
-                  item['titulo'],
+                  item.nombre,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
@@ -371,43 +250,25 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 3),
-
-                // Capítulos
                 Text(
-                  item['capitulos'],
+                  nCapitulos == 1
+                      ? '1 Capítulo'
+                      : '$nCapitulos Capítulos',
                   style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF888888),
-                    fontWeight: FontWeight.w500,
-                  ),
+                      fontSize: 12,
+                      color: Color(0xFF888888),
+                      fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 3),
-
-                // Calificación y estudiantes
-                Row(
+                const Row(
                   children: [
-                    const Icon(Icons.star, size: 13, color: Color(0xFFF6B55C)),
-                    const SizedBox(width: 3),
-                    Text(
-                      item['calificacion'],
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF111111),
-                      ),
-                    ),
-                    const Text(
-                      ' | ',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF888888)),
-                    ),
-                    Text(
-                      '${item['estudiantes']} estudiantes',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF888888),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    Icon(Icons.star, size: 13, color: Color(0xFFF6B55C)),
+                    SizedBox(width: 3),
+                    Text('4.9',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF111111))),
                   ],
                 ),
               ],
@@ -415,44 +276,41 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
           ),
           const SizedBox(width: 8),
 
-          // ── Botones Editar / Eliminar con efecto press ────────────
+          // Botones Editar / Eliminar
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Botón Editar
               Material(
                 color: const Color(0xFF5AB639),
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
-                  onTap: () {
-                    // acción editar
-                  },
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    '/editar_leccion',
+                    arguments: item.idLeccion,
+                  ),
                   borderRadius: BorderRadius.circular(14),
                   splashColor: Colors.black.withValues(alpha: 0.18),
-                  highlightColor: Colors.black.withValues(alpha: 0.12),
                   child: Container(
                     height: 28,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.edit, color: Colors.white, size: 13),
                         SizedBox(width: 4),
-                        Text(
-                          'Editar',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
+                        Text('Editar',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12)),
                       ],
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 8),
-              // Botón Eliminar
               Material(
                 color: const Color(0xFFFF5252),
                 borderRadius: BorderRadius.circular(14),
@@ -460,27 +318,21 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                   onTap: () => _mostrarModalEliminar(item),
                   borderRadius: BorderRadius.circular(14),
                   splashColor: Colors.black.withValues(alpha: 0.18),
-                  highlightColor: Colors.black.withValues(alpha: 0.12),
                   child: Container(
                     height: 28,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.delete_outline,
-                          color: Colors.white,
-                          size: 13,
-                        ),
+                        Icon(Icons.delete_outline,
+                            color: Colors.white, size: 13),
                         SizedBox(width: 4),
-                        Text(
-                          'Eliminar',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
+                        Text('Eliminar',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12)),
                       ],
                     ),
                   ),
@@ -493,7 +345,7 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
     );
   }
 
-  void _mostrarModalEliminar(Map<String, dynamic> item) {
+  void _mostrarModalEliminar(Leccion item) {
     showDialog(
       context: context,
       builder: (ctx) {
@@ -509,7 +361,6 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Título centrado
                 const Center(
                   child: Text(
                     '¿Eliminar Lección?',
@@ -522,7 +373,6 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Mensaje
                 const Text(
                   'Tenga en cuenta que esta acción no se podrá revertir',
                   style: TextStyle(
@@ -532,38 +382,29 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Botones
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text(
-                        'Cancelar',
-                        style: TextStyle(
-                          color: Color(0xFFFF5252),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
+                      child: const Text('Cancelar',
+                          style: TextStyle(
+                              color: Color(0xFFFF5252),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15)),
                     ),
                     const SizedBox(width: 8),
                     TextButton(
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(ctx);
-                        // Simula la eliminación quitando el item de la lista
-                        setState(() {
-                          _lecciones.remove(item);
-                        });
+                        await _leccionCtrl
+                            .eliminarLeccion(item.idLeccion);
                       },
-                      child: const Text(
-                        'Aceptar',
-                        style: TextStyle(
-                          color: Color(0xFF4DC130),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
+                      child: const Text('Aceptar',
+                          style: TextStyle(
+                              color: Color(0xFF4DC130),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15)),
                     ),
                   ],
                 ),

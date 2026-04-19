@@ -24,6 +24,9 @@ import 'features/leccion/presentation/screens/admin_leccion_screen.dart';
 import 'features/curso/presentation/screens/curso_editar_screen.dart';
 import 'features/leccion/presentation/screens/leccion_editar_screen.dart';
 import 'features/leccion/presentation/screens/capitulo_editar_screen.dart';
+import 'features/usuarios/presentation/screens/usuarios_screen.dart';
+import 'features/usuarios/presentation/screens/edit_usuario_screen.dart';
+import 'core/storage/local_storage.dart';
 
 class BookLApp extends StatelessWidget {
   const BookLApp({super.key});
@@ -50,7 +53,7 @@ class BookLApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4DC130)),
         useMaterial3: true,
       ),
-      initialRoute: '/login',
+      initialRoute: AppSession().estaLogueado ? '/home' : '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
@@ -59,8 +62,18 @@ class BookLApp extends StatelessWidget {
         '/perfil': (context) => const PerfilScreen(),
         '/configuracion': (context) => const ConfiguracionScreen(),
         '/chatbot': (context) => const ChatbotScreen(),
-        '/curso_detail': (context) => const CursoDetailScreen(),
-        '/leccion_detail': (context) => const LeccionDetailScreen(),
+
+        // Rutas que reciben un ID como argumento (int)
+        '/curso_detail': (context) => CursoDetailScreen(
+              idCurso: ModalRoute.of(context)?.settings.arguments as int?,
+            ),
+        '/leccion_detail': (context) => LeccionDetailScreen(
+              idLeccion: ModalRoute.of(context)?.settings.arguments as int?,
+            ),
+        '/editar_capitulo': (context) => CapituloEditarScreen(
+              idCapitulo: ModalRoute.of(context)?.settings.arguments as int?,
+            ),
+
         '/capitulo_detail': (context) => const CapituloScreen(),
         '/busqueda': (context) => const BusquedaScreen(),
         '/resultado': (context) => const ResultadoScreen(),
@@ -75,8 +88,10 @@ class BookLApp extends StatelessWidget {
         '/admin_Home': (context) => const AdminHomeScreen(),
         '/admin_leccion': (context) => const AdminLeccionScreen(),
         '/editar_curso': (context) => const CursoEditarScreen(),
-        '/editar_leccion': (context) => const LeccionEditarScreen(),
-        '/editar_capitulo': (context) => const CapituloEditarScreen(),
+        '/editar_leccion': (context) => LeccionEditarScreen(
+              idLeccion: ModalRoute.of(context)?.settings.arguments as int?,
+            ),
+        '/users_admin': (context) => const UsuariosScreen(),
       },
     );
   }

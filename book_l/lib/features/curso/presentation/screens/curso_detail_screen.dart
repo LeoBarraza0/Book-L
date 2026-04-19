@@ -5,17 +5,35 @@ import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
 import '../../../leccion/presentation/screens/leccion_detail_screen.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
+import '../controller/curso_controller.dart';
 import 'curso_editar_screen.dart';
-
+import '../../../../core/storage/local_storage.dart';
+import '../../../../shared/widgets/quill_read_only_view.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 class CursoDetailScreen extends StatefulWidget {
-  const CursoDetailScreen({super.key});
+  final int? idCurso;
+  const CursoDetailScreen({super.key, this.idCurso});
 
   @override
   State<CursoDetailScreen> createState() => _CursoDetailScreenState();
 }
 
 class _CursoDetailScreenState extends State<CursoDetailScreen> {
-  int _selectedTab = 0; // 0: Lecciones, 1: Ejercicios, 2: Discusión
+  int _selectedTab = 0;
+  final CursoController _ctrl = CursoController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.idCurso != null) {
+      _ctrl.seleccionarCurso(widget.idCurso!);
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,22 +46,35 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
               SliverToBoxAdapter(child: _buildHeaderImage(context)),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 20,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildTitleAndProgress(),
                       const SizedBox(height: 24),
-
                       _buildStatsRow(),
                       const SizedBox(height: 24),
-
-                      _buildTabs(),
-                      const SizedBox(height: 24),
-
+                    ],
+                  ),
+                ),
+              ),
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SliverAppBarDelegate(
+                  minHeight: 80.0, // 42 tab height + 24 bottom padding + SafeArea/top padding
+                  maxHeight: 80.0,
+                  child: Container(
+                    color: const Color(0xFFECEBEB),
+                    padding: const EdgeInsets.only(top: 14.0, bottom: 24.0, left: 20, right: 20),
+                    child: _buildTabs(),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
                       // Render Dinámico según la Pestaña
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
@@ -54,14 +85,11 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                                 key: const ValueKey(0),
                                 child: _buildLeccionesContent(),
                               )
-                            : _selectedTab == 1
-                            ? const EjerciciosScreen(key: ValueKey(1))
                             : Container(
-                                key: const ValueKey(2),
+                                key: const ValueKey(1),
                                 child: _buildDiscusionContent(),
                               ),
                       ),
-
                       const SizedBox(height: 100), // Espacio para NavBar
                     ],
                   ),
@@ -73,12 +101,12 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           AnimatedPositioned(
             duration: const Duration(milliseconds: 500),
             curve: Curves.fastOutSlowIn,
-            bottom: _selectedTab == 2 ? 110 : -60,
+            bottom: _selectedTab == 1 ? 110 : -60,
             left: 20,
             right: 20,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 400),
-              opacity: _selectedTab == 2 ? 1.0 : 0.0,
+              opacity: _selectedTab == 1 ? 1.0 : 0.0,
               child: const ComentarioInput(),
             ),
           ),
@@ -129,10 +157,41 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                   ),
                   Row(
                     children: [
-                      _buildCircularIconButton(
-                        Icons.edit_rounded,
-                        () => Navigator.push(context, _slideRoute(const CursoEditarScreen())),
-                        color: const Color(0xFFFEB95C),
+                      ListenableBuilder(
+                        listenable: _ctrl,
+                        builder: (context, _) {
+                          final isOwner = _ctrl.state.selected?.idUsuarioFk == AppSession().usuarioId;
+                          if (isOwner) {
+                            return Row(
+                              children: [
+                                _buildCircularIconButton(
+                                  Icons.edit_rounded,
+                                  () => Navigator.push(context, _slideRoute(const CursoEditarScreen(
+                                    // TODO: pasar idCurso a la pantalla de edición si admite parámetro
+                                  ))),
+                                  color: const Color(0xFFFEB95C),
+                                ),
+                                const SizedBox(width: 10),
+                              ],
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                      ListenableBuilder(
+                        listenable: AppSession().savedCursos,
+                        builder: (context, _) {
+                          final isSaved = widget.idCurso != null && AppSession().savedCursos.value.contains(widget.idCurso!);
+                          return _buildCircularIconButton(
+                            isSaved ? Icons.favorite : Icons.favorite_border,
+                            () {
+                              if (widget.idCurso != null) {
+                                AppSession().toggleSavedCurso(widget.idCurso!);
+                              }
+                            },
+                            color: isSaved ? Colors.redAccent : const Color(0xFF6BCA54),
+                          );
+                        },
                       ),
                       const SizedBox(width: 10),
                       _buildCircularIconButton(Icons.share, () {}),
@@ -187,21 +246,25 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
   }
 
   Widget _buildTitleAndProgress() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Ejemplo De Curso',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
+    return ListenableBuilder(
+      listenable: _ctrl,
+      builder: (context, _) {
+        final curso = _ctrl.state.selected;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    curso?.nombre ?? 'Cargando...',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
               const SizedBox(height: 12),
               GestureDetector(
                 onTap: () => Navigator.push(
@@ -282,6 +345,8 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           ),
         ),
       ],
+    );
+      },
     );
   }
 
@@ -369,8 +434,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
       child: Row(
         children: [
           _buildTabItem('Lecciones', 0),
-          _buildTabItem('Ejercicios', 1),
-          _buildTabItem('Discusión', 2),
+          _buildTabItem('Discusión', 1),
         ],
       ),
     );
@@ -426,14 +490,50 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada lacinia integer nunc posuere ut hendrerit.',
-          style: TextStyle(
-            fontSize: 14,
-            color: Color(0xFF787878),
-            fontWeight: FontWeight.w600,
-            height: 1.4,
-          ),
+        ListenableBuilder(
+          listenable: _ctrl,
+          builder: (context, _) {
+            final contenido = _ctrl.state.selected?.contenido;
+            if (contenido == null || contenido.isEmpty) {
+              return const Text(
+                'Aún no hay introducción disponible para este curso.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF787878),
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: contenido.map((s) {
+                final titulo = s['titulo'] as String? ?? '';
+                final deltaData = s['cuerpo_delta'] as List<dynamic>?;
+                
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (titulo.isNotEmpty && titulo != 'Resumen') ...[
+                        Text(
+                          titulo,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      QuillReadOnlyView(
+                        delta: deltaData,
+                        fontSize: 16,
+                        color: const Color(0xFF787878),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            );
+          },
         ),
         const SizedBox(height: 32),
         const Text(
@@ -441,39 +541,40 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        _buildLeccionCard(
-          category: 'Cálculo diferencial',
-          categoryColor: const Color(0xFF6BC654),
-          title: 'Derivadas',
-          duration: '1 Hora',
-          rating: '4.9',
-          students: '1.200 estudiantes',
-          progress: 0.2, // 20%
-          imageUrl: 'https://picsum.photos/150/150?random=10', // Placeholder
-        ),
-        const SizedBox(height: 12),
-        _buildLeccionCard(
-          category: 'JAVA',
-          categoryColor: const Color(0xFF4DC130).withOpacity(0.8),
-          category2: 'P.O.O',
-          categoryColor2: const Color(0xFFFF606F).withOpacity(0.74),
-          title: 'Herencia',
-          duration: '1 Hora',
-          rating: '4.9',
-          students: '1.200 estudiantes',
-          progress: 0.2,
-          imageUrl: 'https://picsum.photos/150/150?random=11',
-        ),
-        const SizedBox(height: 12),
-        _buildLeccionCard(
-          category: 'Cálculo diferencial',
-          categoryColor: const Color(0xFFF6B55C).withOpacity(0.69),
-          title: 'Derivadas',
-          duration: '1 Hora',
-          rating: '4.9',
-          students: '1.200 estudiantes',
-          progress: 0.2,
-          imageUrl: 'https://picsum.photos/150/150?random=12',
+        ListenableBuilder(
+          listenable: _ctrl,
+          builder: (context, _) {
+            final lecciones = _ctrl.leccionesDeCurso;
+            if (lecciones.isEmpty) {
+              // Placeholder mientras carga o sin datos
+              return _buildLeccionCard(
+                category: 'Sin lecciones',
+                title: 'Aún no hay lecciones',
+                duration: '--',
+                rating: '--',
+                students: '--',
+                progress: 0,
+                imageUrl: '',
+              );
+            }
+            return Column(
+              children: [
+                for (final l in lecciones) ...[
+                  _buildLeccionCard(
+                    category: 'Lección',
+                    title: l.nombre,
+                    duration: '--',
+                    rating: '--',
+                    students: '--',
+                    progress: 0,
+                    imageUrl: '',
+                    idLeccion: l.idLeccion,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ],
+            );
+          },
         ),
       ],
     );
@@ -490,11 +591,12 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     required String students,
     required double progress,
     required String imageUrl,
+    int? idLeccion,
   }) {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        _slideRoute(const LeccionDetailScreen()),
+        _slideRoute(LeccionDetailScreen(idLeccion: idLeccion)),
       ),
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -625,11 +727,23 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Icon(
-                  Icons.favorite_border,
-                  color: Colors.redAccent,
-                  size: 20,
-                ),
+                if (idLeccion != null)
+                  ListenableBuilder(
+                    listenable: AppSession().savedLecciones,
+                    builder: (context, _) {
+                      final isSaved = AppSession().savedLecciones.value.contains(idLeccion);
+                      return GestureDetector(
+                        onTap: () {
+                          AppSession().toggleSavedLeccion(idLeccion);
+                        },
+                        child: Icon(
+                          isSaved ? Icons.favorite : Icons.favorite_border,
+                          color: Colors.redAccent,
+                          size: 24,
+                        ),
+                      );
+                    },
+                  ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: 32,
@@ -662,3 +776,35 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     );
   }
 }
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final double minHeight;
+  final double maxHeight;
+  final Widget child;
+
+  _SliverAppBarDelegate({
+    required this.minHeight,
+    required this.maxHeight,
+    required this.child,
+  });
+
+  @override
+  double get minExtent => minHeight;
+
+  @override
+  double get maxExtent => maxHeight;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return maxHeight != oldDelegate.maxHeight ||
+        minHeight != oldDelegate.minHeight ||
+        child != oldDelegate.child;
+  }
+}
+

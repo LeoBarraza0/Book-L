@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:book_l/shared/widgets/custom_button.dart';
 import 'package:book_l/shared/widgets/custom_text_field.dart';
-import 'package:book_l/shared/domain/models/curso_model.dart';
-import 'package:book_l/shared/domain/models/leccion_model.dart';
-import 'package:book_l/shared/data/course_repository.dart';
 import '../widgets/agregar_seccion_button.dart';
+import '../controller/leccion_controller.dart';
+import '../../../../core/storage/local_storage.dart';
 
 class PublicarLeccionScreen extends StatefulWidget {
   const PublicarLeccionScreen({super.key});
@@ -17,10 +16,11 @@ class PublicarLeccionScreen extends StatefulWidget {
 class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController descController = TextEditingController();
-  final TextEditingController cursoController =
-      TextEditingController(); // Not used anymore
-  String? selectedCourseId;
-  int chapterCount = 1;
+  final TextEditingController cursoController = TextEditingController();
+  final _leccionCtrl = LeccionController();
+  bool _guardando = false;
+
+  final List<String> _capitulos = ['Capítulo 1 - Introducción'];
 
   @override
   void dispose() {
@@ -28,156 +28,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
     descController.dispose();
     cursoController.dispose();
     super.dispose();
-  }
-
-  void _mostrarOpcionesPrueba(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 48,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Agregar Prueba',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '¿Qué tipo de ejercicio deseas agregar?',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: Color(0xFF676767),
-                ),
-              ),
-              const SizedBox(height: 24),
-              _buildOpcionBottomSheet(
-                icon: Icons.quiz_outlined,
-                title: 'Crear Ejercicio Teórico',
-                subtitle: 'Opción múltiple, completar, verdadero/falso',
-                color: const Color(0xFF4DC130),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.pushNamed(context, '/crear_ejercicio_teorico');
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildOpcionBottomSheet(
-                icon: Icons.code,
-                title: 'Crear Ejercicio Práctico',
-                subtitle: 'Escribir y validar código',
-                color: const Color(0xFFFF606F),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.pushNamed(context, '/crear_ejercicio_practico');
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildOpcionBottomSheet(
-                icon: Icons.file_present_rounded,
-                title: 'Adjuntar Ejercicio Existente',
-                subtitle: 'Seleccionar del banco de ejercicios',
-                color: const Color(0xFFF6B55C),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Abriendo banco de ejercicios...'),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildOpcionBottomSheet({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                      color: Color(0xFF676767),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: color),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -427,29 +277,8 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
 
                     // Botón Final
                     CustomButton(
-                      label: '¡Subir ya!',
-                      onPressed: () {
-                        if (selectedCourseId == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Selecciona un curso')),
-                          );
-                          return;
-                        }
-
-                        final name = nameController.text.trim();
-                        if (name.isEmpty) return;
-
-                        final lesson = LeccionModel(
-                          id: DateTime.now().millisecondsSinceEpoch.toString(),
-                          titulo: name,
-                          contenido: descController.text.trim(),
-                        );
-
-                        CourseRepository.instance
-                            .addLessonToCourse(selectedCourseId!, lesson);
-                        Navigator.pushReplacementNamed(context, '/perfil');
-                      },
+                      label: _guardando ? 'Guardando...' : '¡Guardar Lección!',
+                      onPressed: _guardando ? null : _guardarLeccion,
                     ),
                   ],
                 ),
@@ -518,6 +347,207 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
             icon: const Icon(Icons.edit_note_rounded, color: Color(0xFF4DC130)),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _guardarLeccion() async {
+    final nombre = nameController.text.trim();
+    if (nombre.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('El nombre de la lección es obligatorio')),
+      );
+      return;
+    }
+
+    setState(() => _guardando = true);
+    try {
+      await _leccionCtrl.agregarLeccion(
+        idUsuario: AppSession().usuarioId ?? 1,
+        nombre: nombre,
+        contenido: descController.text.trim().isEmpty
+            ? null
+            : [
+                {
+                  "titulo": "Resumen",
+                  "cuerpo_delta": [
+                    {"insert": "${descController.text.trim()}\n"}
+                  ],
+                  "tiene_imagen": false,
+                  "tiene_video": false
+                }
+              ],
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text('Lección guardada exitosamente',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+            ]),
+            backgroundColor: const Color(0xFF4DC130),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } finally {
+      if (mounted) setState(() => _guardando = false);
+    }
+  }
+
+  void _mostrarOpcionesPrueba(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Agregar Prueba',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '¿Qué tipo de ejercicio deseas agregar?',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: Color(0xFF676767),
+                ),
+              ),
+              const SizedBox(height: 24),
+              _buildOpcionBottomSheet(
+                icon: Icons.quiz_outlined,
+                title: 'Crear Ejercicio Teórico',
+                subtitle: 'Opción múltiple, completar, verdadero/falso',
+                color: const Color(0xFF4DC130),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.pushNamed(context, '/crear_ejercicio_teorico');
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildOpcionBottomSheet(
+                icon: Icons.code,
+                title: 'Crear Ejercicio Práctico',
+                subtitle: 'Escribir y validar código',
+                color: const Color(0xFFFF606F),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.pushNamed(context, '/crear_ejercicio_practico');
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildOpcionBottomSheet(
+                icon: Icons.file_present_rounded,
+                title: 'Adjuntar Ejercicio Existente',
+                subtitle: 'Seleccionar del banco de ejercicios',
+                color: const Color(0xFFF6B55C),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Abriendo banco de ejercicios...'),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOpcionBottomSheet({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                      color: Color(0xFF676767),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: color),
+          ],
+        ),
       ),
     );
   }

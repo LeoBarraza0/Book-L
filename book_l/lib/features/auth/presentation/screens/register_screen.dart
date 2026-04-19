@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
+import '../controller/auth_controller.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _celularController = TextEditingController();
   final _preferenciasController = TextEditingController();
+  final _ctrl = AuthController();
 
   bool _obscurePassword = true;
 
@@ -58,6 +60,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _celularController.dispose();
     _preferenciasController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onRegister() async {
+    final nombre = _nombreController.text.trim();
+    final correo = _emailController.text.trim();
+    final pass = _passwordController.text;
+    final programa = _programaSeleccionado;
+
+    if (nombre.isEmpty || correo.isEmpty || pass.isEmpty || programa == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor completa los campos obligatorios')),
+      );
+      return;
+    }
+
+    final ok = await _ctrl.registrar(
+      nombreCompleto: nombre,
+      correo: correo,
+      contrasena: pass,
+      rol: 'Estudiante', // Default en registro de esta pantalla
+      programa: programa,
+    );
+
+    if (!mounted) return;
+
+    if (ok) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_ctrl.errorMessage ?? 'Error al registrarse'),
+          backgroundColor: const Color(0xFFFF5252),
+        ),
+      );
+      _ctrl.clearError();
+    }
   }
 
   @override
@@ -175,11 +213,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 30),
 
                     // Botón Registrarse
-                    CustomButton(
-                      label: 'Registrarse',
-                      onPressed: () {
-                        // TODO: implementar lógica de registro
-                      },
+                    ListenableBuilder(
+                      listenable: _ctrl,
+                      builder: (context, _) => CustomButton(
+                        label: _ctrl.isLoading ? 'Registrando...' : 'Registrarse',
+                        onPressed: _ctrl.isLoading ? null : _onRegister,
+                      ),
                     ),
                     const SizedBox(height: 20),
 

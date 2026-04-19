@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/storage/local_storage.dart';
 import 'package:book_l/shared/widgets/custom_button.dart';
 import 'package:book_l/shared/widgets/custom_text_field.dart';
 import 'package:book_l/shared/data/course_repository.dart';
 import 'package:book_l/shared/domain/models/curso_model.dart';
-import 'package:book_l/shared/domain/models/leccion_model.dart';
+import '../controller/curso_controller.dart';
 
 class PublicarCursoScreen extends StatefulWidget {
   const PublicarCursoScreen({super.key});
@@ -18,6 +19,8 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
   final TextEditingController descController = TextEditingController();
   final TextEditingController leccionesController = TextEditingController();
   String? selectedCourseId; // NULL means new course
+  final _cursoCtrl = CursoController();
+  bool _guardando = false;
 
   @override
   void dispose() {
@@ -41,7 +44,8 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
+                  borderRadius:
+                      BorderRadius.vertical(bottom: Radius.circular(40)),
                 ),
                 child: Column(
                   children: [
@@ -57,7 +61,8 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
                               color: Color(0xFF4CAF50), // Green back button
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.arrow_back, color: Colors.white),
+                            child: const Icon(Icons.arrow_back,
+                                color: Colors.white),
                           ),
                         ),
                         SvgPicture.asset(
@@ -82,13 +87,13 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
                   ],
                 ),
               ),
-              
+
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0, vertical: 20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     // Texto de Instrucción
                     Text(
                       'Llenar los siguientes datos para poder publicar el curso:',
@@ -133,18 +138,22 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
                         maxLines: 4,
                         decoration: InputDecoration(
                           hintText: 'Añade una descripción',
-                          hintStyle: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 15),
+                          hintStyle: const TextStyle(
+                              color: Color(0xFFB0B0B0), fontSize: 15),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFEEEEEE)),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFEEEEEE)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFF4DC130), width: 2),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF4DC130), width: 2),
                           ),
                           filled: true,
                           fillColor: const Color(0xFFF9F9F9),
@@ -155,16 +164,21 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
 
                     // Lecciones Count Display (Real-time)
                     ValueListenableBuilder<List<CursoModel>>(
-                      valueListenable: CourseRepository.instance.coursesNotifier,
+                      valueListenable:
+                          CourseRepository.instance.coursesNotifier,
                       builder: (context, courses, _) {
                         // Find the selected course
-                        final course = selectedCourseId != null 
-                            ? courses.firstWhere((c) => c.id == selectedCourseId)
+                        final course = selectedCourseId != null
+                            ? courses
+                                .firstWhere((c) => c.id == selectedCourseId)
                             : null;
                         final count = course?.lecciones.length ?? 0;
-                        
+
                         return CustomTextField(
-                          controller: TextEditingController(text: selectedCourseId == null ? 'Sin lecciones' : '$count lecciones'),
+                          controller: TextEditingController(
+                              text: selectedCourseId == null
+                                  ? 'Sin lecciones'
+                                  : '$count lecciones'),
                           label: 'Lecciones',
                           hint: 'Seleccionar...',
                           readOnly: true,
@@ -180,7 +194,8 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
                         Navigator.pushNamed(context, '/publicar_leccion');
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: const Color(0xFF4CAF50),
                           borderRadius: BorderRadius.circular(20),
@@ -192,7 +207,9 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
                             SizedBox(width: 4),
                             Text(
                               'Crear lección',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -231,13 +248,15 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
                         child: const Row(
                           children: [
                             SizedBox(width: 16),
-                            Icon(Icons.file_upload_outlined, color: Colors.grey),
+                            Icon(Icons.file_upload_outlined,
+                                color: Colors.grey),
                             SizedBox(width: 12),
                             Text(
                               'Cargar archivo',
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.grey, // Gris como indicó el subagent
+                                color:
+                                    Colors.grey, // Gris como indicó el subagent
                               ),
                             ),
                           ],
@@ -257,7 +276,8 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
                     ),
                     const SizedBox(height: 6),
                     ValueListenableBuilder<List<CursoModel>>(
-                      valueListenable: CourseRepository.instance.coursesNotifier,
+                      valueListenable:
+                          CourseRepository.instance.coursesNotifier,
                       builder: (context, courses, _) {
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -277,11 +297,12 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
                                   child: Text('Crear Nuevo Curso'),
                                 ),
                                 ...courses.map((c) => DropdownMenuItem(
-                                  value: c.id,
-                                  child: Text(c.titulo),
-                                )),
+                                      value: c.id,
+                                      child: Text(c.titulo),
+                                    )),
                               ],
-                              onChanged: (val) => setState(() => selectedCourseId = val),
+                              onChanged: (val) =>
+                                  setState(() => selectedCourseId = val),
                             ),
                           ),
                         );
@@ -291,38 +312,8 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
 
                     // Botón Publicar
                     CustomButton(
-                      label: 'Publicar',
-                      onPressed: () {
-                        final titulo = nombreController.text.trim();
-                        if (titulo.isEmpty) return;
- 
-                        if (selectedCourseId == null) {
-                          // Create NEW Course
-                          final nuevoCurso = CursoModel(
-                            id: DateTime.now().millisecondsSinceEpoch.toString(),
-                            titulo: titulo,
-                            descripcion: descController.text.trim(),
-                            tags: const ['JAVA', 'OOP'],
-                            rating: 4.9,
-                            duracion: '1 Hora',
-                            estudiantes: 1200,
-                            progreso: 0.2,
-                            esNuevo: true,
-                            lecciones: [],
-                          );
-                          CourseRepository.instance.addCourse(nuevoCurso);
-                        } else {
-                          // Add LESSON to Existing Course
-                          final nuevaLeccion = LeccionModel(
-                            id: DateTime.now().millisecondsSinceEpoch.toString(),
-                            titulo: titulo,
-                            contenido: descController.text.trim(),
-                          );
-                          CourseRepository.instance.addLessonToCourse(selectedCourseId!, nuevaLeccion);
-                        }
-                        
-                        Navigator.pushNamed(context, '/perfil');
-                      },
+                      label: _guardando ? 'Publicando...' : 'Publicar',
+                      onPressed: _guardando ? null : _guardarCurso,
                     ),
                   ],
                 ),
@@ -332,5 +323,55 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _guardarCurso() async {
+    final nombre = nombreController.text.trim();
+    if (nombre.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('El nombre del curso es obligatorio')),
+      );
+      return;
+    }
+    setState(() => _guardando = true);
+    try {
+      await _cursoCtrl.agregarCurso(
+        idUsuario: AppSession().usuarioId ?? 1,
+        nombre: nombre,
+        contenido: descController.text.trim().isEmpty
+            ? null
+            : [
+                {
+                  "titulo": "Resumen",
+                  "cuerpo_delta": [
+                    {"insert": "${descController.text.trim()}\n"}
+                  ],
+                  "tiene_imagen": false,
+                  "tiene_video": false
+                }
+              ],
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text('Curso publicado exitosamente',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+            ]),
+            backgroundColor: const Color(0xFF4DC130),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } finally {
+      if (mounted) setState(() => _guardando = false);
+    }
   }
 }
