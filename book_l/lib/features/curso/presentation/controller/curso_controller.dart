@@ -10,6 +10,21 @@ import '../../../leccion/domain/entities/leccion.dart';
 // Adaptador primario — orquesta los casos de uso y notifica a la UI.
 // La UI solo lo instancia e invoca sus métodos; nunca toca repositorios.
 class CursoController extends ChangeNotifier {
+  // ── Singleton ──────────────────────────────────────────────────────────────
+  static final CursoController _instance = CursoController._internal();
+  factory CursoController() => _instance;
+  CursoController._internal() {
+    final repo = CursoRepositoryImpl(BooklService());
+    _getCursos = GetCursosUseCase(repo);
+    _getCursoById = GetCursoByIdUseCase(repo);
+    _addCurso = AddCursoUseCase(repo);
+    _updateCurso = UpdateCursoUseCase(repo);
+    _deleteCurso = DeleteCursoUseCase(repo);
+    _getLecciones = GetLeccionesDeCursoUseCase(repo);
+    _asociar = AsociarLeccionACursoUseCase(repo);
+    _desasociar = DesasociarLeccionDeCursoUseCase(repo);
+  }
+
   // ── Use cases ──────────────────────────────────────────────────────────────
   late final GetCursosUseCase _getCursos;
   late final GetCursoByIdUseCase _getCursoById;
@@ -25,19 +40,6 @@ class CursoController extends ChangeNotifier {
 
   // Lecciones del curso seleccionado
   List<Leccion> leccionesDeCurso = [];
-
-  // ── Constructor ────────────────────────────────────────────────────────────
-  CursoController() {
-    final repo = CursoRepositoryImpl(BooklService());
-    _getCursos = GetCursosUseCase(repo);
-    _getCursoById = GetCursoByIdUseCase(repo);
-    _addCurso = AddCursoUseCase(repo);
-    _updateCurso = UpdateCursoUseCase(repo);
-    _deleteCurso = DeleteCursoUseCase(repo);
-    _getLecciones = GetLeccionesDeCursoUseCase(repo);
-    _asociar = AsociarLeccionACursoUseCase(repo);
-    _desasociar = DesasociarLeccionDeCursoUseCase(repo);
-  }
 
   // ── READ ───────────────────────────────────────────────────────────────────
 
@@ -72,13 +74,13 @@ class CursoController extends ChangeNotifier {
   Future<void> agregarCurso({
     required int idUsuario,
     required String nombre,
-    String? introduccion,
+    List<dynamic>? contenido,
   }) async {
     final nuevo = Curso(
       idCurso: 0, // el impl asigna el ID real
       idUsuarioFk: idUsuario,
       nombre: nombre,
-      introduccion: introduccion,
+      contenido: contenido,
       estado: 'activo',
     );
     await _addCurso(nuevo);
@@ -123,5 +125,10 @@ class CursoController extends ChangeNotifier {
       leccionesDeCurso = (await _getLecciones(idCurso)).cast<Leccion>();
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    // Es un Singleton, no debe destruirse nunca para evitar errores de 'used after being disposed'.
   }
 }

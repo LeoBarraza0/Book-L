@@ -59,7 +59,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _celularController.dispose();
     _preferenciasController.dispose();
-    _ctrl.dispose();
     super.dispose();
   }
 

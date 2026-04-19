@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
@@ -6,6 +7,8 @@ import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
 import '../../../../core/storage/local_storage.dart';
+import '../../../../shared/widgets/quill_read_only_view.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 enum CapituloStatus { completed, inProgress, locked }
 
@@ -35,7 +38,6 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
 
   @override
   void dispose() {
-    _ctrl.dispose();
     super.dispose();
   }
 
@@ -436,22 +438,104 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
     );
   }
 
+  Widget _buildMediaItem(IconData icon, String label, Color color) {
+    return Container(
+      height: 140,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F0F0),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color.withOpacity(0.7), size: 36),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildContenido() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Introducción ──
-        const Text('Introducción',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 10),
-        const Text(
-          'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada lacinia integer nunc posuere ut hendrerit.',
-          style: TextStyle(
-            fontSize: 13,
-            color: Color(0xFF787878),
-            height: 1.5,
-            fontWeight: FontWeight.w500,
-          ),
+        ListenableBuilder(
+          listenable: _ctrl,
+          builder: (context, _) {
+            final contenido = _ctrl.state.selected?.contenido;
+            if (contenido == null || contenido.isEmpty) {
+              return const Text(
+                'Aún no hay introducción disponible para esta lección.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF787878),
+                  fontWeight: FontWeight.w500,
+                  height: 1.5,
+                ),
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: contenido.map((s) {
+                final titulo = s['titulo'] as String? ?? '';
+                final deltaData = s['cuerpo_delta'] as List<dynamic>?;
+                final bool tieneImagen = s['tiene_imagen'] == true;
+                final bool tieneVideo = s['tiene_video'] == true;
+                final String? imagenPath = s['imagen_path'];
+                
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (titulo.isNotEmpty) ...[
+                        Text(
+                          titulo,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      QuillReadOnlyView(
+                        delta: deltaData,
+                        fontSize: 16,
+                        color: const Color(0xFF787878),
+                      ),
+                      if (tieneImagen) ...[
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: (imagenPath != null && imagenPath.isNotEmpty)
+                              ? (imagenPath.startsWith('http') || imagenPath.startsWith('assets/'))
+                                  ? Image.network(imagenPath, width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
+                                  : Image.file(File(imagenPath), width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
+                              : _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)),
+                        ),
+                      ],
+                      if (tieneVideo) ...[
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: _buildMediaItem(Icons.play_circle_filled, 'Video adjunto', const Color(0xFFFF606F)),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }).toList(),
+            );
+          },
         ),
         const SizedBox(height: 28),
 

@@ -4,14 +4,14 @@ class Capitulo {
   final int idCapitulo;
   final int idLeccion;
   final String nombre;
-  final String? introduccion;
+  final List<dynamic>? contenido;
   final int tiempoTotal; // duración en segundos
 
   const Capitulo({
     required this.idCapitulo,
     required this.idLeccion,
     required this.nombre,
-    this.introduccion,
+    this.contenido,
     required this.tiempoTotal,
   });
 
@@ -19,14 +19,14 @@ class Capitulo {
     int? idCapitulo,
     int? idLeccion,
     String? nombre,
-    String? introduccion,
+    List<dynamic>? contenido,
     int? tiempoTotal,
   }) {
     return Capitulo(
       idCapitulo: idCapitulo ?? this.idCapitulo,
       idLeccion: idLeccion ?? this.idLeccion,
       nombre: nombre ?? this.nombre,
-      introduccion: introduccion ?? this.introduccion,
+      contenido: contenido ?? this.contenido,
       tiempoTotal: tiempoTotal ?? this.tiempoTotal,
     );
   }

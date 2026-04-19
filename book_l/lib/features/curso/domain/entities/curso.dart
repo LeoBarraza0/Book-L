@@ -4,14 +4,14 @@ class Curso {
   final int idCurso;
   final int idUsuarioFk;
   final String nombre;
-  final String? introduccion;
+  final List<dynamic>? contenido;
   final String estado; // 'activo' | 'inactivo' | 'en_revision' | 'suspendido'
 
   const Curso({
     required this.idCurso,
     required this.idUsuarioFk,
     required this.nombre,
-    this.introduccion,
+    this.contenido,
     required this.estado,
   });
 
@@ -19,14 +19,14 @@ class Curso {
     int? idCurso,
     int? idUsuarioFk,
     String? nombre,
-    String? introduccion,
+    List<dynamic>? contenido,
     String? estado,
   }) {
     return Curso(
       idCurso: idCurso ?? this.idCurso,
       idUsuarioFk: idUsuarioFk ?? this.idUsuarioFk,
       nombre: nombre ?? this.nombre,
-      introduccion: introduccion ?? this.introduccion,
+      contenido: contenido ?? this.contenido,
       estado: estado ?? this.estado,
     );
   }

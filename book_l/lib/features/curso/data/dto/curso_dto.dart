@@ -8,7 +8,7 @@ class CursoDto {
       idCurso: json['id_curso'] as int,
       idUsuarioFk: json['id_usuario_fk'] as int? ?? 1, // Default 1 (Emanuel) si falta
       nombre: json['nombre'] as String,
-      introduccion: json['introduccion'] as String?,
+      contenido: (json['contenido'] as List<dynamic>?),
       estado: json['estado'] as String? ?? 'activo',
     );
   }
@@ -18,7 +18,7 @@ class CursoDto {
       'id_curso': curso.idCurso,
       'id_usuario_fk': curso.idUsuarioFk,
       'nombre': curso.nombre,
-      'introduccion': curso.introduccion,
+      'contenido': curso.contenido,
       'estado': curso.estado,
     };
   }

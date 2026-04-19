@@ -6,7 +6,7 @@ class LeccionDto {
       idLeccion: json['id_leccion'] as int,
       idUsuarioFk: json['id_usuario_fk'] as int,
       nombre: json['nombre'] as String,
-      introduccion: json['introduccion'] as String?,
+      contenido: (json['contenido'] as List<dynamic>?),
       estado: json['estado'] as String? ?? 'activa',
     );
   }
@@ -16,7 +16,7 @@ class LeccionDto {
       'id_leccion': leccion.idLeccion,
       'id_usuario_fk': leccion.idUsuarioFk,
       'nombre': leccion.nombre,
-      'introduccion': leccion.introduccion,
+      'contenido': leccion.contenido,
       'estado': leccion.estado,
     };
   }

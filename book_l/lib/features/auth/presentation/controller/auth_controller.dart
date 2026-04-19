@@ -10,6 +10,16 @@ enum AuthStatus { idle, loading, authenticated, error }
 
 // Adaptador primario — orquesta los use cases y expone el estado a la UI.
 class AuthController extends ChangeNotifier {
+  // ── Singleton ──────────────────────────────────────────────────────────────
+  static final AuthController _instance = AuthController._internal();
+  factory AuthController() => _instance;
+  AuthController._internal() {
+    final repo = AuthRepositoryImpl(BooklService(), AppSession());
+    _login = LoginUseCase(repo);
+    _register = RegisterUseCase(repo);
+    _logout = LogoutUseCase(repo);
+  }
+
   late final LoginUseCase _login;
   late final RegisterUseCase _register;
   late final LogoutUseCase _logout;
@@ -17,13 +27,6 @@ class AuthController extends ChangeNotifier {
   AuthStatus status = AuthStatus.idle;
   Usuario? usuarioActual;
   String? errorMessage;
-
-  AuthController() {
-    final repo = AuthRepositoryImpl(BooklService(), AppSession());
-    _login = LoginUseCase(repo);
-    _register = RegisterUseCase(repo);
-    _logout = LogoutUseCase(repo);
-  }
 
   bool get isLoading => status == AuthStatus.loading;
   bool get isAuthenticated => status == AuthStatus.authenticated;
@@ -101,5 +104,10 @@ class AuthController extends ChangeNotifier {
       errorMessage = null;
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    // Es un Singleton, no debe destruirse nunca para evitar errores de 'used after being disposed'.
   }
 }

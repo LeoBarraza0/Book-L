@@ -27,7 +27,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
     nameController.dispose();
     descController.dispose();
     cursoController.dispose();
-    _leccionCtrl.dispose();
     super.dispose();
   }
 
@@ -338,9 +337,18 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
       await _leccionCtrl.agregarLeccion(
         idUsuario: AppSession().usuarioId ?? 1,
         nombre: nombre,
-        introduccion: descController.text.trim().isEmpty
+        contenido: descController.text.trim().isEmpty
             ? null
-            : descController.text.trim(),
+            : [
+                {
+                  "titulo": "Resumen",
+                  "cuerpo_delta": [
+                    {"insert": "${descController.text.trim()}\n"}
+                  ],
+                  "tiene_imagen": false,
+                  "tiene_video": false
+                }
+              ],
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
