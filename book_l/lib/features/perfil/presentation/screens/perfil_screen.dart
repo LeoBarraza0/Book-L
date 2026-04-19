@@ -6,6 +6,7 @@ import 'editar_perfil.dart';
 import '../../../../core/services/bookl_service.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../widgets/mis_contenidos_tab_widget.dart';
+import '../widgets/mis_favoritos_tab_widget.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -329,13 +330,8 @@ class _PerfilScreenState extends State<PerfilScreen>
                   children: const [
                     // Grid Tab content
                     MisContenidosTabWidget(),
-                    // Favorite Tab
-                    Center(
-                      child: Text(
-                        'Favoritos',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
+                    // Favorite Tab content
+                    MisFavoritosTabWidget(),
                   ],
                 ),
               ),

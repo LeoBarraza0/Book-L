@@ -207,6 +207,22 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                           return const SizedBox.shrink();
                         },
                       ),
+                      ListenableBuilder(
+                        listenable: AppSession().savedLecciones,
+                        builder: (context, _) {
+                          final isSaved = widget.idLeccion != null && AppSession().savedLecciones.value.contains(widget.idLeccion!);
+                          return _buildCircularIconButton(
+                            isSaved ? Icons.favorite : Icons.favorite_border,
+                            () {
+                              if (widget.idLeccion != null) {
+                                AppSession().toggleSavedLeccion(widget.idLeccion!);
+                              }
+                            },
+                            color: isSaved ? Colors.redAccent.withOpacity(0.9) : const Color(0xFF6BCA54).withOpacity(0.9),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 10),
                       _buildCircularIconButton(Icons.share, () {}),
                     ],
                   ),
@@ -219,14 +235,14 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
     );
   }
 
-  Widget _buildCircularIconButton(IconData icon, VoidCallback onTap) {
+  Widget _buildCircularIconButton(IconData icon, VoidCallback onTap, {Color? color}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: const Color(0xFF6BCA54).withOpacity(0.9), // Más visible sobre imagen
+          color: color ?? const Color(0xFF6BCA54).withOpacity(0.9), // Más visible sobre imagen
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(

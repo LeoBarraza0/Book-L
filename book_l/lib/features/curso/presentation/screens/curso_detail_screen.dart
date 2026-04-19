@@ -178,6 +178,22 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                           return const SizedBox.shrink();
                         },
                       ),
+                      ListenableBuilder(
+                        listenable: AppSession().savedCursos,
+                        builder: (context, _) {
+                          final isSaved = widget.idCurso != null && AppSession().savedCursos.value.contains(widget.idCurso!);
+                          return _buildCircularIconButton(
+                            isSaved ? Icons.favorite : Icons.favorite_border,
+                            () {
+                              if (widget.idCurso != null) {
+                                AppSession().toggleSavedCurso(widget.idCurso!);
+                              }
+                            },
+                            color: isSaved ? Colors.redAccent : const Color(0xFF6BCA54),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 10),
                       _buildCircularIconButton(Icons.share, () {}),
                     ],
                   ),
@@ -230,21 +246,25 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
   }
 
   Widget _buildTitleAndProgress() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Ejemplo De Curso',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
+    return ListenableBuilder(
+      listenable: _ctrl,
+      builder: (context, _) {
+        final curso = _ctrl.state.selected;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    curso?.nombre ?? 'Cargando...',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
               const SizedBox(height: 12),
               GestureDetector(
                 onTap: () => Navigator.push(
@@ -325,6 +345,8 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           ),
         ),
       ],
+    );
+      },
     );
   }
 
@@ -468,14 +490,20 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada lacinia integer nunc posuere ut hendrerit.',
-          style: TextStyle(
-            fontSize: 14,
-            color: Color(0xFF787878),
-            fontWeight: FontWeight.w600,
-            height: 1.4,
-          ),
+        ListenableBuilder(
+          listenable: _ctrl,
+          builder: (context, _) {
+            final intro = _ctrl.state.selected?.introduccion ?? 'Aún no hay introducción disponible para este curso.';
+            return Text(
+              intro,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF787878),
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+              ),
+            );
+          },
         ),
         const SizedBox(height: 32),
         const Text(
@@ -669,11 +697,23 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Icon(
-                  Icons.favorite_border,
-                  color: Colors.redAccent,
-                  size: 20,
-                ),
+                if (idLeccion != null)
+                  ListenableBuilder(
+                    listenable: AppSession().savedLecciones,
+                    builder: (context, _) {
+                      final isSaved = AppSession().savedLecciones.value.contains(idLeccion);
+                      return GestureDetector(
+                        onTap: () {
+                          AppSession().toggleSavedLeccion(idLeccion);
+                        },
+                        child: Icon(
+                          isSaved ? Icons.favorite : Icons.favorite_border,
+                          color: Colors.redAccent,
+                          size: 24,
+                        ),
+                      );
+                    },
+                  ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: 32,
