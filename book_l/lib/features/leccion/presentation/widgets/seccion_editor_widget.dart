@@ -1,21 +1,30 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:image_picker/image_picker.dart';
 
 class SeccionData {
   final TextEditingController tituloCtrl;
   late final quill.QuillController cuerpoCtrl;
   bool tieneImagen;
   bool tieneVideo;
+  String? imagenPath;
+  String? videoPath;
 
   SeccionData({
     String titulo = '',
     String cuerpo = '',
+    List<dynamic>? cuerpoDelta,
     this.tieneImagen = false,
     this.tieneVideo = false,
+    this.imagenPath,
+    this.videoPath,
   }) : tituloCtrl = TextEditingController(text: titulo) {
     quill.Document doc;
     try {
-      if (cuerpo.isNotEmpty) {
+      if (cuerpoDelta != null && cuerpoDelta.isNotEmpty) {
+        doc = quill.Document.fromJson(cuerpoDelta);
+      } else if (cuerpo.isNotEmpty) {
         doc = quill.Document()..insert(0, '$cuerpo\n');
       } else {
         doc = quill.Document();
@@ -32,6 +41,28 @@ class SeccionData {
   void dispose() {
     tituloCtrl.dispose();
     cuerpoCtrl.dispose();
+  }
+
+  factory SeccionData.fromJson(Map<String, dynamic> json) {
+    return SeccionData(
+      titulo: json['titulo'] as String? ?? '',
+      cuerpoDelta: json['cuerpo_delta'] as List<dynamic>?,
+      tieneImagen: json['tiene_imagen'] as bool? ?? false,
+      tieneVideo: json['tiene_video'] as bool? ?? false,
+      imagenPath: json['imagen_path'] as String?,
+      videoPath: json['video_path'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'titulo': tituloCtrl.text,
+      'cuerpo_delta': cuerpoCtrl.document.toDelta().toJson(),
+      'tiene_imagen': tieneImagen,
+      'tiene_video': tieneVideo,
+      'imagen_path': imagenPath,
+      'video_path': videoPath,
+    };
   }
 }
 
@@ -216,7 +247,7 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
                 paragraph: quill.DefaultTextBlockStyle(
                   const TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 14,
+                    fontSize: 16,
                     color: Color(0xFF787878),
                     fontWeight: FontWeight.w400,
                   ),
@@ -243,7 +274,11 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
               icon: Icons.image_outlined,
               label: 'Imagen',
               color: const Color(0xFF4DC130),
-              onRemove: () => setState(() => widget.data.tieneImagen = false),
+              path: widget.data.imagenPath,
+              onRemove: () => setState(() {
+                widget.data.tieneImagen = false;
+                widget.data.imagenPath = null;
+              }),
             ),
             const SizedBox(width: 12),
           ],
@@ -252,7 +287,11 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
               icon: Icons.play_circle_filled,
               label: 'Video',
               color: const Color(0xFFFF606F),
-              onRemove: () => setState(() => widget.data.tieneVideo = false),
+              path: widget.data.videoPath,
+              onRemove: () => setState(() {
+                widget.data.tieneVideo = false;
+                widget.data.videoPath = null;
+              }),
             ),
         ],
       ),
@@ -264,6 +303,7 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
     required String label,
     required Color color,
     required VoidCallback onRemove,
+    String? path,
   }) {
     return Expanded(
       child: Stack(
@@ -276,23 +316,24 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: color.withOpacity(0.3), width: 1.5),
             ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, color: color.withOpacity(0.7), size: 32),
-                  const SizedBox(height: 6),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: color.withOpacity(0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            child: path != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: path.startsWith('http') || path.startsWith('assets/')
+                        ? Image.network(
+                            path,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (_, __, ___) => _buildIconContent(icon, label, color),
+                          )
+                        : Image.file(
+                            File(path),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (_, __, ___) => _buildIconContent(icon, label, color),
+                          ),
+                  )
+                : _buildIconContent(icon, label, color),
           ),
           Positioned(
             top: 6,
@@ -375,6 +416,52 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
     );
   }
 
-  void _agregarImagen() => setState(() => widget.data.tieneImagen = true);
-  void _agregarVideo() => setState(() => widget.data.tieneVideo = true);
+  // Contenido interno del icono (usado si no hay path o da error al cargar)
+  Widget _buildIconContent(IconData icon, String label, Color color) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color.withOpacity(0.7), size: 32),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color.withOpacity(0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _agregarImagen() async {
+    final picker = ImagePicker();
+    final img = await picker.pickImage(source: ImageSource.gallery);
+    if (img != null) {
+      setState(() {
+        widget.data.tieneImagen = true;
+        widget.data.imagenPath = img.path;
+      });
+      // Llama a onChanged si exisitera para auto-guardar
+    } else {
+      // Por si solo quería activar el placeholder y canceló (opcional, pero puedes dejarlo en true sin path)
+      setState(() => widget.data.tieneImagen = true);
+    }
+  }
+
+  Future<void> _agregarVideo() async {
+    final picker = ImagePicker();
+    final vid = await picker.pickVideo(source: ImageSource.gallery);
+    if (vid != null) {
+      setState(() {
+        widget.data.tieneVideo = true;
+        widget.data.videoPath = vid.path;
+      });
+    } else {
+      setState(() => widget.data.tieneVideo = true);
+    }
+  }
 }

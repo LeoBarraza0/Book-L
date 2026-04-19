@@ -45,6 +45,15 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
           setState(() {
             _leccionActual = l;
             _tituloCtrl.text = l.nombre;
+            
+            _secciones.clear();
+            if (l.contenido != null && l.contenido!.isNotEmpty) {
+              for (final s in l.contenido!) {
+                _secciones.add(SeccionData.fromJson(s));
+              }
+            } else {
+              _secciones.add(SeccionData(titulo: 'Introducción'));
+            }
           });
         }
       });
@@ -79,19 +88,18 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
       () => _guardarAnimCtrl.forward(),
     );
 
-    // Sección inicial por defecto
-    _secciones.add(SeccionData(
-      titulo: '¿Qué son las derivadas?',
-      cuerpo:
-          'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean.',
-    ));
+    // Sección inicial por defecto solo si no cargamos una existente
+    if (widget.idLeccion == null) {
+      _secciones.add(SeccionData(
+        titulo: 'Introducción',
+      ));
+    }
   }
 
   @override
   void dispose() {
     _tituloCtrl.dispose();
     _scrollCtrl.dispose();
-    _leccionCtrl.dispose();
     _headerAnimCtrl.dispose();
     _guardarAnimCtrl.dispose();
     for (final s in _secciones) {
@@ -582,7 +590,10 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
     try {
       if (_leccionActual != null) {
         await _leccionCtrl.editarLeccion(
-          _leccionActual!.copyWith(nombre: nombre),
+          _leccionActual!.copyWith(
+            nombre: nombre,
+            contenido: _secciones.map((s) => s.toJson()).toList(),
+          ),
         );
       }
       if (mounted) {
@@ -642,7 +653,6 @@ class _GuardarButtonState extends State<_GuardarButton>
 
   @override
   void dispose() {
-    _ctrl.dispose();
     super.dispose();
   }
 

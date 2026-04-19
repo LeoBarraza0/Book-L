@@ -11,6 +11,27 @@ import '../../domain/usecases/leccion_usecases.dart';
 // Adaptador primario — maneja Lección y Capítulo juntos porque en la UI
 // siempre se navegan en conjunto (lección → lista de capítulos).
 class LeccionController extends ChangeNotifier {
+  // ── Singleton ──────────────────────────────────────────────────────────────
+  static final LeccionController _instance = LeccionController._internal();
+  factory LeccionController() => _instance;
+  LeccionController._internal() {
+    final service = BooklService();
+    final leccionRepo = LeccionRepositoryImpl(service);
+    final capituloRepo = CapituloRepositoryImpl(service);
+
+    _getLecciones = GetLeccionesUseCase(leccionRepo);
+    _getLeccionById = GetLeccionByIdUseCase(leccionRepo);
+    _addLeccion = AddLeccionUseCase(leccionRepo);
+    _updateLeccion = UpdateLeccionUseCase(leccionRepo);
+    _deleteLeccion = DeleteLeccionUseCase(leccionRepo);
+    _getCapitulos = GetCapitulosDeLeccionUseCase(leccionRepo);
+
+    _getCapituloById = GetCapituloByIdUseCase(capituloRepo);
+    _addCapitulo = AddCapituloUseCase(capituloRepo);
+    _updateCapitulo = UpdateCapituloUseCase(capituloRepo);
+    _deleteCapitulo = DeleteCapituloUseCase(capituloRepo);
+  }
+
   // ── Use cases — Lección ───────────────────────────────────────────────────
   late final GetLeccionesUseCase _getLecciones;
   late final GetLeccionByIdUseCase _getLeccionById;
@@ -30,25 +51,7 @@ class LeccionController extends ChangeNotifier {
 
   // Capítulos de la lección seleccionada
   List<Capitulo> capitulosDeLeccion = [];
-
-  // ── Constructor ────────────────────────────────────────────────────────────
-  LeccionController() {
-    final service = BooklService();
-    final leccionRepo = LeccionRepositoryImpl(service);
-    final capituloRepo = CapituloRepositoryImpl(service);
-
-    _getLecciones = GetLeccionesUseCase(leccionRepo);
-    _getLeccionById = GetLeccionByIdUseCase(leccionRepo);
-    _addLeccion = AddLeccionUseCase(leccionRepo);
-    _updateLeccion = UpdateLeccionUseCase(leccionRepo);
-    _deleteLeccion = DeleteLeccionUseCase(leccionRepo);
-    _getCapitulos = GetCapitulosDeLeccionUseCase(leccionRepo);
-
-    _getCapituloById = GetCapituloByIdUseCase(capituloRepo);
-    _addCapitulo = AddCapituloUseCase(capituloRepo);
-    _updateCapitulo = UpdateCapituloUseCase(capituloRepo);
-    _deleteCapitulo = DeleteCapituloUseCase(capituloRepo);
-  }
+  Capitulo? capituloSeleccionado;
 
   // ── READ — Lección ─────────────────────────────────────────────────────────
 
@@ -84,13 +87,13 @@ class LeccionController extends ChangeNotifier {
   Future<void> agregarLeccion({
     required int idUsuario,
     required String nombre,
-    String? introduccion,
+    List<dynamic>? contenido,
   }) async {
     final nueva = Leccion(
       idLeccion: 0, // el impl asigna el ID real
       idUsuarioFk: idUsuario,
       nombre: nombre,
-      introduccion: introduccion,
+      contenido: contenido,
       estado: 'activa',
     );
     await _addLeccion(nueva);
@@ -122,6 +125,16 @@ class LeccionController extends ChangeNotifier {
 
   // ── READ — Capítulo ────────────────────────────────────────────────────────
 
+  Future<void> seleccionarCapitulo(int id) async {
+    try {
+      final cap = await _getCapituloById(id);
+      capituloSeleccionado = cap;
+    } catch (e) {
+      // Manejo de error silencioso o log
+    }
+    notifyListeners();
+  }
+
   Future<Capitulo?> obtenerCapitulo(int id) => _getCapituloById(id);
 
   /// Devuelve los capítulos ya en memoria de una lección.
@@ -134,14 +147,14 @@ class LeccionController extends ChangeNotifier {
   Future<void> agregarCapitulo({
     required int idLeccion,
     required String nombre,
-    String? introduccion,
+    List<dynamic>? contenido,
     int tiempoTotal = 0,
   }) async {
     final nuevo = Capitulo(
       idCapitulo: 0, // el impl asigna el ID real
       idLeccion: idLeccion,
       nombre: nombre,
-      introduccion: introduccion,
+      contenido: contenido,
       tiempoTotal: tiempoTotal,
     );
     await _addCapitulo(nuevo);
@@ -156,10 +169,13 @@ class LeccionController extends ChangeNotifier {
 
   Future<void> editarCapitulo(Capitulo capitulo) async {
     await _updateCapitulo(capitulo);
+    if (capituloSeleccionado?.idCapitulo == capitulo.idCapitulo) {
+      capituloSeleccionado = capitulo;
+    }
     if (state.selected?.idLeccion == capitulo.idLeccion) {
       capitulosDeLeccion = await _getCapitulos(capitulo.idLeccion);
-      notifyListeners();
     }
+    notifyListeners();
   }
 
   // ── DELETE — Capítulo ──────────────────────────────────────────────────────
@@ -170,5 +186,10 @@ class LeccionController extends ChangeNotifier {
       capitulosDeLeccion = await _getCapitulos(idLeccion);
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    // Es un Singleton, no debe destruirse nunca para evitar errores de 'used after being disposed'.
   }
 }

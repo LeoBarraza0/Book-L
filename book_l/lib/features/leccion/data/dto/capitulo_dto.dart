@@ -6,7 +6,7 @@ class CapituloDto {
       idCapitulo: json['id_capitulo'] as int,
       idLeccion: json['id_leccion'] as int,
       nombre: json['nombre'] as String,
-      introduccion: json['introduccion'] as String?,
+      contenido: (json['contenido'] as List<dynamic>?),
       tiempoTotal: json['tiempo_total'] as int? ?? 0,
     );
   }
@@ -16,7 +16,7 @@ class CapituloDto {
       'id_capitulo': capitulo.idCapitulo,
       'id_leccion': capitulo.idLeccion,
       'nombre': capitulo.nombre,
-      'introduccion': capitulo.introduccion,
+      'contenido': capitulo.contenido,
       'tiempo_total': capitulo.tiempoTotal,
     };
   }

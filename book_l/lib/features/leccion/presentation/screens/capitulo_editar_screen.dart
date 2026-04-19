@@ -45,6 +45,15 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
           setState(() {
             _capituloActual = cap;
             _nombreCtrl.text = cap.nombre;
+
+            _secciones.clear();
+            if (cap.contenido != null && cap.contenido!.isNotEmpty) {
+              for (final s in cap.contenido!) {
+                _secciones.add(SeccionData.fromJson(s));
+              }
+            } else {
+              _secciones.add(SeccionData(titulo: 'Introducción'));
+            }
           });
         }
       });
@@ -79,24 +88,18 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
       () => _guardarAnimCtrl.forward(),
     );
 
-    // Secciones iniciales según Figma
-    _secciones.add(SeccionData(
-      titulo: 'Introducción',
-      cuerpo:
-          'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada .',
-    ));
-    _secciones.add(SeccionData(
-      titulo: '¿Qué son las derivadas?',
-      cuerpo:
-          'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean.',
-    ));
+    // Secciones iniciales si es nuevo
+    if (widget.idCapitulo == null) {
+      _secciones.add(SeccionData(
+        titulo: 'Introducción',
+      ));
+    }
   }
 
   @override
   void dispose() {
     _scrollCtrl.dispose();
     _nombreCtrl.dispose();
-    _ctrl.dispose();
     _headerAnimCtrl.dispose();
     _guardarAnimCtrl.dispose();
     for (final s in _secciones) {
@@ -497,7 +500,10 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
       if (_capituloActual != null) {
         // Edición
         await _ctrl.editarCapitulo(
-          _capituloActual!.copyWith(nombre: nombre),
+          _capituloActual!.copyWith(
+            nombre: nombre,
+            contenido: _secciones.map((s) => s.toJson()).toList(),
+          ),
         );
       } else {
         // Creación nueva
@@ -505,6 +511,7 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
         await _ctrl.agregarCapitulo(
           idLeccion: idLeccion,
           nombre: nombre,
+          contenido: _secciones.map((s) => s.toJson()).toList(),
         );
       }
       if (mounted) {
@@ -565,7 +572,6 @@ class _GuardarButtonState extends State<_GuardarButton>
 
   @override
   void dispose() {
-    _ctrl.dispose();
     super.dispose();
   }
 

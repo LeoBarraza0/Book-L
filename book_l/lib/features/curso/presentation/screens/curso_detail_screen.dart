@@ -8,7 +8,8 @@ import '../../../perfil/presentation/screens/perfil_screen.dart';
 import '../controller/curso_controller.dart';
 import 'curso_editar_screen.dart';
 import '../../../../core/storage/local_storage.dart';
-
+import '../../../../shared/widgets/quill_read_only_view.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 class CursoDetailScreen extends StatefulWidget {
   final int? idCurso;
   const CursoDetailScreen({super.key, this.idCurso});
@@ -31,7 +32,6 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
 
   @override
   void dispose() {
-    _ctrl.dispose();
     super.dispose();
   }
 
@@ -493,15 +493,45 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
         ListenableBuilder(
           listenable: _ctrl,
           builder: (context, _) {
-            final intro = _ctrl.state.selected?.introduccion ?? 'Aún no hay introducción disponible para este curso.';
-            return Text(
-              intro,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF787878),
-                fontWeight: FontWeight.w600,
-                height: 1.4,
-              ),
+            final contenido = _ctrl.state.selected?.contenido;
+            if (contenido == null || contenido.isEmpty) {
+              return const Text(
+                'Aún no hay introducción disponible para este curso.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF787878),
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: contenido.map((s) {
+                final titulo = s['titulo'] as String? ?? '';
+                final deltaData = s['cuerpo_delta'] as List<dynamic>?;
+                
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (titulo.isNotEmpty && titulo != 'Resumen') ...[
+                        Text(
+                          titulo,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      QuillReadOnlyView(
+                        delta: deltaData,
+                        fontSize: 16,
+                        color: const Color(0xFF787878),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
             );
           },
         ),

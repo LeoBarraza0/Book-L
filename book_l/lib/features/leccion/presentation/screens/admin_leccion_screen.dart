@@ -29,7 +29,6 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
   @override
   void dispose() {
     _searchController.dispose();
-    _leccionCtrl.dispose();
     super.dispose();
   }
 

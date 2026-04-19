@@ -1,8 +1,34 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../../shared/widgets/quill_read_only_view.dart';
 
-class CapituloScreen extends StatelessWidget {
-  const CapituloScreen({super.key});
+import '../controller/leccion_controller.dart';
+import '../../domain/entities/capitulo.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
+
+class CapituloScreen extends StatefulWidget {
+  final int? idCapitulo;
+  const CapituloScreen({super.key, this.idCapitulo});
+
+  @override
+  State<CapituloScreen> createState() => _CapituloScreenState();
+}
+
+class _CapituloScreenState extends State<CapituloScreen> {
+  final _ctrl = LeccionController();
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarData();
+  }
+
+  Future<void> _cargarData() async {
+    if (widget.idCapitulo != null) {
+      await _ctrl.seleccionarCapitulo(widget.idCapitulo!);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,127 +46,77 @@ class CapituloScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Introducción
-                      const Text('Introducción',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada lacinia integer nunc posuere ut hendrerit.',
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF787878),
-                            fontWeight: FontWeight.w600,
-                            height: 1.4),
-                      ),
-                      const SizedBox(height: 36),
+                      // Renderización dinámica del JSON `contenido`
+                      ListenableBuilder(
+                        listenable: _ctrl,
+                        builder: (context, _) {
+                          final cap = _ctrl.capituloSeleccionado;
+                          if (cap != null && cap.contenido != null && cap.contenido!.isNotEmpty) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: cap.contenido!.map((s) {
+                                final titulo = s['titulo'] as String? ?? '';
+                                final deltaData = s['cuerpo_delta'] as List<dynamic>?;
 
-                      // Título Principal
-                      const Text('¿Qué son las derivadas?',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean.',
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF787878),
-                            fontWeight: FontWeight.w600,
-                            height: 1.4),
-                      ),
-                      const SizedBox(height: 28),
-
-                      // Video Thumbnail Placeholder
-                      Container(
-                        height: 192,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD9D9D9),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Center(
-                          child: Icon(Icons.play_circle_fill,
-                              size: 48, color: Colors.black54),
-                        ),
-                      ),
-                      const SizedBox(height: 36),
-
-                      // Subtítulo Lorem Ipsum
-                      const Text('Lorem ipsum',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 16),
-
-                      // Dos cuadros grises
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              height: 94,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFD9D9D9),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                          Expanded(
-                            child: Container(
-                              height: 94,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFD9D9D9),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Texto extra
-                      const Text(
-                        'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean.',
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF787878),
-                            fontWeight: FontWeight.w600,
-                            height: 1.4),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Fórmula Rectángulo
-                      Container(
-                        height: 94,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD9D9D9),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Text('√(x + y)',
-                            style: TextStyle(
-                                fontSize: 32,
-                                fontStyle: FontStyle.italic,
-                                fontWeight: FontWeight.bold)),
-                      ),
-                      const SizedBox(height: 24),
-
-                      const Text(
-                        'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean.',
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF787878),
-                            fontWeight: FontWeight.w600,
-                            height: 1.4),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean.',
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF787878),
-                            fontWeight: FontWeight.w600,
-                            height: 1.4),
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 24),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      if (titulo.isNotEmpty) ...[
+                                        Text(
+                                          titulo,
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                        ),
+                                        const SizedBox(height: 8),
+                                      ],
+                                      QuillReadOnlyView(
+                                        delta: deltaData,
+                                        fontSize: 16,
+                                        color: const Color(0xFF787878),
+                                      ),
+                                      if (s['tiene_imagen'] == true) ...[
+                                        const SizedBox(height: 12),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: (s['imagen_path'] != null && s['imagen_path'].toString().isNotEmpty)
+                                              ? (s['imagen_path'].toString().startsWith('http') || s['imagen_path'].toString().startsWith('assets/'))
+                                                  ? Image.network(s['imagen_path'], width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
+                                                  : Image.file(File(s['imagen_path']), width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
+                                              : _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)),
+                                        ),
+                                      ],
+                                      if (s['tiene_video'] == true) ...[
+                                        const SizedBox(height: 12),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: _buildMediaItem(Icons.play_circle_filled, 'Video adjunto', const Color(0xFFFF606F)),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            );
+                          } else {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Introducción',
+                                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 12),
+                                Text(
+                                  cap == null ? 'Cargando contenido...' : 'Aún no hay contenido para este capítulo.',
+                                  style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFF787878),
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.4),
+                                ),
+                              ],
+                            );
+                          }
+                        },
                       ),
 
                       const SizedBox(height: 64),
@@ -277,6 +253,34 @@ class CapituloScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+  Widget _buildMediaItem(IconData icon, String label, Color color) {
+    return Container(
+      height: 140,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F0F0),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color.withOpacity(0.7), size: 36),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
