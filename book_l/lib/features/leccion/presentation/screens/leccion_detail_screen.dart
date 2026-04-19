@@ -8,7 +8,9 @@ import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
-import 'package:flutter_quill/flutter_quill.dart' as quill;
+import '../../../../core/services/bookl_service.dart';
+import '../../../curso/domain/entities/curso.dart';
+import '../../../perfil/presentation/screens/perfil_screen.dart';
 
 enum CapituloStatus { completed, inProgress, locked }
 
@@ -280,37 +282,58 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 12,
-                    backgroundColor: Color(0xFF6BCA54),
-                    child: Icon(Icons.person, color: Colors.white, size: 16),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('Autor_id', // TODO: Cargar autor real
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 13)),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                        color: const Color(0xFF79AC63),
-                        borderRadius: BorderRadius.circular(4)),
-                    child: const Text('Comunidad',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600)),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('|  4.5',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 13)),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
-                ],
+              ListenableBuilder(
+                listenable: BooklService(),
+                builder: (context, _) {
+                  final creator = BooklService().usuarios.cast<dynamic>().firstWhere(
+                        (u) => (u as dynamic).idUsuario == leccion?.idUsuarioFk,
+                        orElse: () => null,
+                      );
+                  return GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      _slideRoute(PerfilScreen(idUsuario: creator?.idUsuario)),
+                    ),
+                    child: Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 12,
+                          backgroundColor: Color(0xFF6BCA54),
+                          child: Icon(Icons.person, color: Colors.white, size: 16),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          creator?.nombreCompleto ?? 'Autor_id',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Color(0xFF6BCA54),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFF79AC63),
+                              borderRadius: BorderRadius.circular(4)),
+                          child: Text(
+                            creator?.rol ?? 'Comunidad',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('|  4.5',
+                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
+                      ],
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -346,6 +369,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
   }
 
   Widget _buildCursosAsociados() {
+    final idLeccion = _ctrl.state.selected?.idLeccion;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -356,33 +380,61 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
         const SizedBox(height: 12),
         SizedBox(
           height: 60,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: [
-              _buildCursoAsociadoItem(context, width: 110),
-              const SizedBox(width: 12),
-              _buildCursoAsociadoItem(context, width: 110),
-              const SizedBox(width: 12),
-              _buildCursoAsociadoItem(context, width: 110),
-              const SizedBox(width: 12),
-              _buildCursoAsociadoItem(context, width: 110),
-            ],
+          child: ListenableBuilder(
+            listenable: BooklService(),
+            builder: (context, _) {
+              final asociadosIds = BooklService().leccionesCursos
+                  .where((e) => e['id_leccion'] == idLeccion)
+                  .map((e) => e['id_curso'])
+                  .toList();
+              
+              final asociados = BooklService().cursos
+                  .where((c) => asociadosIds.contains(c.idCurso))
+                  .toList();
+
+              if (asociados.isEmpty) {
+                return const Text('Sin cursos asociados', style: TextStyle(fontSize: 13, color: Colors.black45));
+              }
+
+              return ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: asociados.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 12),
+                itemBuilder: (context, index) => _buildCursoAsociadoItem(
+                  context, 
+                  width: 130, 
+                  curso: asociados[index],
+                ),
+              );
+            },
           ),
         ),
       ],
     );
   }
 
-  Widget _buildCursoAsociadoItem(BuildContext context, {required double width}) {
+  Widget _buildCursoAsociadoItem(BuildContext context, {required double width, required Curso curso}) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, '/curso_detail');
+        Navigator.pushNamed(context, '/curso_detail', arguments: curso.idCurso);
       },
       child: Container(
         width: width,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: const Color(0xFF81CF6E),
           borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          curso.nombre,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
         ),
       ),
     );
@@ -577,16 +629,32 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
         const Text('Material Relacionado',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 14),
-        _buildMaterialItem(
-            icon: Icons.insert_drive_file,
-            title: 'Limites y continuidad',
-            duration: '15 minutos'),
-        const SizedBox(height: 12),
-        _buildMaterialItem(
-            icon: Icons.play_arrow,
-            title: 'Limites y continuidad',
-            duration: '15 minutos',
-            iconColor: const Color(0xFFFF606F)),
+        ListenableBuilder(
+          listenable: BooklService(),
+          builder: (context, _) {
+            final leccionId = _ctrl.state.selected?.idLeccion;
+            final materiales = BooklService().materiales.where(
+              (m) => m.idLeccionFk == leccionId
+            ).toList();
+
+            if (materiales.isEmpty) {
+              return const Text('No hay material adicional disponible.', 
+                style: TextStyle(fontSize: 14, color: Colors.grey));
+            }
+
+            return Column(
+              children: materiales.map((m) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildMaterialItem(
+                  icon: m.tipo == 'documento' || m.tipo == 'pdf' ? Icons.insert_drive_file : Icons.play_arrow,
+                  title: m.nombre,
+                  duration: '${(m.tamanoBytes / (1024 * 1024)).toStringAsFixed(1)} MB',
+                  iconColor: m.tipo == 'video' ? const Color(0xFFFF606F) : const Color(0xFF4DC130),
+                ),
+              )).toList(),
+            );
+          },
+        ),
         const SizedBox(height: 32),
 
         // ── Autor ──
@@ -762,47 +830,91 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
   }
 
   Widget _buildAutorCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFD9D9D9),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Image.network(
-              'https://picsum.photos/100/100?random=1', // Placeholder temporal
-              width: 75,
-              height: 75,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  Container(width: 75, height: 75, color: Colors.grey),
-            ),
+    final leccion = _ctrl.state.selected;
+    return ListenableBuilder(
+      listenable: BooklService(),
+      builder: (context, _) {
+        final creator = BooklService().usuarios.cast<dynamic>().firstWhere(
+              (u) => (u as dynamic).idUsuario == leccion?.idUsuarioFk,
+              orElse: () => null,
+            );
+        return GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            _slideRoute(PerfilScreen(idUsuario: creator?.idUsuario)),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFD9D9D9),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
               children: [
-                const Text('Emanuel Barranco',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87)),
-                const SizedBox(height: 6),
-                const Text('Estudiante de Ingeniería de Sistemas',
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF555555),
-                        fontWeight: FontWeight.w500)),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    width: 75,
+                    height: 75,
+                    color: const Color(0xFF6BCA54),
+                    child: const Icon(Icons.person, color: Colors.white, size: 40),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        creator?.nombreCompleto ?? 'Emanuel Barranco',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '${creator?.rol ?? "Profesor"} de ${creator?.programa ?? "Ingeniería"}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF555555),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.black26),
               ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  Route _slideRoute(Widget page) {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final slide = Tween<Offset>(
+          begin: const Offset(1.0, 0),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+        return SlideTransition(position: slide, child: child);
+      },
+      transitionDuration: const Duration(milliseconds: 380),
+    );
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'Fecha desconocida';
+    final months = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }
 

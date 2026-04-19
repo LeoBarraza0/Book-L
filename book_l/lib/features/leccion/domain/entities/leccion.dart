@@ -6,6 +6,8 @@ class Leccion {
   final String nombre;
   final List<dynamic>? contenido;
   final String estado; // 'activa' | 'inactiva' | 'en_revision' | 'suspendida'
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const Leccion({
     required this.idLeccion,
@@ -13,6 +15,8 @@ class Leccion {
     required this.nombre,
     this.contenido,
     required this.estado,
+    this.createdAt,
+    this.updatedAt,
   });
 
   Leccion copyWith({
@@ -21,6 +25,8 @@ class Leccion {
     String? nombre,
     List<dynamic>? contenido,
     String? estado,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return Leccion(
       idLeccion: idLeccion ?? this.idLeccion,
@@ -28,6 +34,8 @@ class Leccion {
       nombre: nombre ?? this.nombre,
       contenido: contenido ?? this.contenido,
       estado: estado ?? this.estado,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
-import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
 import '../../../leccion/presentation/screens/leccion_detail_screen.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
 import '../controller/curso_controller.dart';
 import 'curso_editar_screen.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
-import 'package:flutter_quill/flutter_quill.dart' as quill;
+import '../../../../core/services/bookl_service.dart';
+
 class CursoDetailScreen extends StatefulWidget {
   final int? idCurso;
   const CursoDetailScreen({super.key, this.idCurso});
@@ -265,87 +265,96 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                       color: Colors.black87,
                     ),
                   ),
-              const SizedBox(height: 12),
-              GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  _slideRoute(const PerfilScreen()),
-                ),
-                child: Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 12,
-                      backgroundColor: Color(0xFF6BCA54),
-                      child: Icon(Icons.person, color: Colors.white, size: 16),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Ema Nuel',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        decoration: TextDecoration.underline,
-                        decorationColor: Color(0xFF6BCA54),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF79AC63),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'Estudiante',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
+                  const SizedBox(height: 12),
+                  ListenableBuilder(
+                    listenable: BooklService(),
+                    builder: (context, _) {
+                      final creator = BooklService().usuarios.cast<dynamic>().firstWhere(
+                        (u) => (u as dynamic).idUsuario == curso?.idUsuarioFk,
+                        orElse: () => null,
+                      );
+                      return GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          _slideRoute(PerfilScreen(idUsuario: creator?.idUsuario)),
                         ),
-                      ),
+                        child: Row(
+                          children: [
+                            const CircleAvatar(
+                              radius: 12,
+                              backgroundColor: Color(0xFF6BCA54),
+                              child: Icon(Icons.person, color: Colors.white, size: 16),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              creator?.nombreCompleto ?? 'Cargando...',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Color(0xFF6BCA54),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF79AC63),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                creator?.rol ?? 'Estudiante',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              '|  4.5',
+                              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(
+              width: 65,
+              height: 65,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 65,
+                    height: 65,
+                    child: CircularProgressIndicator(
+                      value: 0.2,
+                      strokeWidth: 6,
+                      backgroundColor: Color(0xFFD9D9D9),
+                      color: Color(0xFF4DC130),
+                      strokeAlign: CircularProgressIndicator.strokeAlignCenter,
                     ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      '|  4.5',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
-                  ],
-                ),
+                  ),
+                  Text(
+                    '20%',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-        const SizedBox(
-          width: 65,
-          height: 65,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 65,
-                height: 65,
-                child: CircularProgressIndicator(
-                  value: 0.2,
-                  strokeWidth: 6,
-                  backgroundColor: Color(0xFFD9D9D9),
-                  color: Color(0xFF4DC130),
-                  strokeAlign: CircularProgressIndicator.strokeAlignCenter,
-                ),
-              ),
-              Text(
-                '20%',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+            ),
+          ],
+        );
       },
     );
   }
@@ -370,17 +379,23 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
+                  children: [
+                    const Text(
                       'Creación',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
                     ),
-                    Text(
-                      '1 Marzo 2026',
-                      style: TextStyle(fontSize: 11, color: Colors.black54),
+                    ListenableBuilder(
+                      listenable: _ctrl,
+                      builder: (context, _) {
+                        final date = _ctrl.state.selected?.createdAt;
+                        return Text(
+                          _formatDate(date),
+                          style: const TextStyle(fontSize: 11, color: Colors.black54),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -402,17 +417,20 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
+                  children: [
+                    const Text(
                       'Rate: 4.5',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
                     ),
-                    Text(
-                      '167 comentarios',
-                      style: TextStyle(fontSize: 11, color: Colors.black54),
+                    ListenableBuilder(
+                      listenable: BooklService(), // Listener dummy or actual comments controller if it existed
+                      builder: (context, _) => const Text(
+                        '0 comentarios',
+                        style: TextStyle(fontSize: 11, color: Colors.black54),
+                      ),
                     ),
                   ],
                 ),
@@ -774,6 +792,15 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'Fecha desconocida';
+    final months = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }
 
