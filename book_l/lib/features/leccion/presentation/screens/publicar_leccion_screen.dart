@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:book_l/shared/widgets/custom_button.dart';
 import 'package:book_l/shared/widgets/custom_text_field.dart';
 import '../widgets/agregar_seccion_button.dart';
+import '../controller/leccion_controller.dart';
+import '../../../../core/storage/local_storage.dart';
 
 class PublicarLeccionScreen extends StatefulWidget {
   const PublicarLeccionScreen({super.key});
@@ -15,6 +17,8 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController descController = TextEditingController();
   final TextEditingController cursoController = TextEditingController();
+  final _leccionCtrl = LeccionController();
+  bool _guardando = false;
 
   final List<String> _capitulos = ['Capítulo 1 - Introducción'];
 
@@ -23,6 +27,7 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
     nameController.dispose();
     descController.dispose();
     cursoController.dispose();
+    _leccionCtrl.dispose();
     super.dispose();
   }
 
@@ -245,8 +250,8 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
 
                     // Botón Final
                     CustomButton(
-                      label: '¡Guardar Lección!',
-                      onPressed: () => Navigator.pushNamed(context, '/perfil'),
+                      label: _guardando ? 'Guardando...' : '¡Guardar Lección!',
+                      onPressed: _guardando ? null : _guardarLeccion,
                     ),
                   ],
                 ),
@@ -317,5 +322,47 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _guardarLeccion() async {
+    final nombre = nameController.text.trim();
+    if (nombre.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('El nombre de la lección es obligatorio')),
+      );
+      return;
+    }
+
+    setState(() => _guardando = true);
+    try {
+      await _leccionCtrl.agregarLeccion(
+        idUsuario: AppSession().usuarioId ?? 1,
+        nombre: nombre,
+        introduccion: descController.text.trim().isEmpty
+            ? null
+            : descController.text.trim(),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text('Lección guardada exitosamente',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+            ]),
+            backgroundColor: const Color(0xFF4DC130),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } finally {
+      if (mounted) setState(() => _guardando = false);
+    }
   }
 }

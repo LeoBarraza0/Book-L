@@ -1,0 +1,180 @@
+{
+  "app": {
+    "name": "Book-L",
+    "version": "1.0.0"
+  },
+  "cursos": [
+    {
+      "id_curso": 1,
+      "nombre": "Matemáticas Discretas",
+      "introduccion": "Fundamentos de lógica, conjuntos, combinatoria y grafos aplicados a la computación.",
+      "estado": "activo",
+      "created_at": "2026-01-10T08:00:00",
+      "updated_at": "2026-01-10T08:00:00"
+    },
+    {
+      "id_curso": 2,
+      "nombre": "Algoritmos y Programación",
+      "introduccion": "Diseño, análisis e implementación de algoritmos fundamentales.",
+      "estado": "activo",
+      "created_at": "2026-01-15T08:00:00",
+      "updated_at": "2026-01-15T08:00:00"
+    }
+  ],
+  "lecciones_cursos": [
+    { "id_leccion": 1, "id_curso": 1 },
+    { "id_leccion": 2, "id_curso": 1 },
+    { "id_leccion": 3, "id_curso": 2 },
+    { "id_leccion": 4, "id_curso": 2 }
+  ],
+  "lecciones": [
+    {
+      "id_leccion": 1,
+      "id_usuario_fk": 1,
+      "nombre": "Lógica Proposicional",
+      "introduccion": "Aprende a razonar formalmente con proposiciones, conectivos lógicos y tablas de verdad.",
+      "estado": "activa",
+      "created_at": "2026-01-12T09:00:00",
+      "updated_at": "2026-01-12T09:00:00"
+    },
+    {
+      "id_leccion": 2,
+      "id_usuario_fk": 1,
+      "nombre": "Teoría de Conjuntos",
+      "introduccion": "Operaciones con conjuntos, relaciones y funciones como base del pensamiento matemático.",
+      "estado": "activa",
+      "created_at": "2026-01-13T09:00:00",
+      "updated_at": "2026-01-13T09:00:00"
+    },
+    {
+      "id_leccion": 3,
+      "id_usuario_fk": 1,
+      "nombre": "Complejidad Algorítmica",
+      "introduccion": "Notación Big-O, análisis de tiempo y espacio para evaluar la eficiencia de algoritmos.",
+      "estado": "activa",
+      "created_at": "2026-01-16T09:00:00",
+      "updated_at": "2026-01-16T09:00:00"
+    },
+    {
+      "id_leccion": 4,
+      "id_usuario_fk": 1,
+      "nombre": "Ordenamiento y Búsqueda",
+      "introduccion": "Algoritmos clásicos de ordenamiento (bubble, merge, quick) y técnicas de búsqueda.",
+      "estado": "activa",
+      "created_at": "2026-01-17T09:00:00",
+      "updated_at": "2026-01-17T09:00:00"
+    }
+  ],
+  "capitulos": [
+    {
+      "id_capitulo": 1,
+      "id_leccion": 1,
+      "nombre": "Proposiciones y Conectivos",
+      "introduccion": "Definición de proposición, valores de verdad y los conectivos AND, OR, NOT, implicación y bicondicional.",
+      "tiempo_total": 900,
+      "created_at": "2026-01-12T10:00:00",
+      "updated_at": "2026-01-12T10:00:00"
+    },
+    {
+      "id_capitulo": 2,
+      "id_leccion": 1,
+      "nombre": "Tablas de Verdad",
+      "introduccion": "Construcción sistemática de tablas de verdad para evaluar fórmulas proposicionales complejas.",
+      "tiempo_total": 1200,
+      "created_at": "2026-01-12T11:00:00",
+      "updated_at": "2026-01-12T11:00:00"
+    },
+    {
+      "id_capitulo": 3,
+      "id_leccion": 2,
+      "nombre": "Operaciones con Conjuntos",
+      "introduccion": "Unión, intersección, diferencia, complemento y producto cartesiano.",
+      "tiempo_total": 900,
+      "created_at": "2026-01-13T10:00:00",
+      "updated_at": "2026-01-13T10:00:00"
+    },
+    {
+      "id_capitulo": 4,
+      "id_leccion": 2,
+      "nombre": "Relaciones y Funciones",
+      "introduccion": "Propiedades de relaciones (reflexividad, simetría, transitividad) y tipos de funciones.",
+      "tiempo_total": 1080,
+      "created_at": "2026-01-13T11:00:00",
+      "updated_at": "2026-01-13T11:00:00"
+    },
+    {
+      "id_capitulo": 5,
+      "id_leccion": 3,
+      "nombre": "Notación Asintótica",
+      "introduccion": "Big-O, Omega y Theta: cómo describir el comportamiento de un algoritmo en el límite.",
+      "tiempo_total": 1080,
+      "created_at": "2026-01-16T10:00:00",
+      "updated_at": "2026-01-16T10:00:00"
+    },
+    {
+      "id_capitulo": 6,
+      "id_leccion": 3,
+      "nombre": "Análisis de Casos",
+      "introduccion": "Mejor caso, caso promedio y peor caso. Recurrencias y el Teorema Maestro.",
+      "tiempo_total": 1200,
+      "created_at": "2026-01-16T11:00:00",
+      "updated_at": "2026-01-16T11:00:00"
+    },
+    {
+      "id_capitulo": 7,
+      "id_leccion": 4,
+      "nombre": "Algoritmos de Ordenamiento",
+      "introduccion": "Bubble Sort, Selection Sort, Insertion Sort, Merge Sort y Quick Sort con análisis comparativo.",
+      "tiempo_total": 1500,
+      "created_at": "2026-01-17T10:00:00",
+      "updated_at": "2026-01-17T10:00:00"
+    },
+    {
+      "id_capitulo": 8,
+      "id_leccion": 4,
+      "nombre": "Búsqueda Lineal y Binaria",
+      "introduccion": "Implementación y análisis de búsqueda secuencial vs búsqueda binaria en listas ordenadas.",
+      "tiempo_total": 900,
+      "created_at": "2026-01-17T11:00:00",
+      "updated_at": "2026-01-17T11:00:00"
+    }
+  ],
+  "materiales": [
+    {
+      "id_material": 1,
+      "id_leccion_fk": 1,
+      "nombre": "Diapositivas — Lógica Proposicional",
+      "url": "https://example.com/materiales/logica.pdf",
+      "descripcion": "Presentación con definiciones, ejemplos y ejercicios resueltos.",
+      "tipo": "pdf",
+      "tamano_bytes": 2048000
+    },
+    {
+      "id_material": 2,
+      "id_leccion_fk": 2,
+      "nombre": "Video — Conjuntos en la práctica",
+      "url": "https://example.com/materiales/conjuntos.mp4",
+      "descripcion": "Video explicativo de 12 minutos con ejemplos del mundo real.",
+      "tipo": "video",
+      "tamano_bytes": 45000000
+    },
+    {
+      "id_material": 3,
+      "id_leccion_fk": 3,
+      "nombre": "Guía — Complejidad paso a paso",
+      "url": "https://example.com/materiales/complejidad.pdf",
+      "descripcion": "Ejercicios graduales de análisis de complejidad con soluciones.",
+      "tipo": "pdf",
+      "tamano_bytes": 1536000
+    },
+    {
+      "id_material": 4,
+      "id_leccion_fk": 4,
+      "nombre": "Video — Visualización de Sorting",
+      "url": "https://example.com/materiales/sorting.mp4",
+      "descripcion": "Animación comparativa de los principales algoritmos de ordenamiento.",
+      "tipo": "video",
+      "tamano_bytes": 38000000
+    }
+  ]
+}
