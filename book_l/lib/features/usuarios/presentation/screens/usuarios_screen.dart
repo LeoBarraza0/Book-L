@@ -351,7 +351,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
             children: [
               Material(
                 color:
-                    const Color(0xFFF19066), // Naranja para editar en usuarios
+                    const Color(0xFFF6B55C), // Naranja para editar en usuarios
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
                   onTap: () {

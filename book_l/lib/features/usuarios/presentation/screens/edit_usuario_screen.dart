@@ -13,6 +13,7 @@ class EditUsuarioScreen extends StatefulWidget {
 
 class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
   late TextEditingController _nombreController;
+  late TextEditingController _usernameController;
   late TextEditingController _correoController;
   late TextEditingController _passwordController;
   late TextEditingController _celularController;
@@ -39,6 +40,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
   void initState() {
     super.initState();
     _nombreController = TextEditingController(text: widget.usuario.nombreCompleto);
+    _usernameController = TextEditingController(text: widget.usuario.username);
     _correoController = TextEditingController(text: widget.usuario.correo);
     _passwordController = TextEditingController(text: widget.usuario.password);
     _celularController = TextEditingController(text: widget.usuario.celular?.toString() ?? '');
@@ -51,6 +53,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
   @override
   void dispose() {
     _nombreController.dispose();
+    _usernameController.dispose();
     _correoController.dispose();
     _passwordController.dispose();
     _celularController.dispose();
@@ -109,16 +112,20 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                       Positioned(
                         top: topPadding + 8,
                         left: 20,
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              shape: BoxShape.circle,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => Navigator.pop(context),
+                              customBorder: const CircleBorder(),
+                              child: const Icon(Icons.arrow_back, color: Colors.white),
                             ),
-                            child: const Icon(Icons.arrow_back, color: Colors.white),
                           ),
                         ),
                       ),
@@ -149,6 +156,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                     children: [
                       // Perfil: Avatar + Nombre
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Stack(
                             children: [
@@ -177,7 +185,13 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                           ),
                           const SizedBox(width: 15),
                           Expanded(
-                            child: _buildTextField('Nombre *', _nombreController),
+                            child: Column(
+                              children: [
+                                _buildTextField('Nombre completo: *', _nombreController),
+                                const SizedBox(height: 10),
+                                _buildTextField('Usuario:', _usernameController),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -191,7 +205,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                               onTap: () => _selectDate(context),
                               child: AbsorbPointer(
                                 child: _buildTextField(
-                                  'Fecha de nac.',
+                                  'Fecha de nacimiento:',
                                   TextEditingController(
                                     text: _selectedDate == null 
                                       ? '' 
@@ -203,17 +217,46 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                             ),
                           ),
                           const SizedBox(width: 15),
-                          Expanded(child: _buildTextField('Email *', _correoController)),
+                          Expanded(child: _buildTextField('Correo electrónico: *', _correoController)),
                         ],
                       ),
+                      
                       const SizedBox(height: 20),
 
                       // Fila 3: Contraseña & Celular
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(child: _buildTextField('Contraseña', _passwordController, obscureText: true)),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildTextField('Contraseña: *', _passwordController, obscureText: true),
+                                const SizedBox(height: 5),
+                                const Row(
+                                  children: [
+                                    Icon(Icons.info_outline, size: 12, color: Colors.grey),
+                                    SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        'La contraseña debe contener mínimo 8 caracteres',
+                                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                              ],
+                            ),
+                          ),
                           const SizedBox(width: 15),
-                          Expanded(child: _buildTextField('Celular', _celularController, keyboardType: TextInputType.phone)),
+                          Expanded(
+                            child: _buildTextField(
+                              'Celular: *', 
+                              _celularController, 
+                              keyboardType: TextInputType.phone
+                            )
+                          ),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -222,14 +265,14 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: _buildDropdownField('Programa', _programas, _selectedPrograma, (val) {
+                            child: _buildDropdownField('Programa: *', _programas, _selectedPrograma, (val) {
                               setState(() => _selectedPrograma = val);
                             }),
                           ),
                           const SizedBox(width: 15),
                           Expanded(
                             child: _buildDropdownField(
-                              'Semestre', 
+                              'Semestre: *', 
                               List.generate(10, (i) => (i + 1).toString()), 
                               _selectedSemestre?.toString(), 
                               (val) {
@@ -245,35 +288,39 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                       _buildTextField('Preferencias', _preferenciasController, maxLines: 4),
                       
                       const SizedBox(height: 30),
-
-                      // Botones
-                      SizedBox(
-                        width: double.infinity,
-                        child: TextButton(
-                          onPressed: () {},
-                          child: const Text(
-                            'Restablecer contraseña',
-                            style: TextStyle(
-                              color: Color(0xFFF1B440),
-                              fontWeight: FontWeight.bold,
-                              decoration: TextDecoration.underline,
+                      
+                      Container(
+                        decoration: ShapeDecoration(
+                          color: const Color(0xFFFDCD51),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24.50),
+                          ),
+                          shadows: const [
+                            BoxShadow(
+                              color: Color(0x3F000000), // 0x3F = ~0.247 de opacidad
+                              blurRadius: 4,
+                              offset: Offset(0, 4),
+                              spreadRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => Navigator.pop(context),
+                            borderRadius: BorderRadius.circular(24.50),
+                            child: Container(
+                              width: 156,
+                              height: 49,
+                              child: const Center(
+                                child: Text(
+                                  'Guardar',
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF1B440),
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: const Text('Guardar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(height: 100), // Espacio para la navbar
                     ],
