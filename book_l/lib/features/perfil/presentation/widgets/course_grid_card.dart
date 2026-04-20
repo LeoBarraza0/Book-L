@@ -126,7 +126,7 @@ class CourseGridCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          course.titulo,
+                          course.nombre,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(

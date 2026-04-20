@@ -331,7 +331,6 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
         id: LocalDbService.instance.generateId(),
         idUsuarioFk: AppSession().usuarioId ?? 1,
         nombre: nombre,
-        resumen: _descCtrl.text.trim(),
         descripcion: _descCtrl.text.trim(),
         lecciones: [], // El usuario agregará lecciones después o al curso
       );

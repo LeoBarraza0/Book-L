@@ -8,6 +8,7 @@ class Usuario {
   final String rol; // 'Estudiante' | 'Profesor' | 'Administrador'
   final String? programa;
   final bool activo;
+  final String? avatarUrl;
 
   const Usuario({
     required this.idUsuario,
@@ -16,6 +17,7 @@ class Usuario {
     required this.rol,
     this.programa,
     required this.activo,
+    this.avatarUrl,
   });
 
   Usuario copyWith({
@@ -25,6 +27,7 @@ class Usuario {
     String? rol,
     String? programa,
     bool? activo,
+    String? avatarUrl,
   }) {
     return Usuario(
       idUsuario: idUsuario ?? this.idUsuario,
@@ -33,6 +36,7 @@ class Usuario {
       rol: rol ?? this.rol,
       programa: programa ?? this.programa,
       activo: activo ?? this.activo,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
     );
   }
 }

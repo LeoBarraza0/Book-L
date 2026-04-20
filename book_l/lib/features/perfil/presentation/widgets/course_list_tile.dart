@@ -118,7 +118,7 @@ class CourseListTile extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    course.titulo,
+                    course.nombre,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

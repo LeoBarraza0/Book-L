@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:book_l/shared/domain/models/capitulo_model.dart';
+import 'package:book_l/shared/domain/models/ejercicio_model.dart';
 import 'package:book_l/shared/data/local_db_service.dart';
 import '../widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';

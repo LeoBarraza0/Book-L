@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/nav_bar.dart';
-import '../../../leccion/presentation/controller/leccion_controller.dart';
-import '../../../leccion/domain/entities/leccion.dart';
+import '../../../../shared/widgets/content_cards.dart';
+import '../../../../core/services/bookl_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,12 +12,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _leccionCtrl = LeccionController();
-
   @override
   void initState() {
     super.initState();
-    _leccionCtrl.cargarLecciones();
   }
 
   @override
@@ -70,33 +67,35 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildRachaCard(),
                       const SizedBox(height: 24),
 
-                      // Lecciones desde el servicio JSON
+                      // Lecciones y Cursos desde el servicio JSON (Mixto)
                       ListenableBuilder(
-                        listenable: _leccionCtrl,
+                        listenable: BooklService(),
                         builder: (context, _) {
-                          final state = _leccionCtrl.state;
-                          if (state.isLoading) {
-                            return const Center(
-                              child: CircularProgressIndicator(
-                                  color: Color(0xFF4DC130)),
-                            );
-                          }
-                          final lecciones = state.items
+                          final lecciones = BooklService().lecciones
                               .where((l) => l.estado == 'activa')
                               .toList();
-                          if (lecciones.isEmpty) {
+                          final cursos = BooklService().cursos
+                              .where((c) => c.estado == 'Publicado')
+                              .toList();
+                              
+                          if (lecciones.isEmpty && cursos.isEmpty) {
                             return const SizedBox();
                           }
-                          return Column(
-                            children: lecciones
-                                .map((l) => Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 20),
-                                      child: _buildLeccionCard(
-                                          context: context, leccion: l),
-                                    ))
-                                .toList(),
-                          );
+                          
+                          // Mezclamos en una sola lista (intercalados para FYP)
+                          final mixedList = <Widget>[];
+                          final maxLen = lecciones.length > cursos.length ? lecciones.length : cursos.length;
+                          
+                          for (int i = 0; i < maxLen; i++) {
+                            if (i < cursos.length) {
+                               mixedList.add(FypCursoCard(curso: cursos[i]));
+                            }
+                            if (i < lecciones.length) {
+                               mixedList.add(FypLeccionCard(leccion: lecciones[i]));
+                            }
+                          }
+                          
+                          return Column(children: mixedList);
                         },
                       ),
                       const SizedBox(height: 100),
@@ -301,102 +300,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Tarjeta de Lección (datos reales del servicio)
-  // ─────────────────────────────────────────────────────────────────────────
-  Widget _buildLeccionCard({
-    required BuildContext context,
-    required Leccion leccion,
-  }) {
-    return GestureDetector(
-      onTap: () => Navigator.pushNamed(
-        context,
-        '/leccion_detail',
-        arguments: leccion.idLeccion,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 180,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: const Color(0xFFD9D9D9),
-            ),
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF4DC130), Color(0xFF3AAA26)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(Icons.menu_book_rounded,
-                        color: Colors.white.withOpacity(0.25), size: 80),
-                  ),
-                ),
-                // Estado badge
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4DC130),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      leccion.estado ?? 'Lección',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const Positioned(
-                  bottom: 12,
-                  right: 12,
-                  child: Icon(Icons.favorite_border,
-                      color: Color(0xFFFF606F), size: 28),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  leccion.nombre,
-                  style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const Row(children: [
-                Icon(Icons.star, color: Color(0xFFF6B55C), size: 18),
-                SizedBox(width: 4),
-                Text('4.9',
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87)),
-              ]),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }

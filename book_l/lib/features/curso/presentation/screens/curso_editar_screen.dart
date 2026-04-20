@@ -4,40 +4,17 @@ import '../../../leccion/presentation/screens/leccion_editar_screen.dart';
 import '../../../leccion/presentation/widgets/seccion_editor_widget.dart';
 import '../../../leccion/presentation/widgets/agregar_seccion_button.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Modelo liviano de lección editable (maquetación)
-// ─────────────────────────────────────────────────────────────────────────────
-class _LeccionItem {
-  final String title;
-  final String category;
-  final Color categoryColor;
-  final String? category2;
-  final Color? categoryColor2;
-  final String duration;
-  final String rating;
-  final String students;
-  final double progress;
-  final String imageUrl;
-
-  const _LeccionItem({
-    required this.title,
-    required this.category,
-    this.categoryColor = const Color(0xFF6BC654),
-    this.category2,
-    this.categoryColor2,
-    required this.duration,
-    required this.rating,
-    required this.students,
-    required this.progress,
-    required this.imageUrl,
-  });
-}
+import '../../../../core/services/bookl_service.dart';
+import '../../../../core/storage/local_storage.dart';
+import '../../../leccion/domain/entities/leccion.dart';
+import '../../domain/entities/curso.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CursoEditarScreen
 // ─────────────────────────────────────────────────────────────────────────────
 class CursoEditarScreen extends StatefulWidget {
-  const CursoEditarScreen({super.key});
+  final int? idCurso;
+  const CursoEditarScreen({super.key, this.idCurso});
 
   @override
   State<CursoEditarScreen> createState() => _CursoEditarScreenState();
@@ -60,55 +37,28 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
   late AnimationController _guardarAnimCtrl;
   late Animation<double> _guardarScaleAnim;
 
-  // Lista de lecciones (maquetación)
-  final List<_LeccionItem> _lecciones = [
-    _LeccionItem(
-      title: 'Derivadas',
-      category: 'Cálculo diferencial',
-      categoryColor: Color(0xFF6BC654),
-      duration: '1 Hora',
-      rating: '4.9',
-      students: '1.200 estudiantes',
-      progress: 0.2,
-      imageUrl: 'https://picsum.photos/150/150?random=10',
-    ),
-    _LeccionItem(
-      title: 'Herencia',
-      category: 'JAVA',
-      categoryColor: Color(0xFF4DC130),
-      category2: 'P.O.O',
-      categoryColor2: Color(0xFFFF606F),
-      duration: '1 Hora',
-      rating: '4.9',
-      students: '1.200 estudiantes',
-      progress: 0.2,
-      imageUrl: 'https://picsum.photos/150/150?random=11',
-    ),
-    _LeccionItem(
-      title: 'Derivadas',
-      category: 'Cálculo diferencial',
-      categoryColor: Color(0xFFF6B55C),
-      duration: '1 Hora',
-      rating: '4.9',
-      students: '1.200 estudiantes',
-      progress: 0.2,
-      imageUrl: 'https://picsum.photos/150/150?random=12',
-    ),
-    _LeccionItem(
-      title: 'Derivadas',
-      category: 'Cálculo diferencial',
-      categoryColor: Color(0xFF6BC654),
-      duration: '1 Hora',
-      rating: '4.9',
-      students: '1.200 estudiantes',
-      progress: 0.2,
-      imageUrl: 'https://picsum.photos/150/150?random=13',
-    ),
-  ];
+  List<Map<String, int>> _leccionesCursosData = [];
+  List<Leccion> _leccionesDelCurso = [];
+  Curso? _cursoOriginal;
 
   @override
   void initState() {
     super.initState();
+
+    if (widget.idCurso != null) {
+      _cursoOriginal = BooklService().cursos.firstWhere(
+        (c) => c.idCurso == widget.idCurso,
+        orElse: () => Curso(
+          idCurso: -1, 
+          idUsuarioFk: AppSession().usuarioId ?? 1, 
+          nombre: '', 
+          estado: 'Borrador',
+        ),
+      );
+      _tituloCtrl.text = _cursoOriginal!.nombre;
+    }
+    
+    _refreshLeccionesLocales();
 
     // Header: fade + slide
     _headerAnimCtrl = AnimationController(
@@ -149,6 +99,21 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
     );
   }
 
+  void _refreshLeccionesLocales() {
+    if (widget.idCurso != null) {
+      final idsLecciones = BooklService()
+          .leccionesCursos
+          .where((lc) => lc['id_curso'] == widget.idCurso)
+          .map((lc) => lc['id_leccion'])
+          .toList();
+
+      _leccionesDelCurso = BooklService()
+          .lecciones
+          .where((l) => idsLecciones.contains(l.idLeccion))
+          .toList();
+    }
+  }
+
   @override
   void dispose() {
     _tituloCtrl.dispose();
@@ -181,8 +146,15 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
     });
   }
 
-  void _eliminarLeccion(int index) {
-    setState(() => _lecciones.removeAt(index));
+  void _eliminarLeccion(Leccion leccion) {
+    if (widget.idCurso == null) return;
+    
+    setState(() {
+      BooklService().leccionesCursos.removeWhere((lc) => lc['id_curso'] == widget.idCurso && lc['id_leccion'] == leccion.idLeccion);
+      _refreshLeccionesLocales();
+    });
+    // Notificamos para que la UI compartida o Home Screen recargue sus dependencias
+    // En un escenario real esto consumiría la API y esperaría el refetch.
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Row(
@@ -204,6 +176,68 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
         duration: const Duration(seconds: 2),
       ),
+    );
+  }
+
+  void _showAssignLessonModal() {
+    final myUserLessons = BooklService().lecciones.where((l) => l.idUsuarioFk == AppSession().usuarioId).toList();
+    // Excluimos las que ya están en el curso
+    final unassigned = myUserLessons.where((l) => !_leccionesDelCurso.any((c) => c.idLeccion == l.idLeccion)).toList();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFFECEBEB),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        if (unassigned.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Text(
+              'No tienes lecciones disponibles para asignar.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontFamily: 'Inter', fontSize: 16, color: Colors.black54),
+            ),
+          );
+        }
+        return Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'Selecciona una lección para asignar',
+                style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: unassigned.length,
+                itemBuilder: (context, i) {
+                  final l = unassigned[i];
+                  return ListTile(
+                    leading: const Icon(Icons.menu_book, color: Color(0xFF4DC130)),
+                    title: Text(l.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(l.estado ?? '', style: const TextStyle(fontSize: 12)),
+                    onTap: () {
+                      if (widget.idCurso != null) {
+                        setState(() {
+                          BooklService().leccionesCursos.add({
+                            'id_leccion': l.idLeccion,
+                            'id_curso': widget.idCurso!,
+                          });
+                          _refreshLeccionesLocales();
+                        });
+                      }
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -633,16 +667,29 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
         const SizedBox(height: 16),
 
         // Lista de lecciones con controles de edición
-        ...List.generate(_lecciones.length, (i) {
+        ...List.generate(_leccionesDelCurso.length, (i) {
           return _LeccionEditableCard(
-            leccion: _lecciones[i],
+            leccion: _leccionesDelCurso[i],
             onEditar: () => Navigator.push(
               context,
-              _slideRoute(const LeccionEditarScreen()),
+              _slideRoute(LeccionEditarScreen(idLeccion: _leccionesDelCurso[i].idLeccion)),
             ),
-            onEliminar: () => _eliminarLeccion(i),
+            onEliminar: () => _eliminarLeccion(_leccionesDelCurso[i]),
           );
         }),
+
+        const SizedBox(height: 16),
+        Center(
+          child: ElevatedButton.icon(
+             onPressed: _showAssignLessonModal,
+             icon: const Icon(Icons.add_link_rounded, color: Colors.white),
+             label: const Text('Asignar lección existente', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+             style: ElevatedButton.styleFrom(
+               backgroundColor: const Color(0xFFFEB95C),
+               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+             ),
+          ),
+        ),
 
         const SizedBox(height: 24),
 
@@ -729,7 +776,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
 // Widget: Tarjeta de lección con botones editar / eliminar (animados)
 // ─────────────────────────────────────────────────────────────────────────────
 class _LeccionEditableCard extends StatefulWidget {
-  final _LeccionItem leccion;
+  final Leccion leccion;
   final VoidCallback onEditar;
   final VoidCallback onEliminar;
 
@@ -790,13 +837,11 @@ class _LeccionEditableCardState extends State<_LeccionEditableCard>
               // Miniatura
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  l.imageUrl,
-                  width: 74,
-                  height: 74,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(width: 74, height: 74, color: Colors.grey[300]),
+                child: Container(
+                   width: 74,
+                   height: 74,
+                   color: const Color(0xFF4DC130),
+                   child: const Icon(Icons.menu_book, color: Colors.white, size: 36),
                 ),
               ),
               const SizedBox(width: 14),
@@ -810,36 +855,22 @@ class _LeccionEditableCardState extends State<_LeccionEditableCard>
                     Row(
                       children: [
                         _CategoryChip(
-                          label: l.category,
-                          color: l.categoryColor,
+                          label: l.estado ?? 'Activa',
+                          color: const Color(0xFF6BC654),
                         ),
-                        if (l.category2 != null) ...[
-                          const SizedBox(width: 6),
-                          _CategoryChip(
-                            label: l.category2!,
-                            color: l.categoryColor2!,
-                          ),
-                        ],
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      l.title,
+                      l.nombre,
                       style: const TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
-                    ),
-                    Text(
-                      l.duration,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12,
-                        color: Colors.black54,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -850,25 +881,15 @@ class _LeccionEditableCardState extends State<_LeccionEditableCard>
                           size: 14,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          l.rating,
-                          style: const TextStyle(
+                        const Text(
+                          'N/A',
+                          style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Container(width: 1, height: 10, color: Colors.black26),
-                        const SizedBox(width: 8),
-                        Text(
-                          l.students,
-                          style: const TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                       ],
                     ),
                   ],
@@ -895,31 +916,6 @@ class _LeccionEditableCardState extends State<_LeccionEditableCard>
                     tooltip: 'Eliminar lección',
                   ),
                   const SizedBox(height: 8),
-                  // Progreso circular
-                  SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        CircularProgressIndicator(
-                          value: l.progress,
-                          backgroundColor: Colors.transparent,
-                          color: const Color(0xFF4DC130),
-                          strokeWidth: 3.5,
-                          strokeCap: StrokeCap.round,
-                        ),
-                        Text(
-                          '${(l.progress * 100).toInt()}%',
-                          style: const TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ],

@@ -6,9 +6,11 @@ import '../../../../shared/data/leccion_repository.dart';
 import '../../../../shared/data/course_repository.dart';
 import '../../../../shared/domain/models/leccion_model.dart';
 import '../../../../shared/domain/models/curso_model.dart';
+import '../../../../shared/widgets/content_cards.dart';
 
 class MisContenidosTabWidget extends StatefulWidget {
-  const MisContenidosTabWidget({super.key});
+  final int idUsuario;
+  const MisContenidosTabWidget({super.key, required this.idUsuario});
 
   @override
   State<MisContenidosTabWidget> createState() => _MisContenidosTabWidgetState();
@@ -66,7 +68,7 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
             final String nameField = (l as dynamic).nombre;
             return nameField.toLowerCase().contains(q);
           }).toList();
-          
+
           filteredCursos = allCursos.where((c) {
             final String nameField = (c as dynamic).nombre;
             return nameField.toLowerCase().contains(q);
@@ -166,9 +168,9 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
       itemBuilder: (context, index) {
         final item = items[index];
         if (isLeccion) {
-          return _buildLeccionCard(item, context);
+          return SharedLeccionCard(leccion: item);
         } else {
-          return _buildCursoCard(item, context);
+          return SharedCursoCard(curso: item);
         }
       },
     );
@@ -176,12 +178,12 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
 
   Widget _buildLeccionCard(dynamic leccion, BuildContext context) {
     final String nombre = (leccion as dynamic).nombre;
-    final int id = (leccion is LeccionModel) ? leccion.id : (leccion as dynamic).idLeccion;
+    final int id =
+        (leccion is LeccionModel) ? leccion.id : (leccion as dynamic).idLeccion;
 
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, '/leccion_detail',
-            arguments: id);
+        Navigator.pushNamed(context, '/leccion_detail', arguments: id);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -328,10 +330,8 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
               child: ListenableBuilder(
                 listenable: AppSession().savedLecciones,
                 builder: (context, _) {
-                  final isSaved = AppSession()
-                      .savedLecciones
-                      .value
-                      .contains(id);
+                  final isSaved =
+                      AppSession().savedLecciones.value.contains(id);
                   return GestureDetector(
                     onTap: () {
                       AppSession().toggleSavedLeccion(id);
@@ -353,7 +353,8 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
 
   Widget _buildCursoCard(dynamic curso, BuildContext context) {
     final String nombre = (curso as dynamic).nombre;
-    final int id = (curso is CursoModel) ? curso.id : (curso as dynamic).idCurso;
+    final int id =
+        (curso is CursoModel) ? curso.id : (curso as dynamic).idCurso;
 
     return GestureDetector(
       onTap: () {
@@ -406,8 +407,7 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
             ListenableBuilder(
               listenable: AppSession().savedCursos,
               builder: (context, _) {
-                final isSaved =
-                    AppSession().savedCursos.value.contains(id);
+                final isSaved = AppSession().savedCursos.value.contains(id);
                 return GestureDetector(
                   onTap: () {
                     AppSession().toggleSavedCurso(id);
