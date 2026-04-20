@@ -12,6 +12,8 @@ import '../../features/leccion/data/dto/material_dto.dart';
 import '../../features/leccion/domain/entities/capitulo.dart';
 import '../../features/leccion/domain/entities/leccion.dart';
 import '../../features/leccion/domain/entities/material_educativo.dart';
+import '../../features/configuracion/data/dto/configuracion_dto.dart';
+import '../../features/configuracion/domain/entities/configuracion.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -42,6 +44,8 @@ class BooklService extends ChangeNotifier {
   List<Leccion> lecciones = [];
   List<Capitulo> capitulos = [];
   List<MaterialEducativo> materiales = [];
+  List<Configuracion> configuraciones = [];
+  List<Map<String, dynamic>> sugerencias = [];
 
   // Pivote M:N lecciones ↔ cursos
   // Cada elemento es { 'id_leccion': int, 'id_curso': int }
@@ -83,12 +87,27 @@ class BooklService extends ChangeNotifier {
         .map((e) => MaterialDto.fromJson(e as Map<String, dynamic>))
         .toList();
 
+    if (data.containsKey('configuraciones')) {
+      final configDtos = (data['configuraciones'] as List)
+          .map((e) => ConfiguracionDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+      configuraciones = configDtos.map((d) => d.toEntity()).toList();
+    } else {
+      configuraciones = [];
+    }
+
     leccionesCursos = (data['lecciones_cursos'] as List)
         .map((e) => {
               'id_leccion': e['id_leccion'] as int,
               'id_curso': e['id_curso'] as int,
             })
         .toList();
+
+    if (data.containsKey('sugerencias')) {
+      sugerencias = List<Map<String, dynamic>>.from(data['sugerencias']);
+    } else {
+      sugerencias = [];
+    }
 
     _loaded = true;
     notifyListeners();
@@ -104,6 +123,8 @@ class BooklService extends ChangeNotifier {
         'lecciones': lecciones.map((l) => LeccionDto.toJson(l)).toList(),
         'capitulos': capitulos.map((c) => CapituloDto.toJson(c)).toList(),
         'materiales': materiales.map((m) => MaterialDto.toJson(m)).toList(),
+        'configuraciones': configuraciones.map((c) => ConfiguracionDto.fromEntity(c).toJson()).toList(),
+        'sugerencias': sugerencias,
         'lecciones_cursos': leccionesCursos,
       };
       await prefs.setString(_storageKey, json.encode(fullData));
@@ -158,6 +179,21 @@ class BooklService extends ChangeNotifier {
 
   void removeCapitulo(int id) {
     capitulos.removeWhere((c) => c.idCapitulo == id);
+    _save();
+  }
+
+  void saveConfiguracion(Configuracion config) {
+    final idx = configuraciones.indexWhere((c) => c.idUsuario == config.idUsuario);
+    if (idx != -1) {
+      configuraciones[idx] = config;
+    } else {
+      configuraciones.add(config);
+    }
+    _save();
+  }
+
+  void saveSugerencia(Map<String, dynamic> sugerencia) {
+    sugerencias.add(sugerencia);
     _save();
   }
 

@@ -69,12 +69,19 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
     return result;
   }
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return '';
+    final words = name.trim().split(RegExp(r'\s+'));
+    if (words.length == 1) return words[0][0].toUpperCase();
+    return '${words[0][0]}${words[1][0]}'.toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFECEBEB),
+      backgroundColor: const Color(0xFFFFF9E1), // Crema claro
       body: ListenableBuilder(
         listenable: _controller,
         builder: (context, _) {
@@ -120,6 +127,24 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                                 color: Colors.white,
                                 size: 24,
                               ),
+                            ),
+                          ),
+                        ),
+                        // Icono campana (esquina superior derecha)
+                        Positioned(
+                          top: topPadding + 8,
+                          right: 20,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.notifications_none,
+                              color: Colors.white,
+                              size: 24,
                             ),
                           ),
                         ),
@@ -257,7 +282,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFD9D9D9),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
@@ -275,11 +300,28 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFFE8F5E9), // Fondo suave para el avatar
               shape: BoxShape.circle,
               border: Border.all(color: const Color(0xFFE0E0E0)),
+              image: (user.avatarUrl != null && user.avatarUrl!.isNotEmpty)
+                  ? DecorationImage(
+                      image: NetworkImage(user.avatarUrl!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
             ),
-            child: const Icon(Icons.person, color: Color(0xFF888888), size: 40),
+            child: (user.avatarUrl == null || user.avatarUrl!.isEmpty)
+                ? Center(
+                    child: Text(
+                      _getInitials(user.nombreCompleto),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF44BD32),
+                      ),
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(width: 12),
 
@@ -394,20 +436,10 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                   borderRadius: BorderRadius.circular(14),
                   splashColor: Colors.black.withValues(alpha: 0.18),
                   child: Container(
-                    height: 28,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.edit, color: Colors.white, size: 13),
-                        SizedBox(width: 4),
-                        Text('Editar',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12)),
-                      ],
-                    ),
+                    height: 32,
+                    width: 32,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.edit, color: Colors.white, size: 18),
                   ),
                 ),
               ),
@@ -420,20 +452,10 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                   borderRadius: BorderRadius.circular(14),
                   splashColor: Colors.black.withValues(alpha: 0.18),
                   child: Container(
-                    height: 28,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.delete_outline, color: Colors.white, size: 13),
-                        SizedBox(width: 4),
-                        Text('Eliminar',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12)),
-                      ],
-                    ),
+                    height: 32,
+                    width: 32,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.delete_outline, color: Colors.white, size: 18),
                   ),
                 ),
               ),

@@ -22,6 +22,7 @@ class AppSession {
   static const _kPrograma = 'programa';
   static const _kTemaOscuro = 'tema_oscuro';
   static const _kIdioma = 'idioma';
+  static const _kTamanoFuente = 'tamano_fuente';
   static const _kSavedCursos = 'saved_cursos';
   static const _kSavedLecciones = 'saved_lecciones';
 
@@ -33,6 +34,7 @@ class AppSession {
   String? programa;
   bool temaOscuro = false;
   String idioma = 'es';
+  String tamanoFuente = 'normal';
 
   late SharedPreferences _prefs;
   bool _initialized = false;
@@ -40,6 +42,10 @@ class AppSession {
   // Reactividad para los Favoritos
   final ValueNotifier<Set<int>> savedCursos = ValueNotifier<Set<int>>({});
   final ValueNotifier<Set<int>> savedLecciones = ValueNotifier<Set<int>>({});
+  
+  // Notifiers globales para la UI
+  final ValueNotifier<bool> temaNotifier = ValueNotifier<bool>(false);
+  final ValueNotifier<String> fontScaleNotifier = ValueNotifier<String>('normal');
 
   // ── Inicialización ─────────────────────────────────────────────────────────
   Future<void> init() async {
@@ -53,6 +59,10 @@ class AppSession {
     programa = _prefs.getString(_kPrograma);
     temaOscuro = _prefs.getBool(_kTemaOscuro) ?? false;
     idioma = _prefs.getString(_kIdioma) ?? 'es';
+    tamanoFuente = _prefs.getString(_kTamanoFuente) ?? 'normal';
+
+    temaNotifier.value = temaOscuro;
+    fontScaleNotifier.value = tamanoFuente;
 
     final loadedCursos = _prefs.getStringList(_kSavedCursos) ?? [];
     savedCursos.value = loadedCursos
@@ -98,14 +108,21 @@ class AppSession {
   Future<void> guardarPreferencias({
     bool? temaOscuro,
     String? idioma,
+    String? tamanoFuente,
   }) async {
     if (temaOscuro != null) {
       this.temaOscuro = temaOscuro;
+      temaNotifier.value = temaOscuro;
       await _prefs.setBool(_kTemaOscuro, temaOscuro);
     }
     if (idioma != null) {
       this.idioma = idioma;
       await _prefs.setString(_kIdioma, idioma);
+    }
+    if (tamanoFuente != null) {
+      this.tamanoFuente = tamanoFuente;
+      fontScaleNotifier.value = tamanoFuente;
+      await _prefs.setString(_kTamanoFuente, tamanoFuente);
     }
   }
 

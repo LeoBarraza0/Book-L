@@ -4,8 +4,8 @@ import '../../features/leccion/domain/entities/leccion.dart';
 import '../../features/leccion/domain/entities/capitulo.dart';
 import 'package:flutter/foundation.dart';
 
-/// Puente singleton entre la UI (LeccionModel) y el almacenamiento centralizado (BooklService).
-/// Escucha cambios de BooklService para mantener la UI reactiva.
+/// Repositorio singleton de lecciones independientes (no asociadas a un curso).
+/// Ahora actúa como puente a [BooklService] para arquitectura centralizada.
 class LeccionRepository {
   LeccionRepository._internal() {
     BooklService().addListener(_syncFromCentral);
@@ -22,8 +22,9 @@ class LeccionRepository {
   void _syncFromCentral() {
     leccionesNotifier.value = BooklService().lecciones.map((l) {
       // Buscar el curso al que pertenece esta lección (relación M:N)
-      final relacion = BooklService().leccionesCursos
-          .firstWhere((lc) => lc['id_leccion'] == l.idLeccion, orElse: () => {});
+      final relacion = BooklService().leccionesCursos.firstWhere(
+          (lc) => lc['id_leccion'] == l.idLeccion,
+          orElse: () => {});
 
       return LeccionModel(
         id: l.idLeccion,
@@ -41,11 +42,10 @@ class LeccionRepository {
     }).toList();
   }
 
-  /// Persiste una lección (con sus capítulos) en BooklService.
   Future<void> addLeccion(LeccionModel model) async {
     final entity = Leccion(
       idLeccion: model.id,
-      idUsuarioFk: 1,
+      idUsuarioFk: 1, // Emanuel
       nombre: model.nombre,
       rating: model.rating,
       duracion: model.duracion,
@@ -58,6 +58,7 @@ class LeccionRepository {
     );
     BooklService().addLeccion(entity, idCurso: model.idCursoFk);
 
+    // Guardar capítulos relacionales
     for (var cap in model.capitulos) {
       final capEntity = Capitulo(
         idCapitulo: cap.id,

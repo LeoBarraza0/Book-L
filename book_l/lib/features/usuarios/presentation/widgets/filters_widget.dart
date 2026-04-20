@@ -30,8 +30,16 @@ class FilterChipsRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isSelected
                       ? const Color(0xFF5AB639)
-                      : const Color(0xFFD9D9D9),
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    if (!isSelected)
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                  ],
                 ),
                 alignment: Alignment.center,
                 child: Text(

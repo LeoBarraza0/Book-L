@@ -363,5 +363,20 @@
       "tipo": "video",
       "tamano_bytes": 38000000
     }
-  ]
+  ],
+  "configuraciones": [
+    {
+      "id_config": 1,
+      "id_usuario": 1,
+      "tema": 0,
+      "idioma": "es",
+      "notificaciones_push": 1,
+      "notificaciones_email": 1,
+      "notificaciones_racha": 1,
+      "tamano_fuente": "normal",
+      "reproduccion_auto": 1,
+      "perfil_publico": 1
+    }
+  ],
+  "sugerencias": []
 }
