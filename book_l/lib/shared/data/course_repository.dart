@@ -43,7 +43,7 @@ class CourseRepository {
     _saveToLocalDB();
   }
 
-  void addLessonToCourse(String courseId, LeccionModel lesson) {
+  void addLessonToCourse(int courseId, LeccionModel lesson) {
     final list = coursesNotifier.value;
     final index = list.indexWhere((c) => c.id == courseId);
     if (index != -1) {
@@ -58,16 +58,17 @@ class CourseRepository {
     }
   }
 
-  void updateLessonInCourse(String courseId, LeccionModel updatedLesson) {
+  void updateLessonInCourse(int courseId, LeccionModel updatedLesson) {
     final list = coursesNotifier.value;
     final index = list.indexWhere((c) => c.id == courseId);
     if (index != -1) {
       final course = list[index];
-      final lessonIndex = course.lecciones.indexWhere((l) => l.id == updatedLesson.id);
+      final lessonIndex =
+          course.lecciones.indexWhere((l) => l.id == updatedLesson.id);
       if (lessonIndex != -1) {
         final newLessons = List<LeccionModel>.from(course.lecciones);
         newLessons[lessonIndex] = updatedLesson;
-        
+
         final updatedCourse = course.copyWith(lecciones: newLessons);
         final newList = List<CursoModel>.from(list);
         newList[index] = updatedCourse;
@@ -77,7 +78,7 @@ class CourseRepository {
     }
   }
 
-  void addChapterToLesson(String courseId, String lessonId, CapituloModel chapter) {
+  void addChapterToLesson(int courseId, int lessonId, CapituloModel chapter) {
     final list = coursesNotifier.value;
     final index = list.indexWhere((c) => c.id == courseId);
     if (index != -1) {
@@ -90,7 +91,7 @@ class CourseRepository {
         );
         final newLessons = List<LeccionModel>.from(course.lecciones);
         newLessons[lessonIndex] = updatedLesson;
-        
+
         final updatedCourse = course.copyWith(lecciones: newLessons);
         final newList = List<CursoModel>.from(list);
         newList[index] = updatedCourse;
@@ -101,12 +102,12 @@ class CourseRepository {
   }
 
   void updateCourseState() {
-     // A handy method when nested things are mutated
-     coursesNotifier.value = List.from(coursesNotifier.value);
-     _saveToLocalDB();
+    // A handy method when nested things are mutated
+    coursesNotifier.value = List.from(coursesNotifier.value);
+    _saveToLocalDB();
   }
 
-  void removeCourse(String id) {
+  void removeCourse(int id) {
     coursesNotifier.value =
         coursesNotifier.value.where((c) => c.id != id).toList();
     _saveToLocalDB();

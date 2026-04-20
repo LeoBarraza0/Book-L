@@ -1,26 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:book_l/shared/data/leccion_repository.dart';
-import 'package:book_l/shared/domain/models/leccion_model.dart';
 import 'package:book_l/shared/domain/models/capitulo_model.dart';
 import 'package:book_l/shared/data/local_db_service.dart';
-import '../widgets/agregar_seccion_button.dart';
 import '../widgets/seccion_editor_widget.dart';
+import '../widgets/agregar_seccion_button.dart';
 
-class PublicarLeccionScreen extends StatefulWidget {
-  const PublicarLeccionScreen({super.key});
+class CrearCapituloScreen extends StatefulWidget {
+  const CrearCapituloScreen({super.key});
 
   @override
-  State<PublicarLeccionScreen> createState() => _PublicarLeccionScreenState();
+  State<CrearCapituloScreen> createState() => _CrearCapituloScreenState();
 }
 
-class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
+class _CrearCapituloScreenState extends State<CrearCapituloScreen>
     with TickerProviderStateMixin {
   final _nombreCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   final List<SeccionData> _secciones = [];
-  final List<CapituloModel> _capitulosEnMemoria = [];
-  bool _guardando = false;
+  final List<EjercicioModel> _ejercicios = [];
 
   // Animaciones
   late AnimationController _headerAnimCtrl;
@@ -33,10 +29,8 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
   void initState() {
     super.initState();
 
-    // Sección inicial por defecto
-    _secciones.add(SeccionData(titulo: 'Descripción'));
+    _secciones.add(SeccionData(titulo: 'Contenido'));
 
-    // Header: fade + slide desde arriba
     _headerAnimCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -50,7 +44,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _headerAnimCtrl, curve: Curves.easeOut));
 
-    // Botón Guardar: pulso al entrar
     _guardarAnimCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
@@ -132,8 +125,8 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
                       _buildNombreEditable(),
                       const SizedBox(height: 28),
 
-                      // Secciones — material de apoyo/descripción
-                      _buildSeccionLabel('Material de apoyo'),
+                      // Secciones de contenido
+                      _buildSeccionLabel('Contenido del capítulo'),
                       const SizedBox(height: 12),
                       ...List.generate(_secciones.length, (i) {
                         return SeccionEditorWidget(
@@ -151,25 +144,23 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
 
                       const SizedBox(height: 28),
 
-                      // Sección capítulos
-                      _buildSeccionLabel('Capítulos'),
+                      // Ejercicio
+                      _buildSeccionLabel('Ejercicios del capítulo'),
                       const SizedBox(height: 12),
-                      ..._capitulosEnMemoria.asMap().entries.map(
-                            (e) => _buildCapituloChip(e.key, e.value),
-                          ),
+                      ..._ejercicios
+                          .map((ex) => _buildEjercicioItem(ex))
+                          .toList(),
                       const SizedBox(height: 8),
-
-                      // Botón centrado "Añadir Capítulo"
                       Center(
                         child: AgregarSeccionButton(
-                          titulo: 'Añadir Capítulo',
-                          onTap: _irACrearCapitulo,
+                          titulo: 'Añadir ejercicio',
+                          onTap: () => _mostrarOpcionesPrueba(context),
                         ),
                       ),
 
                       const SizedBox(height: 36),
 
-                      // Botón Guardar
+                      // Botón guardar centrado
                       _buildGuardarButton(),
 
                       const SizedBox(height: 120),
@@ -205,8 +196,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
               ),
             ),
           ),
-
-          // Overlay
           Positioned.fill(
             child: ClipRRect(
               borderRadius: const BorderRadius.only(
@@ -229,25 +218,7 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
             ),
           ),
 
-          // Logo centrado
-          Positioned(
-            top: 60,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: SvgPicture.asset(
-                'assets/images/logo_white.svg',
-                width: 80,
-                height: 35,
-                colorFilter: const ColorFilter.mode(
-                  Colors.white,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
-          ),
-
-          // Badge "Nueva Lección"
+          // Badge "Nuevo Capítulo"
           Positioned(
             bottom: 20,
             left: 0,
@@ -269,11 +240,11 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.add_circle_outline_rounded,
+                    Icon(Icons.menu_book_rounded,
                         size: 16, color: Color(0xFF4DC130)),
                     SizedBox(width: 6),
                     Text(
-                      'Nueva Lección',
+                      'Nuevo Capítulo',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 12,
@@ -324,7 +295,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
     );
   }
 
-  // ─── Nombre editable inline ─────────────────────────────────────────────────
   Widget _buildNombreEditable() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -354,7 +324,7 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
-                hintText: 'Nombre de la lección...',
+                hintText: 'Nombre del capítulo...',
                 hintStyle: TextStyle(
                   color: Color(0xFFB0B0B0),
                   fontWeight: FontWeight.w500,
@@ -369,7 +339,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
     );
   }
 
-  // ─── Label de sección ───────────────────────────────────────────────────────
   Widget _buildSeccionLabel(String texto) {
     return Text(
       texto,
@@ -382,146 +351,212 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
     );
   }
 
-  // ─── Chip de capítulo añadido ────────────────────────────────────────────────
-  Widget _buildCapituloChip(int index, CapituloModel capitulo) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0C000000),
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              color: Color(0xFF4DC130),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '${index + 1}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              capitulo.nombre.isEmpty
-                  ? 'Capítulo ${index + 1}'
-                  : capitulo.nombre,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () => setState(() => _capitulosEnMemoria.removeAt(index)),
-            child: const Icon(Icons.close_rounded,
-                size: 18, color: Color(0xFFAAAAAA)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── Navegar a crear capítulo ────────────────────────────────────────────────
-  Future<void> _irACrearCapitulo() async {
-    final resultado = await Navigator.pushNamed(context, '/crear_capitulo');
-    if (resultado != null && resultado is CapituloModel) {
-      setState(() => _capitulosEnMemoria.add(resultado));
-    }
-  }
-
-  // ─── Botón Guardar ───────────────────────────────────────────────────────────
   Widget _buildGuardarButton() {
     return ScaleTransition(
       scale: _guardarScaleAnim,
       child: Center(
         child: SizedBox(
           width: 220,
-          child: _GuardarButton(
-            onTap: _guardando ? null : _guardarLeccion,
-          ),
+          child: _GuardarButton(onTap: _guardarCapitulo),
         ),
       ),
     );
   }
 
-  // ─── Lógica de guardado ──────────────────────────────────────────────────────
-  Future<void> _guardarLeccion() async {
+  void _guardarCapitulo() {
     final nombre = _nombreCtrl.text.trim();
-    if (nombre.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('El nombre de la lección es obligatorio'),
-          backgroundColor: Color(0xFFFF606F),
-        ),
-      );
-      return;
-    }
+    final nuevoCapitulo = CapituloModel(
+      id: LocalDbService.instance.generateId(),
+      nombre: nombre.isEmpty ? 'Capítulo sin nombre' : nombre,
+      ejercicios: List.from(_ejercicios),
+      secciones: _secciones
+          .map((s) => {
+                'nombre': s.tituloCtrl.text,
+                'contenido': s.cuerpoCtrl.document.toPlainText(),
+              })
+          .toList(),
+    );
+    // Retorna el capítulo a la pantalla anterior
+    Navigator.pop(context, nuevoCapitulo);
+  }
 
-    setState(() => _guardando = true);
-    try {
-      // Construir el contenido de secciones como texto plano
-      final contenido = _secciones
-          .map((s) =>
-              '${s.tituloCtrl.text}: ${s.cuerpoCtrl.document.toPlainText().trim()}')
-          .where((s) => s.trim().isNotEmpty)
-          .join('\n');
+  Widget _buildEjercicioItem(EjercicioModel ex) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            ex.tipo == 'teorico' ? Icons.quiz_outlined : Icons.code,
+            color: ex.tipo == 'teorico'
+                ? const Color(0xFF4DC130)
+                : const Color(0xFFFF606F),
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              ex.pregunta,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18, color: Colors.redAccent),
+            onPressed: () => setState(() => _ejercicios.remove(ex)),
+          ),
+        ],
+      ),
+    );
+  }
 
-      final nuevaLeccion = LeccionModel(
-        id: LocalDbService.instance.generateId(),
-        nombre: nombre,
-        contenido: contenido,
-        tipo: 'teorica',
-        capitulos: _capitulosEnMemoria,
-      );
-
-      await LeccionRepository.instance.addLeccion(nuevaLeccion);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 10),
-              Text(
-                'Lección guardada exitosamente',
-                style:
-                    TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600),
+  void _mostrarOpcionesPrueba(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-            ]),
-            backgroundColor: const Color(0xFF4DC130),
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-            duration: const Duration(seconds: 2),
+              const SizedBox(height: 24),
+              const Text(
+                'Agregar Ejercicio',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '¿Qué tipo de ejercicio deseas agregar?',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: Color(0xFF676767),
+                ),
+              ),
+              const SizedBox(height: 24),
+              _buildOpcionBottomSheet(
+                icon: Icons.quiz_outlined,
+                title: 'Ejercicio Teórico',
+                subtitle: 'Opción múltiple, completar, verdadero/falso',
+                color: const Color(0xFF4DC130),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final result = await Navigator.pushNamed(
+                      context, '/crear_ejercicio_teorico');
+                  if (result != null && result is List<EjercicioModel>) {
+                    setState(() => _ejercicios.addAll(result));
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildOpcionBottomSheet(
+                icon: Icons.code,
+                title: 'Ejercicio Práctico',
+                subtitle: 'Escribir y validar código',
+                color: const Color(0xFFFF606F),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final result = await Navigator.pushNamed(
+                      context, '/crear_ejercicio_practico');
+                  if (result != null && result is List<EjercicioModel>) {
+                    setState(() => _ejercicios.addAll(result));
+                  }
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
           ),
         );
-        Navigator.pop(context);
-      }
-    } finally {
-      if (mounted) setState(() => _guardando = false);
-    }
+      },
+    );
+  }
+
+  Widget _buildOpcionBottomSheet({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                      color: Color(0xFF676767),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: color),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -592,10 +627,10 @@ class _GuardarButtonState extends State<_GuardarButton>
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.save_rounded, color: Colors.white, size: 20),
+              Icon(Icons.check_rounded, color: Colors.white, size: 20),
               SizedBox(width: 8),
               Text(
-                'Guardar lección',
+                'Agregar capítulo',
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 15,

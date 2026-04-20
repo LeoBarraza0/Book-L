@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/models/curso_model.dart';
-import 'package:uuid/uuid.dart';
 
 class LocalDbService {
   static const String _coursesKey = 'cached_courses';
@@ -11,11 +10,9 @@ class LocalDbService {
 
   LocalDbService._internal();
 
-  final _uuid = Uuid();
-
-  /// Gets a new unique ID
-  String generateId() {
-    return _uuid.v4();
+  /// Gets a new unique ID (int)
+  int generateId() {
+    return DateTime.now().millisecondsSinceEpoch;
   }
 
   /// Loads courses, preferring cached versions, falls back to assets

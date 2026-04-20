@@ -5,7 +5,7 @@ import 'package:book_l/shared/widgets/custom_button.dart';
 import 'package:book_l/shared/widgets/custom_text_field.dart';
 import 'package:book_l/shared/data/course_repository.dart';
 import 'package:book_l/shared/domain/models/curso_model.dart';
-import '../controller/curso_controller.dart';
+import 'package:book_l/shared/domain/models/leccion_model.dart';
 
 class PublicarCursoScreen extends StatefulWidget {
   const PublicarCursoScreen({super.key});
@@ -14,364 +14,425 @@ class PublicarCursoScreen extends StatefulWidget {
   State<PublicarCursoScreen> createState() => _PublicarCursoScreenState();
 }
 
-class _PublicarCursoScreenState extends State<PublicarCursoScreen> {
-  final TextEditingController nombreController = TextEditingController();
-  final TextEditingController descController = TextEditingController();
-  final TextEditingController leccionesController = TextEditingController();
-  String? selectedCourseId; // NULL means new course
-  final _cursoCtrl = CursoController();
+class _PublicarCursoScreenState extends State<PublicarCursoScreen>
+    with TickerProviderStateMixin {
+  final _nombreCtrl = TextEditingController();
+  final _descCtrl = TextEditingController();
+  final _scrollCtrl = ScrollController();
   bool _guardando = false;
+
+  // Animaciones
+  late AnimationController _headerAnimCtrl;
+  late Animation<double> _headerFadeAnim;
+  late Animation<Offset> _headerSlideAnim;
+  late AnimationController _guardarAnimCtrl;
+  late Animation<double> _guardarScaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _headerAnimCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _headerFadeAnim = CurvedAnimation(
+      parent: _headerAnimCtrl,
+      curve: Curves.easeOut,
+    );
+    _headerSlideAnim = Tween<Offset>(
+      begin: const Offset(0, -0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _headerAnimCtrl, curve: Curves.easeOut));
+
+    _guardarAnimCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _guardarScaleAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
+      CurvedAnimation(parent: _guardarAnimCtrl, curve: Curves.easeOutBack),
+    );
+
+    _headerAnimCtrl.forward();
+    Future.delayed(
+      const Duration(milliseconds: 300),
+      () => _guardarAnimCtrl.forward(),
+    );
+  }
 
   @override
   void dispose() {
-    nombreController.dispose();
-    descController.dispose();
-    leccionesController.dispose();
+    _nombreCtrl.dispose();
+    _descCtrl.dispose();
+    _scrollCtrl.dispose();
+    _headerAnimCtrl.dispose();
+    _guardarAnimCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9), // Background azulado muy claro
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Contenedor Blanco del Header
-              Container(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius:
-                      BorderRadius.vertical(bottom: Radius.circular(40)),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF4CAF50), // Green back button
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.arrow_back,
-                                color: Colors.white),
-                          ),
-                        ),
-                        SvgPicture.asset(
-                          'assets/images/logo.svg',
-                          width: 60,
-                          height: 30,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Título dentro del header
-                    const Center(
-                      child: Text(
-                        'Publicar curso',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ],
+      backgroundColor: const Color(0xFFECEBEB),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            controller: _scrollCtrl,
+            slivers: [
+              // Header verde
+              SliverToBoxAdapter(
+                child: FadeTransition(
+                  opacity: _headerFadeAnim,
+                  child: SlideTransition(
+                    position: _headerSlideAnim,
+                    child: _buildHeader(context),
+                  ),
                 ),
               ),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0, vertical: 20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Texto de Instrucción
-                    Text(
-                      'Llenar los siguientes datos para poder publicar el curso:',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-
-                    CustomTextField(
-                      controller: nombreController,
-                      label: 'Nombre del curso',
-                      hint: 'Ej. Introducción a la algoritmia',
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Custom Multiline Description
-                    const Text(
-                      'Descripción',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF858484),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9F9F9),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x15000000),
-                            blurRadius: 8,
-                            offset: Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: TextField(
-                        controller: descController,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText: 'Añade una descripción',
-                          hintStyle: const TextStyle(
-                              color: Color(0xFFB0B0B0), fontSize: 15),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFEEEEEE)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFEEEEEE)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: Color(0xFF4DC130), width: 2),
-                          ),
-                          filled: true,
-                          fillColor: const Color(0xFFF9F9F9),
+              // Cuerpo
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Instrucción
+                      Text(
+                        'Llenar los siguientes datos para publicar el curso:',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[600],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 24),
 
-                    // Lecciones Count Display (Real-time)
-                    ValueListenableBuilder<List<CursoModel>>(
-                      valueListenable:
-                          CourseRepository.instance.coursesNotifier,
-                      builder: (context, courses, _) {
-                        // Find the selected course
-                        final course = selectedCourseId != null
-                            ? courses
-                                .firstWhere((c) => c.id == selectedCourseId)
-                            : null;
-                        final count = course?.lecciones.length ?? 0;
+                      // Nombre del curso
+                      CustomTextField(
+                        controller: _nombreCtrl,
+                        label: 'Nombre del curso',
+                        hint: 'Ej. Introducción a Flutter',
+                      ),
+                      const SizedBox(height: 20),
 
-                        return CustomTextField(
-                          controller: TextEditingController(
-                              text: selectedCourseId == null
-                                  ? 'Sin lecciones'
-                                  : '$count lecciones'),
-                          label: 'Lecciones',
-                          hint: 'Seleccionar...',
-                          readOnly: true,
-                          suffixIcon: const Icon(Icons.list),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Crear Lección button
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/publicar_leccion');
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.add, color: Colors.white, size: 20),
-                            SizedBox(width: 4),
-                            Text(
-                              'Crear lección',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ],
+                      // Descripción
+                      const Text(
+                        'Descripción',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF858484),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 30),
+                      const SizedBox(height: 8),
+                      _buildDescriptionBox(),
 
-                    // Cargar Archivo (Fondo de imagen)
-                    const Text(
-                      'Fondo de imagen',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF858484),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    GestureDetector(
-                      onTap: () {
-                        // Implement upload logic later
-                      },
-                      child: Container(
-                        height: 52, // Match CustomTextField height
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x15000000),
-                              blurRadius: 8,
-                              spreadRadius: 1,
-                              offset: Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: const Row(
-                          children: [
-                            SizedBox(width: 16),
-                            Icon(Icons.file_upload_outlined,
-                                color: Colors.grey),
-                            SizedBox(width: 12),
-                            Text(
-                              'Cargar archivo',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color:
-                                    Colors.grey, // Gris como indicó el subagent
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 40),
+                      const SizedBox(height: 36),
 
-                    // Selection for Existing Course
-                    const Text(
-                      'Asignar a Curso (Opcional)',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF858484),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    ValueListenableBuilder<List<CursoModel>>(
-                      valueListenable:
-                          CourseRepository.instance.coursesNotifier,
-                      builder: (context, courses, _) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF9F9F9),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFEEEEEE)),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: selectedCourseId,
-                              hint: const Text('Nuevo Curso'),
-                              isExpanded: true,
-                              items: [
-                                const DropdownMenuItem(
-                                  value: null,
-                                  child: Text('Crear Nuevo Curso'),
-                                ),
-                                ...courses.map((c) => DropdownMenuItem(
-                                      value: c.id,
-                                      child: Text(c.titulo),
-                                    )),
-                              ],
-                              onChanged: (val) =>
-                                  setState(() => selectedCourseId = val),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 40),
+                      // Botón Publicar centrado
+                      _buildPublicarButton(),
 
-                    // Botón Publicar
-                    CustomButton(
-                      label: _guardando ? 'Publicando...' : 'Publicar',
-                      onPressed: _guardando ? null : _guardarCurso,
-                    ),
-                  ],
+                      const SizedBox(height: 120),
+                    ],
+                  ),
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Componentes UI ─────────────────────────────────────────────────────────
+
+  Widget _buildHeader(BuildContext context) {
+    return SizedBox(
+      height: 240,
+      width: double.infinity,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(25),
+                bottomRight: Radius.circular(25),
+              ),
+              child: Image.asset(
+                'assets/images/green_bg.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    Container(color: const Color(0xFF4DC130)),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(25),
+                bottomRight: Radius.circular(25),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.2),
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.3),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Logo centrado
+          Positioned(
+            top: 60,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: SvgPicture.asset(
+                'assets/images/logo_white.svg',
+                width: 80,
+                height: 35,
+                colorFilter:
+                    const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              ),
+            ),
+          ),
+
+          // Badge "Nuevo Curso"
+          Positioned(
+            bottom: 20,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.92),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.12), blurRadius: 8),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.school_rounded,
+                        size: 16, color: Color(0xFF4DC130)),
+                    SizedBox(width: 6),
+                    Text(
+                      'Nuevo Curso',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF3AA820),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Botón back
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 45,
+                  height: 45,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6BCA54).withOpacity(0.9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.arrow_back_rounded,
+                      color: Colors.white, size: 24),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDescriptionBox() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _descCtrl,
+        maxLines: 5,
+        style: const TextStyle(fontFamily: 'Inter', fontSize: 15),
+        decoration: InputDecoration(
+          hintText: 'Añade una descripción detallada...',
+          hintStyle: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 15),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.all(16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPublicarButton() {
+    return ScaleTransition(
+      scale: _guardarScaleAnim,
+      child: Center(
+        child: SizedBox(
+          width: 220,
+          child: _PulseButton(
+            label: _guardando ? 'Publicando...' : 'Publicar curso',
+            onTap: _guardando ? null : _guardarCurso,
           ),
         ),
       ),
     );
   }
 
+  // ─── Lógica ─────────────────────────────────────────────────────────────────
+
   Future<void> _guardarCurso() async {
-    final nombre = nombreController.text.trim();
+    final nombre = _nombreCtrl.text.trim();
     if (nombre.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('El nombre del curso es obligatorio')),
-      );
+      _showSnackbar('El nombre del curso es obligatorio', isError: true);
       return;
     }
+
     setState(() => _guardando = true);
     try {
-      await _cursoCtrl.agregarCurso(
-        idUsuario: AppSession().usuarioId ?? 1,
+      final nuevoCurso = CursoModel(
+        id: LocalDbService.instance.generateId(),
+        idUsuarioFk: AppSession().usuarioId ?? 1,
         nombre: nombre,
-        contenido: descController.text.trim().isEmpty
-            ? null
-            : [
-                {
-                  "titulo": "Resumen",
-                  "cuerpo_delta": [
-                    {"insert": "${descController.text.trim()}\n"}
-                  ],
-                  "tiene_imagen": false,
-                  "tiene_video": false
-                }
-              ],
+        resumen: _descCtrl.text.trim(),
+        descripcion: _descCtrl.text.trim(),
+        lecciones: [], // El usuario agregará lecciones después o al curso
       );
+
+      await CourseRepository.instance.addCourse(nuevoCurso);
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 10),
-              Text('Curso publicado exitosamente',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-            ]),
-            backgroundColor: const Color(0xFF4DC130),
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        _showSnackbar('Curso publicado exitosamente');
         Navigator.pop(context);
       }
+    } catch (e) {
+      _showSnackbar('Error al guardar: $e', isError: true);
     } finally {
       if (mounted) setState(() => _guardando = false);
     }
+  }
+
+  void _showSnackbar(String msg, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, style: const TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor:
+            isError ? const Color(0xFFFF606F) : const Color(0xFF4DC130),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+      ),
+    );
+  }
+}
+
+// Reutilizamos el estilo de botón con pulso/animación
+class _PulseButton extends StatefulWidget {
+  final String label;
+  final VoidCallback? onTap;
+  const _PulseButton({required this.label, this.onTap});
+
+  @override
+  State<_PulseButton> createState() => _PulseButtonState();
+}
+
+class _PulseButtonState extends State<_PulseButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 100),
+        reverseDuration: const Duration(milliseconds: 200));
+    _scale = Tween<double>(begin: 1.0, end: 0.95)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: widget.onTap != null ? (_) => _ctrl.forward() : null,
+      onTapUp: widget.onTap != null
+          ? (_) {
+              _ctrl.reverse();
+              widget.onTap!();
+            }
+          : null,
+      onTapCancel: widget.onTap != null ? () => _ctrl.reverse() : null,
+      child: ScaleTransition(
+        scale: _scale,
+        child: Container(
+          height: 52,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF48C634), Color(0xFF3AAA26)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(26),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF4DC130).withOpacity(0.35),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            widget.label,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+          ),
+        ),
+      ),
+    );
   }
 }

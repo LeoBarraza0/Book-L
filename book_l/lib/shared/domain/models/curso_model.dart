@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'leccion_model.dart';
 
 class CursoModel {
-  final String id;
-  final String titulo;
+  final int id;
+  final String nombre;
   final String descripcion;
   final List<String> tags; // e.g. ['JAVA', 'OOP']
   final double rating;
@@ -13,10 +13,11 @@ class CursoModel {
   final Color tagColor;
   final bool esNuevo;
   final List<LeccionModel> lecciones;
+  final int idUsuarioFk;
 
   const CursoModel({
     required this.id,
-    required this.titulo,
+    required this.nombre,
     required this.descripcion,
     this.tags = const [],
     this.rating = 0.0,
@@ -26,12 +27,13 @@ class CursoModel {
     this.tagColor = const Color(0xFF4DC130),
     this.esNuevo = true,
     this.lecciones = const [],
+    this.idUsuarioFk = 0,
   });
 
   factory CursoModel.fromJson(Map<String, dynamic> json) {
     return CursoModel(
-      id: json['id'] ?? '',
-      titulo: json['titulo'] ?? '',
+      id: json['id'] is String ? int.tryParse(json['id']) ?? 0 : (json['id'] ?? 0),
+      nombre: json['nombre'] ?? json['titulo'] ?? '',
       descripcion: json['descripcion'] ?? '',
       tags: List<String>.from(json['tags'] ?? []),
       rating: (json['rating'] ?? 0.0).toDouble(),
@@ -44,13 +46,14 @@ class CursoModel {
               ?.map((e) => LeccionModel.fromJson(e))
               .toList() ??
           [],
+      idUsuarioFk: json['id_usuario_fk'] ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'titulo': titulo,
+      'nombre': nombre,
       'descripcion': descripcion,
       'tags': tags,
       'rating': rating,
@@ -60,12 +63,13 @@ class CursoModel {
       'tagColor': tagColor.value,
       'esNuevo': esNuevo,
       'lecciones': lecciones.map((e) => e.toJson()).toList(),
+      'id_usuario_fk': idUsuarioFk,
     };
   }
 
   CursoModel copyWith({
-    String? id,
-    String? titulo,
+    int? id,
+    String? nombre,
     String? descripcion,
     List<String>? tags,
     double? rating,
@@ -75,10 +79,11 @@ class CursoModel {
     Color? tagColor,
     bool? esNuevo,
     List<LeccionModel>? lecciones,
+    int? idUsuarioFk,
   }) {
     return CursoModel(
       id: id ?? this.id,
-      titulo: titulo ?? this.titulo,
+      nombre: nombre ?? this.nombre,
       descripcion: descripcion ?? this.descripcion,
       tags: tags ?? this.tags,
       rating: rating ?? this.rating,
@@ -88,6 +93,7 @@ class CursoModel {
       tagColor: tagColor ?? this.tagColor,
       esNuevo: esNuevo ?? this.esNuevo,
       lecciones: lecciones ?? this.lecciones,
+      idUsuarioFk: idUsuarioFk ?? this.idUsuarioFk,
     );
   }
 }

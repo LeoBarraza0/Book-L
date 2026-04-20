@@ -1,44 +1,52 @@
 import 'ejercicio_model.dart';
 
 class CapituloModel {
-  final String id;
-  final String titulo;
+  final int id;
+  final String nombre;
   final List<EjercicioModel> ejercicios;
+  final List<Map<String, dynamic>>? secciones;
 
   const CapituloModel({
     required this.id,
-    required this.titulo,
+    required this.nombre,
     this.ejercicios = const [],
+    this.secciones,
   });
 
   factory CapituloModel.fromJson(Map<String, dynamic> json) {
     return CapituloModel(
-      id: json['id'] ?? '',
-      titulo: json['titulo'] ?? '',
+      id: json['id'] is String ? int.tryParse(json['id']) ?? 0 : (json['id'] ?? 0),
+      nombre: json['nombre'] ?? json['titulo'] ?? '',
       ejercicios: (json['ejercicios'] as List<dynamic>?)
               ?.map((e) => EjercicioModel.fromJson(e))
               .toList() ??
           [],
+      secciones: json['secciones'] != null
+          ? List<Map<String, dynamic>>.from(json['secciones'])
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'titulo': titulo,
+      'nombre': nombre,
       'ejercicios': ejercicios.map((e) => e.toJson()).toList(),
+      'secciones': secciones,
     };
   }
 
   CapituloModel copyWith({
-    String? id,
-    String? titulo,
+    int? id,
+    String? nombre,
     List<EjercicioModel>? ejercicios,
+    List<Map<String, dynamic>>? secciones,
   }) {
     return CapituloModel(
       id: id ?? this.id,
-      titulo: titulo ?? this.titulo,
+      nombre: nombre ?? this.nombre,
       ejercicios: ejercicios ?? this.ejercicios,
+      secciones: secciones ?? this.secciones,
     );
   }
 }

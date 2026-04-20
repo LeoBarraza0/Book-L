@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:book_l/shared/widgets/custom_button.dart';
 import 'package:book_l/shared/widgets/custom_text_field.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:book_l/shared/data/local_db_service.dart';
+import '../../../../shared/domain/models/ejercicio_model.dart';
 
 class CrearEjercicioPracticoScreen extends StatefulWidget {
   const CrearEjercicioPracticoScreen({super.key});
@@ -148,7 +150,19 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                         height: 45,
                         child: ElevatedButton(
                           onPressed: () {
-                            Navigator.pop(context);
+                            final List<EjercicioModel> results = [];
+                            for (var q in questions) {
+                              if (q.descController.text.isEmpty) continue;
+                              
+                              results.add(EjercicioModel(
+                                id: LocalDbService.instance.generateId(),
+                                pregunta: q.descController.text,
+                                tipo: 'practica',
+                                respuestaCorrecta: q.correctOptionController.text,
+                                instrucciones: reqController.text, // Instrucciones generales
+                              ));
+                            }
+                            Navigator.pop(context, results);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF4CAF50),

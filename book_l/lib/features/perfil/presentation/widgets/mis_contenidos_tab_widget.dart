@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/services/bookl_service.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../../shared/widgets/search_filter_bar.dart';
+import '../../../../shared/data/leccion_repository.dart';
+import '../../../../shared/data/course_repository.dart';
+import '../../../../shared/domain/models/leccion_model.dart';
+import '../../../../shared/domain/models/curso_model.dart';
 
 class MisContenidosTabWidget extends StatefulWidget {
   const MisContenidosTabWidget({super.key});
@@ -13,7 +17,13 @@ class MisContenidosTabWidget extends StatefulWidget {
 class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
-  final List<String> _filtros = ['Todas', 'Recientes', 'Calificación', 'Populares', 'Duración'];
+  final List<String> _filtros = [
+    'Todas',
+    'Recientes',
+    'Calificación',
+    'Populares',
+    'Duración'
+  ];
   int _filtroSeleccionado = 0;
 
   @override
@@ -28,21 +38,48 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
       listenable: BooklService(),
       builder: (context, _) {
         final userId = AppSession().usuarioId;
-        var misLecciones = BooklService().lecciones.where((l) => l.idUsuarioFk == userId).toList();
-        var misCursos = BooklService().cursos.where((c) => c.idUsuarioFk == userId).toList();
+        // 1. Datos base del sistema
+        final misLeccionesSystem = BooklService()
+            .lecciones
+            .where((l) => l.idUsuarioFk == userId)
+            .toList();
+        final misCursosSystem = BooklService()
+            .cursos
+            .where((c) => c.idUsuarioFk == userId)
+            .toList();
+
+        // 2. Datos creados localmente
+        final localLecciones = LeccionRepository.instance.lecciones;
+        final localCursos = CourseRepository.instance.courses;
+
+        // Combinamos las listas (dynamic para manejar ambos modelos)
+        final allLecciones = [...misLeccionesSystem, ...localLecciones];
+        final allCursos = [...misCursosSystem, ...localCursos];
+
+        var filteredLecciones = allLecciones;
+        var filteredCursos = allCursos;
 
         // Aplicamos la búsqueda local
         if (_query.isNotEmpty) {
           final q = _query.toLowerCase();
-          misLecciones = misLecciones.where((l) => l.nombre.toLowerCase().contains(q)).toList();
-          misCursos = misCursos.where((c) => c.nombre.toLowerCase().contains(q)).toList();
+          filteredLecciones = allLecciones.where((l) {
+            final String nameField = (l as dynamic).nombre;
+            return nameField.toLowerCase().contains(q);
+          }).toList();
+          
+          filteredCursos = allCursos.where((c) {
+            final String nameField = (c as dynamic).nombre;
+            return nameField.toLowerCase().contains(q);
+          }).toList();
         }
 
         return DefaultTabController(
           length: 2,
           child: Column(
             children: [
-              const SizedBox(height: 16), // Espacio extra bajo la pestaña de Favoritos/Grid
+              const SizedBox(
+                  height:
+                      16), // Espacio extra bajo la pestaña de Favoritos/Grid
               SearchFilterBar(
                 searchController: _searchController,
                 query: _query,
@@ -55,7 +92,8 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
                 },
                 filtros: _filtros,
                 filtroSeleccionado: _filtroSeleccionado,
-                onFiltroChanged: (idx) => setState(() => _filtroSeleccionado = idx),
+                onFiltroChanged: (idx) =>
+                    setState(() => _filtroSeleccionado = idx),
               ),
               const SizedBox(height: 10),
               Padding(
@@ -63,7 +101,8 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
                 child: Container(
                   height: 48, // Ajustable
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD9D9D9), // Gris más oscuro, usado en la app
+                    color: const Color(
+                        0xFFD9D9D9), // Gris más oscuro, usado en la app
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: TabBar(
@@ -84,8 +123,10 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
                     ),
                     labelColor: Colors.white,
                     unselectedLabelColor: Colors.black87,
-                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    labelStyle: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14),
+                    unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14),
                     tabs: const [
                       Tab(text: 'Lecciones'),
                       Tab(text: 'Cursos'),
@@ -98,8 +139,8 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
                 child: TabBarView(
                   physics: const BouncingScrollPhysics(),
                   children: [
-                    _buildList(misLecciones, true),
-                    _buildList(misCursos, false),
+                    _buildList(filteredLecciones, true),
+                    _buildList(filteredCursos, false),
                   ],
                 ),
               ),
@@ -134,9 +175,13 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
   }
 
   Widget _buildLeccionCard(dynamic leccion, BuildContext context) {
+    final String nombre = (leccion as dynamic).nombre;
+    final int id = (leccion is LeccionModel) ? leccion.id : (leccion as dynamic).idLeccion;
+
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, '/leccion_detail', arguments: leccion.idLeccion);
+        Navigator.pushNamed(context, '/leccion_detail',
+            arguments: id);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -158,7 +203,8 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
                       color: const Color(0xFF4DC130),
                       borderRadius: BorderRadius.circular(14),
                       image: const DecorationImage(
-                        image: NetworkImage('https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=2070'),
+                        image: NetworkImage(
+                            'https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=2070'),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -166,52 +212,81 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 12.0, top: 10.0, bottom: 10.0),
+                    padding: const EdgeInsets.only(
+                        right: 12.0, top: 10.0, bottom: 10.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: const Color(0xFF8BCA39),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Text('JAVA', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                              child: const Text('JAVA',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold)),
                             ),
                             const SizedBox(width: 4),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: const Color(0xFF8BCA39),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Text('P.O.O.', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                              child: const Text('P.O.O.',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          leccion.nombre,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+                          nombre,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.black87),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const Spacer(),
                         const Row(
                           children: [
-                            Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
+                            Icon(Icons.star_rounded,
+                                color: Color(0xFFFFB800), size: 16),
                             SizedBox(width: 2),
-                            Text('4.9', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black87)),
+                            Text('4.9',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color: Colors.black87)),
                             SizedBox(width: 8),
-                            Icon(Icons.access_time_filled, color: Color(0xFF555555), size: 14),
+                            Icon(Icons.access_time_filled,
+                                color: Color(0xFF555555), size: 14),
                             SizedBox(width: 2),
-                            Text('1 Hora', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11, color: Color(0xFF555555))),
+                            Text('1 Hora',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 11,
+                                    color: Color(0xFF555555))),
                             SizedBox(width: 8),
-                            Icon(Icons.people_alt, color: Color(0xFF555555), size: 14),
+                            Icon(Icons.people_alt,
+                                color: Color(0xFF555555), size: 14),
                             SizedBox(width: 2),
-                            Text('1200', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11, color: Color(0xFF555555))),
+                            Text('1200',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 11,
+                                    color: Color(0xFF555555))),
                           ],
                         ),
                       ],
@@ -239,7 +314,8 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
                     const Center(
                       child: Text(
                         '20%',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 10, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -252,10 +328,13 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
               child: ListenableBuilder(
                 listenable: AppSession().savedLecciones,
                 builder: (context, _) {
-                  final isSaved = AppSession().savedLecciones.value.contains(leccion.idLeccion);
+                  final isSaved = AppSession()
+                      .savedLecciones
+                      .value
+                      .contains(id);
                   return GestureDetector(
                     onTap: () {
-                      AppSession().toggleSavedLeccion(leccion.idLeccion);
+                      AppSession().toggleSavedLeccion(id);
                     },
                     child: Icon(
                       isSaved ? Icons.favorite : Icons.favorite_border,
@@ -273,9 +352,12 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
   }
 
   Widget _buildCursoCard(dynamic curso, BuildContext context) {
+    final String nombre = (curso as dynamic).nombre;
+    final int id = (curso is CursoModel) ? curso.id : (curso as dynamic).idCurso;
+
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, '/curso_detail', arguments: curso.idCurso);
+        Navigator.pushNamed(context, '/curso_detail', arguments: id);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -284,7 +366,10 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-             BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4)),
           ],
           border: Border.all(color: const Color(0xFFEEEEEE)),
         ),
@@ -297,7 +382,8 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
                 color: const Color(0xFF8BCA39).withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.school_rounded, color: Color(0xFF4DC130), size: 30),
+              child: const Icon(Icons.school_rounded,
+                  color: Color(0xFF4DC130), size: 30),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -305,21 +391,26 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    curso.nombre,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                    nombre,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87),
                   ),
                   const SizedBox(height: 4),
-                  const Text('Toca para ver / editar', style: TextStyle(fontSize: 12, color: Color(0xFF888888))),
+                  const Text('Toca para ver / editar',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF888888))),
                 ],
               ),
             ),
             ListenableBuilder(
               listenable: AppSession().savedCursos,
               builder: (context, _) {
-                final isSaved = AppSession().savedCursos.value.contains(curso.idCurso);
+                final isSaved =
+                    AppSession().savedCursos.value.contains(id);
                 return GestureDetector(
                   onTap: () {
-                    AppSession().toggleSavedCurso(curso.idCurso);
+                    AppSession().toggleSavedCurso(id);
                   },
                   child: Icon(
                     isSaved ? Icons.favorite : Icons.favorite_border,

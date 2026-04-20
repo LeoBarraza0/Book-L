@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:book_l/shared/widgets/custom_button.dart';
 import 'package:book_l/shared/widgets/custom_text_field.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:book_l/shared/data/local_db_service.dart';
+import '../../../../shared/domain/models/ejercicio_model.dart';
 
 class CrearEjercicioTeoricoScreen extends StatefulWidget {
   const CrearEjercicioTeoricoScreen({super.key});
@@ -133,7 +135,24 @@ class _CrearEjercicioTeoricoScreenState
                     CustomButton(
                       label: 'Guardar',
                       onPressed: () {
-                        Navigator.pop(context);
+                        final List<EjercicioModel> results = [];
+                        for (var q in questions) {
+                          if (q.descriptionController.text.isEmpty) continue;
+                          
+                          results.add(EjercicioModel(
+                            id: LocalDbService.instance.generateId(),
+                            pregunta: q.descriptionController.text,
+                            tipo: 'teorico',
+                            opciones: [
+                              q.optionAController.text,
+                              q.optionBController.text,
+                              q.optionCController.text,
+                              q.optionDController.text,
+                            ],
+                            respuestaCorrecta: q.correctOption,
+                          ));
+                        }
+                        Navigator.pop(context, results);
                       },
                     ),
                   ],

@@ -29,7 +29,7 @@ class AppSession {
   String? token;
   int? usuarioId;
   String? nombreCompleto;
-  String? rol;         // 'Estudiante' | 'Profesor' | 'Administrador'
+  String? rol; // 'Estudiante' | 'Profesor' | 'Administrador'
   String? programa;
   bool temaOscuro = false;
   String idioma = 'es';
@@ -55,10 +55,16 @@ class AppSession {
     idioma = _prefs.getString(_kIdioma) ?? 'es';
 
     final loadedCursos = _prefs.getStringList(_kSavedCursos) ?? [];
-    savedCursos.value = loadedCursos.map((e) => int.tryParse(e) ?? -1).where((id) => id != -1).toSet();
+    savedCursos.value = loadedCursos
+        .map((e) => int.tryParse(e) ?? -1)
+        .where((id) => id != -1)
+        .toSet();
 
     final loadedLecciones = _prefs.getStringList(_kSavedLecciones) ?? [];
-    savedLecciones.value = loadedLecciones.map((e) => int.tryParse(e) ?? -1).where((id) => id != -1).toSet();
+    savedLecciones.value = loadedLecciones
+        .map((e) => int.tryParse(e) ?? -1)
+        .where((id) => id != -1)
+        .toSet();
 
     _initialized = true;
   }
@@ -104,7 +110,7 @@ class AppSession {
   }
 
   // ── Modificadores de Favoritos ─────────────────────────────────────────────
-  
+
   void toggleSavedCurso(int idCurso) {
     final current = Set<int>.from(savedCursos.value);
     if (current.contains(idCurso)) {
@@ -113,7 +119,8 @@ class AppSession {
       current.add(idCurso);
     }
     savedCursos.value = current;
-    _prefs.setStringList(_kSavedCursos, current.map((e) => e.toString()).toList());
+    _prefs.setStringList(
+        _kSavedCursos, current.map((e) => e.toString()).toList());
   }
 
   void toggleSavedLeccion(int idLeccion) {
@@ -124,7 +131,8 @@ class AppSession {
       current.add(idLeccion);
     }
     savedLecciones.value = current;
-    _prefs.setStringList(_kSavedLecciones, current.map((e) => e.toString()).toList());
+    _prefs.setStringList(
+        _kSavedLecciones, current.map((e) => e.toString()).toList());
   }
 
   // ── Cerrar sesión ──────────────────────────────────────────────────────────
