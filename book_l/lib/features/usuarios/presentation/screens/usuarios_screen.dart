@@ -3,8 +3,28 @@ import '../../../../shared/widgets/nav_bar.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/filters_widget.dart';
 import '../../domain/entities/usuarios.dart';
+import '../../domain/repositories/usuarios_repository.dart';
+import '../../domain/usecases/get_usuarios_usecase.dart';
+import '../../data/repositories/usuarios_repository_impl.dart';
+import '../controller/usuarios_controller.dart';
+import '../controller/usuarios_state.dart';
 import 'edit_usuario_screen.dart';
 import 'add_usuario_screen.dart';
+
+/// Crea y provee el [UsuariosController] con todas sus dependencias.
+///
+/// Este "mini-injector" manual es suficiente para la fase JSON local.
+/// Cuando se integre un DI real (get_it, riverpod, etc.) se elimina
+/// este factory y el controller se inyecta desde fuera.
+UsuariosController _buildController() {
+  final UsuariosRepository repo = UsuariosRepositoryImpl();
+  return UsuariosController(
+    getUsuarios: GetUsuariosUseCase(repo),
+    addUsuario: AddUsuarioUseCase(repo),
+    updateUsuario: UpdateUsuarioUseCase(repo),
+    deleteUsuario: DeleteUsuarioUseCase(repo),
+  );
+}
 
 class UsuariosScreen extends StatefulWidget {
   const UsuariosScreen({super.key});
@@ -14,208 +34,156 @@ class UsuariosScreen extends StatefulWidget {
 }
 
 class _UsuariosScreenState extends State<UsuariosScreen> {
+  late final UsuariosController _controller;
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
 
   final List<String> _filtros = ['Todos', 'Recientes', 'Activos', '...'];
   int _filtroSeleccionado = 0;
 
-  final List<Usuario> _usuarios = [
-    Usuario(
-      idUsuario: 1,
-      nombreCompleto: 'Arthur Barraza',
-      correo: 'arthurbr@gmail.com',
-      password: '...',
-      username: 'arthurbr',
-      celular: 3001234567,
-      semestre: 8,
-      nacimiento: DateTime(1998, 5, 15),
-      programa: 'Ingenieria de Sistemas',
-      preferencias: 'IA y móviles.',
-      activo: true,
-      rol: 'Admin',
-    ),
-    Usuario(
-      idUsuario: 2,
-      nombreCompleto: 'Maria Lopez',
-      correo: 'marialopez@gmail.com',
-      password: '...',
-      username: 'mlopez',
-      celular: 3109876543,
-      semestre: 4,
-      nacimiento: DateTime(2002, 11, 20),
-      programa: 'Psicologia',
-      preferencias: 'Psicología clínica.',
-      activo: true,
-      rol: 'User',
-    ),
-    Usuario(
-      idUsuario: 3,
-      nombreCompleto: 'Juan Perez',
-      correo: 'juanperez@gmail.com',
-      password: '...',
-      username: 'jperez',
-      celular: 3201112233,
-      semestre: 10,
-      nacimiento: DateTime(1997, 1, 5),
-      programa: 'Derecho',
-      preferencias: 'Derecho penal.',
-      activo: false,
-      rol: 'User',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _controller = _buildController();
+    _controller.cargarUsuarios();
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _controller.dispose();
     super.dispose();
+  }
+
+  List<Usuario> _applyFilters(List<Usuario> todos) {
+    var result = todos;
+    if (_filtroSeleccionado == 2) {
+      result = result.where((u) => u.activo).toList();
+    }
+    if (_query.isNotEmpty) {
+      result = result
+          .where((u) =>
+              u.nombreCompleto.toLowerCase().contains(_query.toLowerCase()))
+          .toList();
+    }
+    return result;
   }
 
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
 
-    // Logic for filtering by query and filter state
-    var filteredUsuarios = _usuarios;
-    if (_filtroSeleccionado == 2) {
-      filteredUsuarios = _usuarios.where((u) => u.activo).toList();
-    }
-    if (_query.isNotEmpty) {
-      filteredUsuarios = filteredUsuarios
-          .where((u) => u.nombreCompleto.toLowerCase().contains(_query.toLowerCase()))
-          .toList();
-    }
-
     return Scaffold(
       backgroundColor: const Color(0xFFECEBEB),
-      body: Stack(
-        children: [
-          // ── COLUMNA PRINCIPAL ──────────────────────────────────────────
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: ListenableBuilder(
+        listenable: _controller,
+        builder: (context, _) {
+          final state = _controller.state;
+          return Stack(
             children: [
-              // ── HEADER: Imagen PNG de fondo con overlay de contenido
-              SizedBox(
-                height: 200,
-                child: Stack(
-                  children: [
-                    // Fondo PNG
-                    Positioned.fill(
-                      child: Image.asset(
-                        'assets/images/yellow_bg.png',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    // Botón atrás (esquina superior izquierda)
-                    Positioned(
-                      top: topPadding + 8,
-                      left: 20,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            '/admin_Home',
-                          );
-                        },
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 24,
+              // ── COLUMNA PRINCIPAL ──────────────────────────────────────────
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ── HEADER: Imagen PNG de fondo con overlay de contenido ──
+                  SizedBox(
+                    height: 200,
+                    child: Stack(
+                      children: [
+                        // Fondo PNG
+                        Positioned.fill(
+                          child: Image.asset(
+                            'assets/images/yellow_bg.png',
+                            fit: BoxFit.cover,
                           ),
                         ),
-                      ),
-                    ),
-                    // Título "Usuarios"
-                    const Positioned(
-                      left: 0,
-                      right: 0,
-                      top: 80,
-                      child: Center(
-                        child: Text(
-                          'Usuarios',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 40,
-                            fontFamily: 'Baloo',
-                            fontWeight: FontWeight.w400,
+                        // Botón atrás (esquina superior izquierda)
+                        Positioned(
+                          top: topPadding + 8,
+                          left: 20,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pushReplacementNamed(
+                                context,
+                                '/admin_Home',
+                              );
+                            },
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        // Título "Usuarios"
+                        const Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 80,
+                          child: Center(
+                            child: Text(
+                              'Usuarios',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 40,
+                                fontFamily: 'Baloo',
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+
+                  // ── ZONA GRIS con búsqueda, filtros y listado ──────────────
+                  Expanded(
+                    child: Column(
+                      children: [
+                        CustomSearchBar(
+                          controller: _searchController,
+                          onSearch: () {
+                            setState(() => _query = _searchController.text);
+                          },
+                          onClear: () {
+                            setState(() => _query = '');
+                          },
+                        ),
+                        FilterChipsRow(
+                          filters: _filtros,
+                          selectedIndex: _filtroSeleccionado,
+                          onFilterSelected: (index) {
+                            setState(() => _filtroSeleccionado = index);
+                          },
+                        ),
+                        Expanded(child: _buildBody(state)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
 
-              // ── ZONA GRIS con búsqueda, filtros y listado ──────────────
-              Expanded(
-                child: Column(
-                  children: [
-                    CustomSearchBar(
-                      controller: _searchController,
-                      onSearch: () {
-                        setState(() {
-                          _query = _searchController.text;
-                        });
-                      },
-                      onClear: () {
-                        setState(() {
-                          _query = '';
-                        });
-                      },
-                    ),
-                    FilterChipsRow(
-                      filters: _filtros,
-                      selectedIndex: _filtroSeleccionado,
-                      onFilterSelected: (index) {
-                        setState(() {
-                          _filtroSeleccionado = index;
-                        });
-                      },
-                    ),
-                    Expanded(
-                      child: filteredUsuarios.isEmpty
-                          ? const Center(
-                              child: Text('No hay usuarios disponibles',
-                                  style: TextStyle(color: Color(0xFF888888))))
-                          : ListView.builder(
-                              padding: const EdgeInsets.only(
-                                left: 16,
-                                right: 16,
-                                top: 8,
-                                bottom: 100,
-                              ),
-                              itemCount: filteredUsuarios.length,
-                              itemBuilder: (context, index) {
-                                return _buildUsuarioCard(
-                                    filteredUsuarios[index]);
-                              },
-                            ),
-                    ),
-                  ],
-                ),
+              // ── BOTTOM NAV BAR ─────────────────────────────────────────────
+              const Positioned(
+                left: 20,
+                right: 20,
+                bottom: 24,
+                child: SharedBottomNavBar(selectedIndex: -1),
               ),
             ],
-          ),
-
-          // ── BOTTOM NAV BAR ─────────────────────────────────────────────
-          const Positioned(
-            left: 20,
-            right: 20,
-            bottom: 24,
-            child: SharedBottomNavBar(selectedIndex: -1),
-          ),
-        ],
+          );
+        },
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(
-            bottom: 80.0), // Padding to avoid covering the nav bar
+        padding: const EdgeInsets.only(bottom: 80.0),
         child: FloatingActionButton(
           onPressed: () async {
             final newUser = await Navigator.push<Usuario>(
@@ -225,9 +193,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
               ),
             );
             if (newUser != null) {
-              setState(() {
-                _usuarios.add(newUser);
-              });
+              await _controller.agregarUsuario(newUser);
             }
           },
           backgroundColor: const Color(0xFF44BD32),
@@ -238,6 +204,52 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
+  }
+
+  /// Construye el cuerpo según el estado actual del controller.
+  Widget _buildBody(UsuariosState state) {
+    if (state is UsuariosLoading || state is UsuariosInitial) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF175e7a)),
+      );
+    }
+
+    if (state is UsuariosError) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            state.message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Color(0xFFEA5455), fontSize: 14),
+          ),
+        ),
+      );
+    }
+
+    if (state is UsuariosLoaded) {
+      final filtrados = _applyFilters(state.usuarios);
+      if (filtrados.isEmpty) {
+        return const Center(
+          child: Text(
+            'No hay usuarios disponibles',
+            style: TextStyle(color: Color(0xFF888888)),
+          ),
+        );
+      }
+      return ListView.builder(
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 8,
+          bottom: 100,
+        ),
+        itemCount: filtrados.length,
+        itemBuilder: (context, index) => _buildUsuarioCard(filtrados[index]),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 
   Widget _buildUsuarioCard(Usuario user) {
@@ -301,7 +313,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 3),
-                // Telefono
+                // Teléfono
                 Text(
                   user.celular?.toString() ?? '',
                   style: const TextStyle(
@@ -321,7 +333,9 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                         decoration: BoxDecoration(
                           color: user.rol == 'Admin'
                               ? const Color(0xFFF19066)
-                              : const Color(0xFF44BD32),
+                              : user.rol == 'Profesor'
+                                  ? const Color(0xFF175e7a)
+                                  : const Color(0xFF44BD32),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -363,8 +377,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Material(
-                color:
-                    const Color(0xFFF6B55C), // Naranja para editar en usuarios
+                color: const Color(0xFFF6B55C),
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
                   onTap: () async {
@@ -375,12 +388,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                       ),
                     );
                     if (updatedUser != null) {
-                      setState(() {
-                        final index = _usuarios.indexWhere((u) => u.idUsuario == user.idUsuario);
-                        if (index != -1) {
-                          _usuarios[index] = updatedUser;
-                        }
-                      });
+                      await _controller.editarUsuario(updatedUser);
                     }
                   },
                   borderRadius: BorderRadius.circular(14),
@@ -405,7 +413,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
               ),
               const SizedBox(height: 8),
               Material(
-                color: const Color(0xFFEA5455), // Rojo para eliminar
+                color: const Color(0xFFEA5455),
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
                   onTap: () => _mostrarModalEliminar(user),
@@ -417,8 +425,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.delete_outline,
-                            color: Colors.white, size: 13),
+                        Icon(Icons.delete_outline, color: Colors.white, size: 13),
                         SizedBox(width: 4),
                         Text('Eliminar',
                             style: TextStyle(
@@ -487,11 +494,9 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                     ),
                     const SizedBox(width: 8),
                     TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _usuarios.removeWhere((u) => u.idUsuario == user.idUsuario);
-                        });
+                      onPressed: () async {
                         Navigator.pop(ctx);
+                        await _controller.eliminarUsuario(user.idUsuario);
                       },
                       child: const Text('Aceptar',
                           style: TextStyle(
@@ -509,4 +514,3 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
     );
   }
 }
-

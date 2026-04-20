@@ -31,7 +31,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Fundamentos de lógica, conjuntos, combinatoria y grafos aplicados a la computación.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Fundamentos de lógica, conjuntos, combinatoria y grafos aplicados a la computación.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -47,7 +51,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Diseño, análisis e implementación de algoritmos fundamentales.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Diseño, análisis e implementación de algoritmos fundamentales.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -58,10 +66,22 @@
     }
   ],
   "lecciones_cursos": [
-    { "id_leccion": 1, "id_curso": 1 },
-    { "id_leccion": 2, "id_curso": 1 },
-    { "id_leccion": 3, "id_curso": 2 },
-    { "id_leccion": 4, "id_curso": 2 }
+    {
+      "id_leccion": 1,
+      "id_curso": 1
+    },
+    {
+      "id_leccion": 2,
+      "id_curso": 1
+    },
+    {
+      "id_leccion": 3,
+      "id_curso": 2
+    },
+    {
+      "id_leccion": 4,
+      "id_curso": 2
+    }
   ],
   "lecciones": [
     {
@@ -71,7 +91,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Aprende a razonar formalmente con proposiciones, conectivos lógicos y tablas de verdad.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Aprende a razonar formalmente con proposiciones, conectivos lógicos y tablas de verdad.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -87,7 +111,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Operaciones con conjuntos, relaciones y funciones como base del pensamiento matemático.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Operaciones con conjuntos, relaciones y funciones como base del pensamiento matemático.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -103,7 +131,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Notación Big-O, análisis de tiempo y espacio para evaluar la eficiencia de algoritmos.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Notación Big-O, análisis de tiempo y espacio para evaluar la eficiencia de algoritmos.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -119,7 +151,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Algoritmos clásicos de ordenamiento (bubble, merge, quick) y técnicas de búsqueda.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Algoritmos clásicos de ordenamiento (bubble, merge, quick) y técnicas de búsqueda.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -137,7 +173,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Definición de proposición, valores de verdad y los conectivos AND, OR, NOT, implicación y bicondicional.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Definición de proposición, valores de verdad y los conectivos AND, OR, NOT, implicación y bicondicional.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -153,7 +193,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Construcción sistemática de tablas de verdad para evaluar fórmulas proposicionales complejas.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Construcción sistemática de tablas de verdad para evaluar fórmulas proposicionales complejas.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -169,7 +213,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Unión, intersección, diferencia, complemento y producto cartesiano.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Unión, intersección, diferencia, complemento y producto cartesiano.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -185,7 +233,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Propiedades de relaciones (reflexividad, simetría, transitividad) y tipos de funciones.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Propiedades de relaciones (reflexividad, simetría, transitividad) y tipos de funciones.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -201,7 +253,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Big-O, Omega y Theta: cómo describir el comportamiento de un algoritmo en el límite.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Big-O, Omega y Theta: cómo describir el comportamiento de un algoritmo en el límite.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -217,7 +273,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Mejor caso, caso promedio y peor caso. Recurrencias y el Teorema Maestro.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Mejor caso, caso promedio y peor caso. Recurrencias y el Teorema Maestro.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -233,7 +293,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Bubble Sort, Selection Sort, Insertion Sort, Merge Sort y Quick Sort con análisis comparativo.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Bubble Sort, Selection Sort, Insertion Sort, Merge Sort y Quick Sort con análisis comparativo.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }
@@ -249,7 +313,11 @@
       "contenido": [
         {
           "titulo": "Resumen",
-          "cuerpo_delta": [ { "insert": "Implementación y análisis de búsqueda secuencial vs búsqueda binaria en listas ordenadas.\n" } ],
+          "cuerpo_delta": [
+            {
+              "insert": "Implementación y análisis de búsqueda secuencial vs búsqueda binaria en listas ordenadas.\n"
+            }
+          ],
           "tiene_imagen": false,
           "tiene_video": false
         }

@@ -24,16 +24,16 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
   int? _selectedSemestre;
 
   final List<String> _programas = [
-    'Ingenieria de Sistemas',
-    'Ingenieria Industrial',
-    'Ingenieria Civil',
-    'Contaduria Publica',
-    'Administracion de Empresas',
+    'Ingeniería de Sistemas',
+    'Ingeniería Industrial',
+    'Ingeniería Civil',
+    'Contaduría Pública',
+    'Administración de Empresas',
     'Derecho',
     'Medicina',
-    'Psicologia',
-    'Enfermeria',
-    'Arquitectura'
+    'Psicología',
+    'Enfermería',
+    'Arquitectura',
   ];
 
   @override
@@ -46,7 +46,11 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
     _celularController = TextEditingController(text: widget.usuario.celular?.toString() ?? '');
     _preferenciasController = TextEditingController(text: widget.usuario.preferencias ?? '');
     _selectedDate = widget.usuario.nacimiento;
-    _selectedPrograma = widget.usuario.programa;
+    // Solo asigna el programa si existe en la lista; si no, deja null (sin selección).
+    final programa = widget.usuario.programa;
+    _selectedPrograma = (programa != null && _programas.contains(programa))
+        ? programa
+        : null;
     _selectedSemestre = widget.usuario.semestre;
   }
 
