@@ -26,11 +26,8 @@ import 'features/leccion/presentation/screens/leccion_editar_screen.dart';
 import 'features/leccion/presentation/screens/capitulo_editar_screen.dart';
 import 'features/leccion/presentation/screens/crear_capitulo_screen.dart';
 import 'features/usuarios/presentation/screens/usuarios_screen.dart';
-<<<<<<< HEAD
 import 'features/usuarios/presentation/screens/edit_usuario_screen.dart';
-=======
 
->>>>>>> 79ab22b3f9f899e651b8c695491ddcf18a6062c3
 import 'core/storage/local_storage.dart';
 
 class BookLApp extends StatelessWidget {

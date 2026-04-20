@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:book_l/shared/data/leccion_repository.dart';
 import 'package:book_l/shared/domain/models/leccion_model.dart';
 import 'package:book_l/shared/domain/models/capitulo_model.dart';
-import 'package:book_l/shared/data/local_db_service.dart';
+import 'package:book_l/core/services/bookl_service.dart';
 import '../widgets/agregar_seccion_button.dart';
 import '../widgets/seccion_editor_widget.dart';
 
@@ -488,7 +488,7 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
           .join('\n');
 
       final nuevaLeccion = LeccionModel(
-        id: LocalDbService.instance.generateId(),
+        id: BooklService().generateId(),
         nombre: nombre,
         contenido: contenido,
         tipo: 'teorica',

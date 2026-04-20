@@ -13,6 +13,8 @@ import '../../features/leccion/domain/entities/capitulo.dart';
 import '../../features/leccion/domain/entities/leccion.dart';
 import '../../features/leccion/domain/entities/material_educativo.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 // Servicio central de datos JSON — Singleton de uso restringido.
 //
 // REGLA DE USO: Solo los repository_impl pueden importar este servicio.
@@ -20,6 +22,7 @@ import '../../features/leccion/domain/entities/material_educativo.dart';
 //
 // Actúa como "base de datos en memoria" hasta migrar a API REST.
 class BooklService extends ChangeNotifier {
+  static const String _storageKey = 'bookl_full_data';
   // ── Singleton ──────────────────────────────────────────────────────────────
   static final BooklService _instance = BooklService._internal();
   factory BooklService() => _instance;
@@ -48,8 +51,16 @@ class BooklService extends ChangeNotifier {
   Future<void> init() async {
     if (_loaded) return;
 
-    final raw = await rootBundle.loadString('assets/data/bookl_data.json');
-    final data = json.decode(raw) as Map<String, dynamic>;
+    final prefs = await SharedPreferences.getInstance();
+    final localData = prefs.getString(_storageKey);
+
+    Map<String, dynamic> data;
+    if (localData != null && localData.isNotEmpty) {
+      data = json.decode(localData);
+    } else {
+      final raw = await rootBundle.loadString('assets/data/bookl_data.json');
+      data = json.decode(raw);
+    }
 
     usuariosDto = (data['usuarios'] as List)
         .map((e) => UsuarioDto.fromJson(e as Map<String, dynamic>))
@@ -80,6 +91,81 @@ class BooklService extends ChangeNotifier {
         .toList();
 
     _loaded = true;
+    notifyListeners();
+  }
+
+  // ── Persistencia ───────────────────────────────────────────────────────────
+  Future<void> _save() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final fullData = {
+        'usuarios': usuariosDto.map((u) => u.toJson()).toList(),
+        'cursos': cursos.map((c) => CursoDto.toJson(c)).toList(),
+        'lecciones': lecciones.map((l) => LeccionDto.toJson(l)).toList(),
+        'capitulos': capitulos.map((c) => CapituloDto.toJson(c)).toList(),
+        'materiales': materiales.map((m) => MaterialDto.toJson(m)).toList(),
+        'lecciones_cursos': leccionesCursos,
+      };
+      await prefs.setString(_storageKey, json.encode(fullData));
+      notifyListeners();
+    } catch (e) {
+      if (kDebugMode) print("Error saving central data: $e");
+    }
+  }
+
+  // ── Operaciones de Escritura ───────────────────────────────────────────────
+  void addCurso(Curso curso) {
+    cursos.add(curso);
+    _save();
+  }
+
+  void addLeccion(Leccion leccion, {int? idCurso}) {
+    lecciones.add(leccion);
+    if (idCurso != null) {
+      leccionesCursos.add({
+        'id_leccion': leccion.idLeccion,
+        'id_curso': idCurso,
+      });
+    }
+    _save();
+  }
+
+  void addCapitulo(Capitulo capitulo) {
+    capitulos.add(capitulo);
+    _save();
+  }
+
+  void updateCurso(Curso curso) {
+    final idx = cursos.indexWhere((c) => c.idCurso == curso.idCurso);
+    if (idx != -1) {
+      cursos[idx] = curso;
+      _save();
+    }
+  }
+
+  void removeCurso(int id) {
+    cursos.removeWhere((c) => c.idCurso == id);
+    // Eliminar también relaciones
+    leccionesCursos.removeWhere((lc) => lc['id_curso'] == id);
+    _save();
+  }
+
+  void removeLeccion(int id) {
+    lecciones.removeWhere((l) => l.idLeccion == id);
+    leccionesCursos.removeWhere((lc) => lc['id_leccion'] == id);
+    _save();
+  }
+
+  void removeCapitulo(int id) {
+    capitulos.removeWhere((c) => c.idCapitulo == id);
+    _save();
+  }
+
+  void clearAllData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_storageKey);
+    _loaded = false;
+    await init();
   }
 
   // ── Generador de IDs ───────────────────────────────────────────────────────
@@ -93,4 +179,8 @@ class BooklService extends ChangeNotifier {
   int nextCapituloId() =>
       _nextId(capitulos, (c) => (c as Capitulo).idCapitulo);
   int nextUsuarioId() => _nextId(usuarios, (u) => (u as Usuario).idUsuario);
+
+  // Generador de IDs único para nuevos registros locales
+  // Se usa microsegundos para minimizar riesgo de colisión en ráfagas.
+  int generateId() => DateTime.now().microsecondsSinceEpoch;
 }

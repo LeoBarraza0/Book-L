@@ -1,3 +1,4 @@
+import 'package:book_l/core/services/bookl_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/storage/local_storage.dart';
@@ -328,14 +329,14 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
     setState(() => _guardando = true);
     try {
       final nuevoCurso = CursoModel(
-        id: LocalDbService.instance.generateId(),
+        id: BooklService().generateId(),
         idUsuarioFk: AppSession().usuarioId ?? 1,
         nombre: nombre,
         descripcion: _descCtrl.text.trim(),
         lecciones: [], // El usuario agregará lecciones después o al curso
       );
 
-      await CourseRepository.instance.addCourse(nuevoCurso);
+      CourseRepository.instance.addCourse(nuevoCurso);
 
       if (mounted) {
         _showSnackbar('Curso publicado exitosamente');

@@ -1,120 +1,122 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../domain/models/curso_model.dart';
 import '../domain/models/leccion_model.dart';
 import '../domain/models/capitulo_model.dart';
-import 'local_db_service.dart';
+import '../../core/services/bookl_service.dart';
+import '../../features/curso/domain/entities/curso.dart';
+import '../../features/leccion/domain/entities/leccion.dart';
+import '../../features/leccion/domain/entities/capitulo.dart';
 
 /// Singleton in-memory repository for locally created courses.
-/// Uses [ValueNotifier] so widgets can reactively rebuild only
-/// the section that shows courses — not the entire profile tree.
+/// Now acts as a bridge to [BooklService] for centralized architecture.
 class CourseRepository {
   CourseRepository._internal() {
-    // Initial load
-    loadInitialCourses();
+    // Sync with BooklService
+    BooklService().addListener(_syncFromCentral);
+    _syncFromCentral();
   }
   static final CourseRepository instance = CourseRepository._internal();
 
-  /// Notifier holding the list of created courses.
+  /// Notifier holding the list of created courses (filtered from BooklService).
   final ValueNotifier<List<CursoModel>> coursesNotifier =
       ValueNotifier<List<CursoModel>>([]);
 
   List<CursoModel> get courses => coursesNotifier.value;
 
-  bool get hasCourses => coursesNotifier.value.isNotEmpty;
+  /// Sincroniza desde BooklService convirtiendo Entidades → Modelos de UI.
+  void _syncFromCentral() {
+    final allCursos = BooklService().cursos;
+    // Here we can filter if we only want "local" courses,
+    // but the user wants "everything in their JSON".
+    // We convert Entities back to Models for the UI if needed,
+    // or just pass them through if the UI can handle them.
+    // For now, let's keep the UI models by converting.
 
-  /// Loads initial dummy data from LocalDB (or fallback to assets/data).
-  Future<void> loadInitialCourses() async {
-    try {
-      final initialCourses = await LocalDbService.instance.loadCourses();
-      coursesNotifier.value = initialCourses;
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error loading initial courses: $e");
-      }
+    coursesNotifier.value = allCursos
+        .map((c) => CursoModel(
+              id: c.idCurso,
+              idUsuarioFk: c.idUsuarioFk,
+              nombre: c.nombre,
+              descripcion: (c.contenido?.isNotEmpty ?? false)
+                  ? (c.contenido!.first['titulo'] ?? '').toString()
+                  : '',
+              rating: c.rating,
+              duracion: c.duracion,
+              estudiantes: c.estudiantes,
+              progreso: c.progreso,
+              tagColor: c.tagColor != null
+                  ? Color(c.tagColor!)
+                  : const Color(0xFF4DC130),
+              esNuevo: c.esNuevo,
+              lecciones: [],
+            ))
+        .toList();
+  }
+
+  /// Persiste un nuevo curso (y sus lecciones/capítulos anidados) en BooklService.
+  void addCourse(CursoModel model) {
+    final entity = Curso(
+      idCurso: model.id,
+      idUsuarioFk: model.idUsuarioFk,
+      nombre: model.nombre,
+      contenido: model.descripcion.isNotEmpty
+          ? [
+              {'titulo': model.descripcion}
+            ]
+          : null,
+      rating: model.rating,
+      duracion: model.duracion,
+      estudiantes: model.estudiantes,
+      progreso: model.progreso,
+      tagColor: model.tagColor?.value,
+      esNuevo: model.esNuevo,
+      estado: 'activo',
+      createdAt: DateTime.now(),
+    );
+    BooklService().addCurso(entity);
+
+    for (var lessonModel in model.lecciones) {
+      addLessonToCourse(model.id, lessonModel);
     }
   }
 
-  Future<void> _saveToLocalDB() async {
-    await LocalDbService.instance.saveCourses(coursesNotifier.value);
-  }
-
-  void addCourse(CursoModel course) {
-    coursesNotifier.value = [...coursesNotifier.value, course];
-    _saveToLocalDB();
-  }
-
+  /// Persiste una lección asociada a un curso en BooklService.
   void addLessonToCourse(int courseId, LeccionModel lesson) {
-    final list = coursesNotifier.value;
-    final index = list.indexWhere((c) => c.id == courseId);
-    if (index != -1) {
-      final course = list[index];
-      final updatedCourse = course.copyWith(
-        lecciones: [...course.lecciones, lesson],
-      );
-      final newList = List<CursoModel>.from(list);
-      newList[index] = updatedCourse;
-      coursesNotifier.value = newList;
-      _saveToLocalDB();
+    final entity = Leccion(
+      idLeccion: lesson.id,
+      idUsuarioFk: 1,
+      nombre: lesson.nombre,
+      rating: lesson.rating,
+      duracion: lesson.duracion,
+      estudiantes: lesson.estudiantes,
+      progreso: lesson.progreso,
+      tagColor: lesson.tagColor,
+      esNuevo: lesson.esNuevo,
+      estado: 'activa',
+      createdAt: DateTime.now(),
+    );
+    BooklService().addLeccion(entity, idCurso: courseId);
+
+    for (var cap in lesson.capitulos) {
+      addChapterToLesson(courseId, lesson.id, cap);
     }
   }
 
-  void updateLessonInCourse(int courseId, LeccionModel updatedLesson) {
-    final list = coursesNotifier.value;
-    final index = list.indexWhere((c) => c.id == courseId);
-    if (index != -1) {
-      final course = list[index];
-      final lessonIndex =
-          course.lecciones.indexWhere((l) => l.id == updatedLesson.id);
-      if (lessonIndex != -1) {
-        final newLessons = List<LeccionModel>.from(course.lecciones);
-        newLessons[lessonIndex] = updatedLesson;
-
-        final updatedCourse = course.copyWith(lecciones: newLessons);
-        final newList = List<CursoModel>.from(list);
-        newList[index] = updatedCourse;
-        coursesNotifier.value = newList;
-        _saveToLocalDB();
-      }
-    }
+  /// Persiste un capítulo en BooklService, vinculado relacionalmente a la lección.
+  void addChapterToLesson(int courseId, int lessonId, CapituloModel model) {
+    final entity = Capitulo(
+      idCapitulo: model.id,
+      idLeccion: lessonId,
+      nombre: model.nombre,
+      contenido: model.secciones,
+      tiempoTotal: 0,
+    );
+    BooklService().addCapitulo(entity);
   }
 
-  void addChapterToLesson(int courseId, int lessonId, CapituloModel chapter) {
-    final list = coursesNotifier.value;
-    final index = list.indexWhere((c) => c.id == courseId);
-    if (index != -1) {
-      final course = list[index];
-      final lessonIndex = course.lecciones.indexWhere((l) => l.id == lessonId);
-      if (lessonIndex != -1) {
-        final lesson = course.lecciones[lessonIndex];
-        final updatedLesson = lesson.copyWith(
-          capitulos: [...lesson.capitulos, chapter],
-        );
-        final newLessons = List<LeccionModel>.from(course.lecciones);
-        newLessons[lessonIndex] = updatedLesson;
+  /// Elimina un curso y sus relaciones del almacenamiento central.
+  void removeCourse(int id) => BooklService().removeCurso(id);
 
-        final updatedCourse = course.copyWith(lecciones: newLessons);
-        final newList = List<CursoModel>.from(list);
-        newList[index] = updatedCourse;
-        coursesNotifier.value = newList;
-        _saveToLocalDB();
-      }
-    }
-  }
-
-  void updateCourseState() {
-    // A handy method when nested things are mutated
-    coursesNotifier.value = List.from(coursesNotifier.value);
-    _saveToLocalDB();
-  }
-
-  void removeCourse(int id) {
-    coursesNotifier.value =
-        coursesNotifier.value.where((c) => c.id != id).toList();
-    _saveToLocalDB();
-  }
-
-  void clear() {
-    coursesNotifier.value = [];
-    _saveToLocalDB();
-  }
+  /// Vacía todo el almacenamiento y recarga desde el asset JSON base.
+  void clear() => BooklService().clearAllData();
 }

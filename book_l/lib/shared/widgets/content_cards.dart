@@ -43,11 +43,10 @@ class _BaseContentCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-             BoxShadow(
-               color: Colors.black.withValues(alpha: 0.05), 
-               blurRadius: 10, 
-               offset: const Offset(0, 4)
-             ),
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4)),
           ],
           border: Border.all(color: const Color(0xFFEEEEEE)),
         ),
@@ -64,19 +63,23 @@ class _BaseContentCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: iconBoxColor,
                       borderRadius: BorderRadius.circular(16),
-                      image: imageUrl != null 
-                        ? DecorationImage(image: NetworkImage(imageUrl!), fit: BoxFit.cover)
-                        : null,
+                      image: imageUrl != null
+                          ? DecorationImage(
+                              image: NetworkImage(imageUrl!), fit: BoxFit.cover)
+                          : null,
                     ),
                     alignment: Alignment.center,
-                    child: imageUrl == null ? Icon(iconData, color: iconColor, size: 40) : const SizedBox(),
+                    child: imageUrl == null
+                        ? Icon(iconData, color: iconColor, size: 40)
+                        : const SizedBox(),
                   ),
                 ),
                 const SizedBox(width: 14),
                 // Contenido de texto
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 12.0, top: 12.0, bottom: 12.0),
+                    padding: const EdgeInsets.only(
+                        right: 12.0, top: 12.0, bottom: 12.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -85,7 +88,10 @@ class _BaseContentCard extends StatelessWidget {
                         const SizedBox(height: 6),
                         Text(
                           title,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.black87),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -101,14 +107,14 @@ class _BaseContentCard extends StatelessWidget {
                 const SizedBox(width: 48),
               ],
             ),
-            
+
             // Botón de Favorito Estandarizado (Arriba Derecha)
             Positioned(
               top: 12,
               right: 16,
               child: favoriteButton,
             ),
-            
+
             // Posible overlay de progreso (Abajo Derecha)
             if (progressOverlay != null)
               Positioned(
@@ -139,16 +145,19 @@ class SharedLeccionCard extends StatelessWidget {
       iconColor: Colors.white,
       iconData: Icons.menu_book_rounded,
       imageUrl: _extractImageUrl(leccion.contenido),
-      onTap: () => Navigator.pushNamed(context, '/leccion_detail', arguments: leccion.idLeccion),
+      onTap: () => Navigator.pushNamed(context, '/leccion_detail',
+          arguments: leccion.idLeccion),
       tagsArea: ListenableBuilder(
         listenable: BooklService(),
         builder: (context, _) {
-          final authCursosIds = BooklService().leccionesCursos
+          final authCursosIds = BooklService()
+              .leccionesCursos
               .where((lc) => lc['id_leccion'] == leccion.idLeccion)
               .map((lc) => lc['id_curso'])
               .toList();
-          
-          final tagNames = BooklService().cursos
+
+          final tagNames = BooklService()
+              .cursos
               .where((c) => authCursosIds.contains(c.idCurso))
               .map((c) => c.nombre)
               .take(2)
@@ -159,10 +168,12 @@ class SharedLeccionCard extends StatelessWidget {
           }
 
           return Row(
-            children: tagNames.map((name) => Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: _buildTag(name, const Color(0xFF8BCA39)),
-            )).toList(),
+            children: tagNames
+                .map((name) => Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: _buildTag(name, const Color(0xFF8BCA39)),
+                    ))
+                .toList(),
           );
         },
       ),
@@ -170,7 +181,11 @@ class SharedLeccionCard extends StatelessWidget {
         children: [
           Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
           SizedBox(width: 2),
-          Text('N/A', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black87)),
+          Text('N/A',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: Colors.black87)),
         ],
       ),
       favoriteButton: _buildFavoriteButton(leccion.idLeccion, true),
@@ -208,7 +223,8 @@ class SharedLeccionCard extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+            color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
         overflow: TextOverflow.ellipsis,
       ),
     );
@@ -216,12 +232,13 @@ class SharedLeccionCard extends StatelessWidget {
 
   Widget _buildFavoriteButton(int id, bool isLeccion) {
     return ListenableBuilder(
-      listenable: isLeccion ? AppSession().savedLecciones : AppSession().savedCursos,
+      listenable:
+          isLeccion ? AppSession().savedLecciones : AppSession().savedCursos,
       builder: (context, _) {
-        final isSaved = isLeccion 
+        final isSaved = isLeccion
             ? AppSession().savedLecciones.value.contains(id)
             : AppSession().savedCursos.value.contains(id);
-        
+
         return GestureDetector(
           onTap: () {
             if (isLeccion) {
@@ -253,20 +270,23 @@ class SharedCursoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _BaseContentCard(
       title: curso.nombre,
-      iconBoxColor: const Color(0xFFFF606F).withValues(alpha: 0.2), 
-      iconColor: const Color(0xFFFF606F), 
+      iconBoxColor: const Color(0xFFFF606F).withValues(alpha: 0.2),
+      iconColor: const Color(0xFFFF606F),
       iconData: Icons.school_rounded,
       imageUrl: _extractImageUrl(curso.contenido),
-      onTap: () => Navigator.pushNamed(context, '/curso_detail', arguments: curso.idCurso),
+      onTap: () => Navigator.pushNamed(context, '/curso_detail',
+          arguments: curso.idCurso),
       tagsArea: const SizedBox(), // Título queda arriba al hacer esto vacío
-      bottomArea: const Text(
-        'Toca para explorar el curso', 
-        style: TextStyle(fontSize: 12, color: Color(0xFF888888), fontWeight: FontWeight.w500)
-      ),
+      bottomArea: const Text('Toca para explorar el curso',
+          style: TextStyle(
+              fontSize: 12,
+              color: Color(0xFF888888),
+              fontWeight: FontWeight.w500)),
       favoriteButton: ListenableBuilder(
         listenable: AppSession().savedCursos,
         builder: (context, _) {
-          final isSaved = AppSession().savedCursos.value.contains(curso.idCurso);
+          final isSaved =
+              AppSession().savedCursos.value.contains(curso.idCurso);
           return GestureDetector(
             onTap: () {
               AppSession().toggleSavedCurso(curso.idCurso);
@@ -339,13 +359,18 @@ class _BaseFypCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: imageBoxColor,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF7CCC69).withValues(alpha: 0.3), width: 1),
-                    image: imageUrl != null 
-                        ? DecorationImage(image: NetworkImage(imageUrl!), fit: BoxFit.cover)
+                    border: Border.all(
+                        color: const Color(0xFF7CCC69).withValues(alpha: 0.3),
+                        width: 1),
+                    image: imageUrl != null
+                        ? DecorationImage(
+                            image: NetworkImage(imageUrl!), fit: BoxFit.cover)
                         : null,
                   ),
                   alignment: Alignment.center,
-                  child: imageUrl == null ? Icon(iconData, color: iconColor, size: 80) : const SizedBox(),
+                  child: imageUrl == null
+                      ? Icon(iconData, color: iconColor, size: 80)
+                      : const SizedBox(),
                 ),
                 // Gradiente encima de la imagen si hay para que se lean las etiquetas y el corazón
                 if (imageUrl != null)
@@ -360,7 +385,8 @@ class _BaseFypCard extends StatelessWidget {
                         colors: [
                           Colors.black.withValues(alpha: 0.4), // Para top tags
                           Colors.transparent,
-                          Colors.black.withValues(alpha: 0.4), // Para bottom icons
+                          Colors.black
+                              .withValues(alpha: 0.4), // Para bottom icons
                         ],
                       ),
                     ),
@@ -396,7 +422,10 @@ class _BaseFypCard extends StatelessWidget {
                     padding: const EdgeInsets.only(left: 8.0),
                     child: Text(
                       title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Colors.black),
                     ),
                   ),
                 ),
@@ -404,9 +433,14 @@ class _BaseFypCard extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8.0, top: 4.0),
                   child: const Row(
                     children: [
-                      Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 20),
+                      Icon(Icons.star_rounded,
+                          color: Color(0xFFFFB800), size: 20),
                       SizedBox(width: 4),
-                      Text('4.9', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black)),
+                      Text('4.9',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Colors.black)),
                     ],
                   ),
                 ),
@@ -428,29 +462,34 @@ class FypLeccionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _BaseFypCard(
       title: leccion.nombre,
-      imageBoxColor: const Color(0xFF8BCA39).withValues(alpha: 0.2), // Verde suave para banner
+      imageBoxColor: const Color(0xFF8BCA39)
+          .withValues(alpha: 0.2), // Verde suave para banner
       iconColor: const Color(0xFF4DC130), // Libro gigante translúcido
       iconData: Icons.menu_book_rounded,
       imageUrl: _extractImageUrl(leccion.contenido),
       durationStr: '3H 2M',
-      onTap: () => Navigator.pushNamed(context, '/leccion_detail', arguments: leccion.idLeccion),
+      onTap: () => Navigator.pushNamed(context, '/leccion_detail',
+          arguments: leccion.idLeccion),
       newBadge: _buildTag('Nuevo', const Color(0xFFF6B55C)), // Naranja
       tagsArea: ListenableBuilder(
         listenable: BooklService(),
         builder: (context, _) {
-          final authCursosIds = BooklService().leccionesCursos
+          final authCursosIds = BooklService()
+              .leccionesCursos
               .where((lc) => lc['id_leccion'] == leccion.idLeccion)
               .map((lc) => lc['id_curso'])
               .toList();
-          
-          final tagNames = BooklService().cursos
+
+          final tagNames = BooklService()
+              .cursos
               .where((c) => authCursosIds.contains(c.idCurso))
               .map((c) => c.nombre)
               .take(1) // En FYP Figma solo muestra 1 tag
               .toList();
 
           if (tagNames.isEmpty) {
-            return _buildTag('Independiente', const Color(0xFF4DC130)); // Verde oscuro
+            return _buildTag(
+                'Independiente', const Color(0xFF4DC130)); // Verde oscuro
           }
 
           return _buildTag(tagNames.first, const Color(0xFF4DC130));
@@ -469,19 +508,21 @@ class FypLeccionCard extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+            color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
       ),
     );
   }
 
   Widget _buildFavoriteButton(int id, bool isLeccion) {
     return ListenableBuilder(
-      listenable: isLeccion ? AppSession().savedLecciones : AppSession().savedCursos,
+      listenable:
+          isLeccion ? AppSession().savedLecciones : AppSession().savedCursos,
       builder: (context, _) {
-        final isSaved = isLeccion 
+        final isSaved = isLeccion
             ? AppSession().savedLecciones.value.contains(id)
             : AppSession().savedCursos.value.contains(id);
-        
+
         return GestureDetector(
           onTap: () {
             if (isLeccion) {
@@ -510,18 +551,22 @@ class FypCursoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _BaseFypCard(
       title: curso.nombre,
-      imageBoxColor: const Color(0xFFFF606F).withValues(alpha: 0.15), // Rojo rosado suave
-      iconColor: const Color(0xFFFF606F).withValues(alpha: 0.7), // Birrete gigante translúcido
+      imageBoxColor:
+          const Color(0xFFFF606F).withValues(alpha: 0.15), // Rojo rosado suave
+      iconColor: const Color(0xFFFF606F)
+          .withValues(alpha: 0.7), // Birrete gigante translúcido
       iconData: Icons.school_rounded,
       imageUrl: _extractImageUrl(curso.contenido),
       durationStr: '8H 15M',
-      onTap: () => Navigator.pushNamed(context, '/curso_detail', arguments: curso.idCurso),
+      onTap: () => Navigator.pushNamed(context, '/curso_detail',
+          arguments: curso.idCurso),
       newBadge: null, // Cursos en FYP no tienen badge Nuevo por ahora
       tagsArea: _buildTag('Curso', const Color(0xFFFF606F)), // Rojo marca
       favoriteButton: ListenableBuilder(
         listenable: AppSession().savedCursos,
         builder: (context, _) {
-          final isSaved = AppSession().savedCursos.value.contains(curso.idCurso);
+          final isSaved =
+              AppSession().savedCursos.value.contains(curso.idCurso);
           return GestureDetector(
             onTap: () {
               AppSession().toggleSavedCurso(curso.idCurso);
@@ -546,7 +591,8 @@ class FypCursoCard extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+            color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
       ),
     );
   }

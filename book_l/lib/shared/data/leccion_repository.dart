@@ -1,78 +1,73 @@
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/models/leccion_model.dart';
+import '../../core/services/bookl_service.dart';
+import '../../features/leccion/domain/entities/leccion.dart';
+import '../../features/leccion/domain/entities/capitulo.dart';
+import 'package:flutter/foundation.dart';
 
-/// Repositorio singleton de lecciones independientes (no asociadas a un curso).
-/// Persiste en SharedPreferences bajo la clave [_leccionesKey].
-/// Reactivo a través de [ValueNotifier] para que los widgets se reconstruyan
-/// automáticamente cuando cambia la lista.
+/// Puente singleton entre la UI (LeccionModel) y el almacenamiento centralizado (BooklService).
+/// Escucha cambios de BooklService para mantener la UI reactiva.
 class LeccionRepository {
   LeccionRepository._internal() {
-    _loadInitial();
+    BooklService().addListener(_syncFromCentral);
+    _syncFromCentral();
   }
   static final LeccionRepository instance = LeccionRepository._internal();
-
-  static const String _leccionesKey = 'standalone_lecciones';
 
   final ValueNotifier<List<LeccionModel>> leccionesNotifier =
       ValueNotifier<List<LeccionModel>>([]);
 
   List<LeccionModel> get lecciones => leccionesNotifier.value;
 
-  bool get hasLecciones => leccionesNotifier.value.isNotEmpty;
+  /// Sincroniza desde BooklService convirtiendo Entidades → Modelos de UI.
+  void _syncFromCentral() {
+    leccionesNotifier.value = BooklService().lecciones.map((l) {
+      // Buscar el curso al que pertenece esta lección (relación M:N)
+      final relacion = BooklService().leccionesCursos
+          .firstWhere((lc) => lc['id_leccion'] == l.idLeccion, orElse: () => {});
 
-  // ── Carga inicial ────────────────────────────────────────────────────────────
-  Future<void> _loadInitial() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_leccionesKey);
+      return LeccionModel(
+        id: l.idLeccion,
+        idCursoFk: relacion['id_curso'],
+        nombre: l.nombre,
+        contenido: l.contenido?.toString() ?? '',
+        rating: l.rating,
+        duracion: l.duracion,
+        estudiantes: l.estudiantes,
+        progreso: l.progreso,
+        tagColor: l.tagColor,
+        esNuevo: l.esNuevo,
+        capitulos: [],
+      );
+    }).toList();
+  }
 
-      if (raw != null && raw.isNotEmpty) {
-        final decoded = jsonDecode(raw) as List<dynamic>;
-        leccionesNotifier.value =
-            decoded.map((e) => LeccionModel.fromJson(e)).toList();
-      }
-      // Si no hay datos guardados, la lista queda vacía (no hay seed de lecciones standalone)
-    } catch (e) {
-      if (kDebugMode) print('LeccionRepository._loadInitial error: $e');
+  /// Persiste una lección (con sus capítulos) en BooklService.
+  Future<void> addLeccion(LeccionModel model) async {
+    final entity = Leccion(
+      idLeccion: model.id,
+      idUsuarioFk: 1,
+      nombre: model.nombre,
+      rating: model.rating,
+      duracion: model.duracion,
+      estudiantes: model.estudiantes,
+      progreso: model.progreso,
+      tagColor: model.tagColor,
+      esNuevo: model.esNuevo,
+      estado: 'activa',
+      createdAt: DateTime.now(),
+    );
+    BooklService().addLeccion(entity, idCurso: model.idCursoFk);
+
+    for (var cap in model.capitulos) {
+      final capEntity = Capitulo(
+        idCapitulo: cap.id,
+        idLeccion: model.id,
+        nombre: cap.nombre,
+        contenido: cap.secciones,
+        tiempoTotal: 0,
+      );
+      BooklService().addCapitulo(capEntity);
     }
-  }
-
-  // ── Persistencia interna ─────────────────────────────────────────────────────
-  Future<void> _save() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final encoded =
-          jsonEncode(leccionesNotifier.value.map((e) => e.toJson()).toList());
-      await prefs.setString(_leccionesKey, encoded);
-    } catch (e) {
-      if (kDebugMode) print('LeccionRepository._save error: $e');
-    }
-  }
-
-  // ── CRUD ────────────────────────────────────────────────────────────────────
-
-  Future<void> addLeccion(LeccionModel leccion) async {
-    leccionesNotifier.value = [...leccionesNotifier.value, leccion];
-    await _save();
-  }
-
-  Future<void> updateLeccion(LeccionModel updated) async {
-    final list = List<LeccionModel>.from(leccionesNotifier.value);
-    final idx = list.indexWhere((l) => l.id == updated.id);
-    if (idx != -1) {
-      list[idx] = updated;
-      leccionesNotifier.value = list;
-      await _save();
-    }
-  }
-
-  Future<void> removeLeccion(int id) async {
-    leccionesNotifier.value =
-        leccionesNotifier.value.where((l) => l.id != id).toList();
-    await _save();
   }
 
   LeccionModel? getLeccionById(int id) {
@@ -83,9 +78,7 @@ class LeccionRepository {
     }
   }
 
-  Future<void> clear() async {
-    leccionesNotifier.value = [];
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_leccionesKey);
-  }
+  void removeLeccion(int id) => BooklService().removeLeccion(id);
+
+  Future<void> clear() async => BooklService().clearAllData();
 }

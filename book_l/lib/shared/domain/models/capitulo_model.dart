@@ -15,7 +15,9 @@ class CapituloModel {
 
   factory CapituloModel.fromJson(Map<String, dynamic> json) {
     return CapituloModel(
-      id: json['id'] is String ? int.tryParse(json['id']) ?? 0 : (json['id'] ?? 0),
+      id: json['id'] is String
+          ? int.tryParse(json['id']) ?? 0
+          : (json['id'] ?? 0),
       nombre: json['nombre'] ?? json['titulo'] ?? '',
       ejercicios: (json['ejercicios'] as List<dynamic>?)
               ?.map((e) => EjercicioModel.fromJson(e))

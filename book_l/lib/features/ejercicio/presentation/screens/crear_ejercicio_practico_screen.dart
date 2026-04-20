@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:book_l/shared/widgets/custom_button.dart';
 import 'package:book_l/shared/widgets/custom_text_field.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:book_l/shared/data/local_db_service.dart';
+import 'package:book_l/core/services/bookl_service.dart';
 import '../../../../shared/domain/models/ejercicio_model.dart';
 
 class CrearEjercicioPracticoScreen extends StatefulWidget {
@@ -155,7 +155,7 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                               if (q.descController.text.isEmpty) continue;
                               
                               results.add(EjercicioModel(
-                                id: LocalDbService.instance.generateId(),
+                                id: BooklService().generateId(),
                                 pregunta: q.descController.text,
                                 tipo: 'practica',
                                 respuestaCorrecta: q.correctOptionController.text,
