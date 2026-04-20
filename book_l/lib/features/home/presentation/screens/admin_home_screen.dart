@@ -127,6 +127,7 @@ class AdminHomeScreen extends StatelessWidget {
           title: 'Configuración',
           color: const Color(0xFF6D6E71),
           icon: Icons.settings_outlined,
+          onTap: () => Navigator.pushNamed(context, '/configuracion'),
         ),
       ],
     );

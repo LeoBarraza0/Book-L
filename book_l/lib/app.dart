@@ -87,7 +87,9 @@ class BookLApp extends StatelessWidget {
                   child: child!,
                 );
               },
-              initialRoute: AppSession().estaLogueado ? '/home' : '/login',
+              initialRoute: AppSession().estaLogueado 
+                  ? (AppSession().esAdministrador ? '/admin_Home' : '/home') 
+                  : '/login',
               routes: {
                 '/login': (context) => const LoginScreen(),
                 '/register': (context) => const RegisterScreen(),

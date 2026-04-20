@@ -38,7 +38,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
 
-  final List<String> _filtros = ['Todos', 'Recientes', 'Activos', '...'];
+  final List<String> _filtros = ['Todos', 'Recientes', 'Activos', 'Inactivos'];
   int _filtroSeleccionado = 0;
 
   @override
@@ -59,7 +59,10 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
     var result = todos;
     if (_filtroSeleccionado == 2) {
       result = result.where((u) => u.activo).toList();
+    } else if (_filtroSeleccionado == 3) {
+      result = result.where((u) => !u.activo).toList();
     }
+    
     if (_query.isNotEmpty) {
       result = result
           .where((u) =>

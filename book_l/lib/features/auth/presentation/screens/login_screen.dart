@@ -40,7 +40,11 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (ok) {
-      Navigator.pushReplacementNamed(context, '/home');
+      if (_ctrl.usuarioActual?.rol == 'Administrador' || _ctrl.usuarioActual?.rol == 'Admin') {
+        Navigator.pushReplacementNamed(context, '/admin_Home');
+      } else {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
