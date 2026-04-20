@@ -50,7 +50,7 @@ class SeguidoresScreen extends StatelessWidget {
                     name: 'Usuario ${index + 1}',
                     username: '@user${index + 1}',
                     imageUrl:
-                        'https://i.pravatar.cc/150?img=${index + 10}', // Random Images
+                        'https://ui-avatars.com/api/?name=User+${index + 1}&background=random', // Random Images
                     isFollowing: index % 3 == 0,
                   );
                 },

@@ -67,6 +67,7 @@ class AuthRepositoryImpl implements AuthRepository {
       rol: rol,
       programa: programa,
       activo: true,
+      avatarUrl: 'https://ui-avatars.com/api/?name=${nombreCompleto.trim().replaceAll(' ', '+')}&background=random',
     );
 
     // Persistir en memoria (BooklService)

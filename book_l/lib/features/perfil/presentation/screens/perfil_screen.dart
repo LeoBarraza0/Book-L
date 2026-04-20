@@ -27,8 +27,8 @@ class _PerfilScreenState extends State<PerfilScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _loadUserData();
+    _tabController = TabController(length: _isOwnProfile ? 2 : 1, vsync: this);
   }
 
   void _loadUserData() {
@@ -190,10 +190,12 @@ class _PerfilScreenState extends State<PerfilScreen>
                                       color: Color(0xFF4DC130), // Solid green border
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const CircleAvatar(
+                                    child: CircleAvatar(
                                       radius: 45,
                                       backgroundColor: Colors.white,
-                                      backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11'),
+                                      backgroundImage: _user?.avatarUrl != null 
+                                          ? NetworkImage(_user!.avatarUrl!)
+                                          : NetworkImage('https://ui-avatars.com/api/?name=${_user?.nombreCompleto ?? 'U'}&background=random') as ImageProvider,
                                     ),
                                   ),
                                   Positioned(
@@ -371,9 +373,10 @@ class _PerfilScreenState extends State<PerfilScreen>
                               indicatorWeight: 4,
                               labelColor: const Color(0xFF4DC130),
                               unselectedLabelColor: Colors.grey,
-                              tabs: const [
-                                Tab(icon: Icon(Icons.grid_on, size: 30)),
-                                Tab(icon: Icon(Icons.favorite_border, size: 30)),
+                              tabs: [
+                                const Tab(icon: Icon(Icons.grid_on, size: 30)),
+                                if (_isOwnProfile)
+                                  const Tab(icon: Icon(Icons.favorite_border, size: 30)),
                               ],
                             ),
                             // Divider under tabs
@@ -389,11 +392,11 @@ class _PerfilScreenState extends State<PerfilScreen>
                 color: const Color(0xFFF4F7FB),
                 child: TabBarView(
                   controller: _tabController,
-                  children: const [
+                  children: [
                     // Grid Tab content
-                    MisContenidosTabWidget(),
-                    // Favorite Tab content
-                    MisFavoritosTabWidget(),
+                    MisContenidosTabWidget(idUsuario: widget.idUsuario ?? AppSession().usuarioId ?? 0),
+                    // Favorite Tab content (solo si es el propio perfil)
+                    if (_isOwnProfile) const MisFavoritosTabWidget(),
                   ],
                 ),
               ),
@@ -401,12 +404,12 @@ class _PerfilScreenState extends State<PerfilScreen>
           ),
 
           // Floating Bottom Navigation Bar aligned as in design
-          const Positioned(
+          Positioned(
             left: 20,
             right: 20,
             bottom: 30, // Elevated off bottom
             child: SharedBottomNavBar(
-              selectedIndex: 2,
+              selectedIndex: _isOwnProfile ? 2 : -1,
             ), // Index 2 is "Perfil" in the SharedBottomNavBar
           ),
         ],

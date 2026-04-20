@@ -10,6 +10,7 @@ class UsuarioDto {
   final String rol;
   final String? programa;
   final bool activo;
+  final String? avatarUrl;
 
   const UsuarioDto({
     required this.idUsuario,
@@ -19,6 +20,7 @@ class UsuarioDto {
     required this.rol,
     this.programa,
     required this.activo,
+    this.avatarUrl,
   });
 
   factory UsuarioDto.fromJson(Map<String, dynamic> json) => UsuarioDto(
@@ -29,6 +31,7 @@ class UsuarioDto {
         rol: json['rol'] as String,
         programa: json['programa'] as String?,
         activo: json['activo'] as bool,
+        avatarUrl: json['avatar_url'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -39,6 +42,7 @@ class UsuarioDto {
         'rol': rol,
         if (programa != null) 'programa': programa,
         'activo': activo,
+        if (avatarUrl != null) 'avatar_url': avatarUrl,
       };
 
   /// Convierte al entity de dominio (sin contraseña).
@@ -49,5 +53,6 @@ class UsuarioDto {
         rol: rol,
         programa: programa,
         activo: activo,
+        avatarUrl: avatarUrl,
       );
 }

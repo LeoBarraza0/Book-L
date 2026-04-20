@@ -9,18 +9,75 @@
       "nombre_completo": "Emanuel Barranco",
       "correo": "emanuel@bookl.com",
       "contrasena": "1234",
-      "rol": "Profesor",
-      "programa": "Ingeniería de Sistemas",
-      "activo": true
+      "username": "emanuelb",
+      "celular": 3001234567,
+      "semestre": 8,
+      "nacimiento": "2000-05-15",
+      "programa": "Ingenieria de Sistemas",
+      "preferencias": { "intereses": ["matematicas", "programacion"], "tema_oscuro": true },
+      "activo": true,
+      "avatar_url": "https://ui-avatars.com/api/?name=Emanuel+Barranco&background=random",
+      "rol": "Profesor"
     },
     {
       "id_usuario": 2,
       "nombre_completo": "Ana Lucía Torres",
       "correo": "ana@bookl.com",
       "contrasena": "1234",
-      "rol": "Estudiante",
-      "programa": "Ingeniería de Sistemas",
-      "activo": true
+      "username": "anatorres",
+      "celular": 3009876543,
+      "semestre": 5,
+      "nacimiento": "2002-11-20",
+      "programa": "Psicologia",
+      "preferencias": { "intereses": ["salud_mental", "desarrollo_infantil"], "tema_oscuro": false },
+      "activo": true,
+      "avatar_url": "https://ui-avatars.com/api/?name=Ana+Torres&background=random",
+      "rol": "Estudiante"
+    },
+    {
+      "id_usuario": 3,
+      "nombre_completo": "Arthur Barraza",
+      "correo": "arthurbr@bookl.com",
+      "contrasena": "1234",
+      "username": "arthurbr",
+      "celular": 3101122334,
+      "semestre": 10,
+      "nacimiento": "1998-05-15",
+      "programa": "Ingenieria de Sistemas",
+      "preferencias": { "intereses": ["inteligencia_artificial", "apps"], "tema_oscuro": true },
+      "activo": true,
+      "avatar_url": "https://ui-avatars.com/api/?name=Arthur+Barraza&background=random",
+      "rol": "Estudiante"
+    },
+    {
+      "id_usuario": 4,
+      "nombre_completo": "Juan Perez",
+      "correo": "jperez@bookl.com",
+      "contrasena": "1234",
+      "username": "jperez",
+      "celular": 3201112233,
+      "semestre": 7,
+      "nacimiento": "1999-01-05",
+      "programa": "Derecho",
+      "preferencias": { "intereses": ["penal", "constitucional"], "tema_oscuro": false },
+      "activo": true,
+      "avatar_url": "https://ui-avatars.com/api/?name=Juan+Perez&background=random",
+      "rol": "Profesor"
+    },
+    {
+      "id_usuario": 5,
+      "nombre_completo": "María López",
+      "correo": "mlopez@bookl.com",
+      "contrasena": "1234",
+      "username": "mlopez",
+      "celular": 3158877665,
+      "semestre": 2,
+      "nacimiento": "2004-08-30",
+      "programa": "Medicina",
+      "preferencias": { "intereses": ["anatomia", "biologia"], "tema_oscuro": true },
+      "activo": true,
+      "avatar_url": "https://ui-avatars.com/api/?name=Maria+Lopez&background=random",
+      "rol": "Estudiante"
     }
   ],
   "cursos": [
@@ -36,7 +93,8 @@
               "insert": "Fundamentos de lógica, conjuntos, combinatoria y grafos aplicados a la computación.\n"
             }
           ],
-          "tiene_imagen": false,
+          "tiene_imagen": true,
+          "imagen_url": "https://picsum.photos/seed/math/600/400",
           "tiene_video": false
         }
       ],
@@ -53,35 +111,68 @@
           "titulo": "Resumen",
           "cuerpo_delta": [
             {
-              "insert": "Diseño, análisis e implementación de algoritmos fundamentales.\n"
+              "insert": "Diseño, análisis e implementación de algoritmos fundamentales y estructuras de datos.\n"
             }
           ],
-          "tiene_imagen": false,
+          "tiene_imagen": true,
+          "imagen_url": "https://picsum.photos/seed/algo/600/400",
           "tiene_video": false
         }
       ],
       "estado": "activo",
       "created_at": "2026-01-15T08:00:00",
       "updated_at": "2026-01-15T08:00:00"
+    },
+    {
+      "id_curso": 3,
+      "id_usuario_fk": 4,
+      "nombre": "Introducción al Derecho Constitucional",
+      "contenido": [
+        {
+          "titulo": "Resumen",
+          "cuerpo_delta": [
+            {
+              "insert": "Bases del ordenamiento jurídico, análisis de la constitución colombiana y sus reformas.\n"
+            }
+          ],
+          "tiene_imagen": true,
+          "imagen_url": "https://picsum.photos/seed/law/600/400",
+          "tiene_video": false
+        }
+      ],
+      "estado": "activo",
+      "created_at": "2026-02-01T08:00:00",
+      "updated_at": "2026-02-01T08:00:00"
+    },
+    {
+      "id_curso": 4,
+      "id_usuario_fk": 2,
+      "nombre": "Psicología Cognitiva",
+      "contenido": [
+        {
+          "titulo": "Introducción",
+          "cuerpo_delta": [
+            {
+              "insert": "Estudio científico de la mente y de los procesos de pensamiento, memoria y aprendizaje.\n"
+            }
+          ],
+          "tiene_imagen": true,
+          "imagen_url": "https://picsum.photos/seed/psych/600/400",
+          "tiene_video": false
+        }
+      ],
+      "estado": "activo",
+      "created_at": "2026-03-10T08:00:00",
+      "updated_at": "2026-03-10T08:00:00"
     }
   ],
   "lecciones_cursos": [
-    {
-      "id_leccion": 1,
-      "id_curso": 1
-    },
-    {
-      "id_leccion": 2,
-      "id_curso": 1
-    },
-    {
-      "id_leccion": 3,
-      "id_curso": 2
-    },
-    {
-      "id_leccion": 4,
-      "id_curso": 2
-    }
+    { "id_leccion": 1, "id_curso": 1 },
+    { "id_leccion": 2, "id_curso": 1 },
+    { "id_leccion": 3, "id_curso": 2 },
+    { "id_leccion": 4, "id_curso": 2 },
+    { "id_leccion": 5, "id_curso": 3 },
+    { "id_leccion": 6, "id_curso": 4 }
   ],
   "lecciones": [
     {
@@ -96,7 +187,8 @@
               "insert": "Aprende a razonar formalmente con proposiciones, conectivos lógicos y tablas de verdad.\n"
             }
           ],
-          "tiene_imagen": false,
+          "tiene_imagen": true,
+          "imagen_url": "https://picsum.photos/seed/logic/600/400",
           "tiene_video": false
         }
       ],
@@ -113,7 +205,7 @@
           "titulo": "Resumen",
           "cuerpo_delta": [
             {
-              "insert": "Operaciones con conjuntos, relaciones y funciones como base del pensamiento matemático.\n"
+              "insert": "Operaciones con conjuntos, relaciones y funciones como base del pensamiento.\n"
             }
           ],
           "tiene_imagen": false,
@@ -133,10 +225,11 @@
           "titulo": "Resumen",
           "cuerpo_delta": [
             {
-              "insert": "Notación Big-O, análisis de tiempo y espacio para evaluar la eficiencia de algoritmos.\n"
+              "insert": "Notación Big-O, análisis de tiempo y espacio para evaluar la eficiencia.\n"
             }
           ],
-          "tiene_imagen": false,
+          "tiene_imagen": true,
+          "imagen_url": "https://picsum.photos/seed/complex/600/400",
           "tiene_video": false
         }
       ],
@@ -153,7 +246,7 @@
           "titulo": "Resumen",
           "cuerpo_delta": [
             {
-              "insert": "Algoritmos clásicos de ordenamiento (bubble, merge, quick) y técnicas de búsqueda.\n"
+              "insert": "Algoritmos clásicos de ordenamiento (bubble, merge, quick) y búsqueda.\n"
             }
           ],
           "tiene_imagen": false,
@@ -163,6 +256,48 @@
       "estado": "activa",
       "created_at": "2026-01-17T09:00:00",
       "updated_at": "2026-01-17T09:00:00"
+    },
+    {
+      "id_leccion": 5,
+      "id_usuario_fk": 4,
+      "nombre": "Tipo de leyes en Colombia",
+      "contenido": [
+        {
+          "titulo": "Introducción",
+          "cuerpo_delta": [
+            {
+              "insert": "Conoce las diferencias entre leyes orgánicas, estatutarias y ordinarias.\n"
+            }
+          ],
+          "tiene_imagen": true,
+          "imagen_url": "https://picsum.photos/seed/const_law/600/400",
+          "tiene_video": false
+        }
+      ],
+      "estado": "activa",
+      "created_at": "2026-02-05T09:00:00",
+      "updated_at": "2026-02-05T09:00:00"
+    },
+    {
+      "id_leccion": 6,
+      "id_usuario_fk": 2,
+      "nombre": "La Memoria a Corto Plazo",
+      "contenido": [
+        {
+          "titulo": "Concepto",
+          "cuerpo_delta": [
+            {
+              "insert": "Cómo funciona nuestra memoria a corto plazo, el número mágico de Miller (7±2).\n"
+            }
+          ],
+          "tiene_imagen": true,
+          "imagen_url": "https://picsum.photos/seed/memory/600/400",
+          "tiene_video": false
+        }
+      ],
+      "estado": "activa",
+      "created_at": "2026-03-12T09:00:00",
+      "updated_at": "2026-03-12T09:00:00"
     }
   ],
   "capitulos": [
@@ -170,161 +305,43 @@
       "id_capitulo": 1,
       "id_leccion": 1,
       "nombre": "Proposiciones y Conectivos",
-      "contenido": [
-        {
-          "titulo": "Resumen",
-          "cuerpo_delta": [
-            {
-              "insert": "Definición de proposición, valores de verdad y los conectivos AND, OR, NOT, implicación y bicondicional.\n"
-            }
-          ],
-          "tiene_imagen": false,
-          "tiene_video": false
-        }
-      ],
-      "tiempo_total": 900,
-      "created_at": "2026-01-12T10:00:00",
-      "updated_at": "2026-01-12T10:00:00"
+      "contenido": [{ "titulo": "Intro", "cuerpo_delta": [{"insert": "Definicion y lógica.\n"}]}],
+      "tiempo_total": 900, "created_at": "2026-01-12T10:00:00", "updated_at": "2026-01-12T10:00:00"
     },
     {
       "id_capitulo": 2,
       "id_leccion": 1,
       "nombre": "Tablas de Verdad",
-      "contenido": [
-        {
-          "titulo": "Resumen",
-          "cuerpo_delta": [
-            {
-              "insert": "Construcción sistemática de tablas de verdad para evaluar fórmulas proposicionales complejas.\n"
-            }
-          ],
-          "tiene_imagen": false,
-          "tiene_video": false
-        }
-      ],
-      "tiempo_total": 1200,
-      "created_at": "2026-01-12T11:00:00",
-      "updated_at": "2026-01-12T11:00:00"
+      "contenido": [{ "titulo": "Intro", "cuerpo_delta": [{"insert": "Construccion de tablas.\n"}]}],
+      "tiempo_total": 1200, "created_at": "2026-01-12T11:00:00", "updated_at": "2026-01-12T11:00:00"
     },
     {
       "id_capitulo": 3,
       "id_leccion": 2,
       "nombre": "Operaciones con Conjuntos",
-      "contenido": [
-        {
-          "titulo": "Resumen",
-          "cuerpo_delta": [
-            {
-              "insert": "Unión, intersección, diferencia, complemento y producto cartesiano.\n"
-            }
-          ],
-          "tiene_imagen": false,
-          "tiene_video": false
-        }
-      ],
-      "tiempo_total": 900,
-      "created_at": "2026-01-13T10:00:00",
-      "updated_at": "2026-01-13T10:00:00"
+      "contenido": [{ "titulo": "Intro", "cuerpo_delta": [{"insert": "Unión e intersección.\n"}]}],
+      "tiempo_total": 900, "created_at": "2026-01-13T10:00:00", "updated_at": "2026-01-13T10:00:00"
     },
     {
       "id_capitulo": 4,
-      "id_leccion": 2,
-      "nombre": "Relaciones y Funciones",
-      "contenido": [
-        {
-          "titulo": "Resumen",
-          "cuerpo_delta": [
-            {
-              "insert": "Propiedades de relaciones (reflexividad, simetría, transitividad) y tipos de funciones.\n"
-            }
-          ],
-          "tiene_imagen": false,
-          "tiene_video": false
-        }
-      ],
-      "tiempo_total": 1080,
-      "created_at": "2026-01-13T11:00:00",
-      "updated_at": "2026-01-13T11:00:00"
+      "id_leccion": 3,
+      "nombre": "Notación Asintótica",
+      "contenido": [{ "titulo": "Intro", "cuerpo_delta": [{"insert": "Big O.\n"}]}],
+      "tiempo_total": 1080, "created_at": "2026-01-16T10:00:00", "updated_at": "2026-01-16T10:00:00"
     },
     {
       "id_capitulo": 5,
-      "id_leccion": 3,
-      "nombre": "Notación Asintótica",
-      "contenido": [
-        {
-          "titulo": "Resumen",
-          "cuerpo_delta": [
-            {
-              "insert": "Big-O, Omega y Theta: cómo describir el comportamiento de un algoritmo en el límite.\n"
-            }
-          ],
-          "tiene_imagen": false,
-          "tiene_video": false
-        }
-      ],
-      "tiempo_total": 1080,
-      "created_at": "2026-01-16T10:00:00",
-      "updated_at": "2026-01-16T10:00:00"
+      "id_leccion": 5,
+      "nombre": "Leyes Estatutarias explicadas",
+      "contenido": [{ "titulo": "Intro", "cuerpo_delta": [{"insert": "Derechos fundamentales.\n"}]}],
+      "tiempo_total": 1200, "created_at": "2026-02-05T10:00:00", "updated_at": "2026-02-05T10:00:00"
     },
     {
       "id_capitulo": 6,
-      "id_leccion": 3,
-      "nombre": "Análisis de Casos",
-      "contenido": [
-        {
-          "titulo": "Resumen",
-          "cuerpo_delta": [
-            {
-              "insert": "Mejor caso, caso promedio y peor caso. Recurrencias y el Teorema Maestro.\n"
-            }
-          ],
-          "tiene_imagen": false,
-          "tiene_video": false
-        }
-      ],
-      "tiempo_total": 1200,
-      "created_at": "2026-01-16T11:00:00",
-      "updated_at": "2026-01-16T11:00:00"
-    },
-    {
-      "id_capitulo": 7,
-      "id_leccion": 4,
-      "nombre": "Algoritmos de Ordenamiento",
-      "contenido": [
-        {
-          "titulo": "Resumen",
-          "cuerpo_delta": [
-            {
-              "insert": "Bubble Sort, Selection Sort, Insertion Sort, Merge Sort y Quick Sort con análisis comparativo.\n"
-            }
-          ],
-          "tiene_imagen": false,
-          "tiene_video": false
-        }
-      ],
-      "tiempo_total": 1500,
-      "created_at": "2026-01-17T10:00:00",
-      "updated_at": "2026-01-17T10:00:00"
-    },
-    {
-      "id_capitulo": 8,
-      "id_leccion": 4,
-      "nombre": "Búsqueda Lineal y Binaria",
-      "contenido": [
-        {
-          "titulo": "Resumen",
-          "cuerpo_delta": [
-            {
-              "insert": "Implementación y análisis de búsqueda secuencial vs búsqueda binaria en listas ordenadas.\n"
-            }
-          ],
-          "tiene_imagen": false,
-          "tiene_video": false
-        }
-      ],
-      "tiempo_total": 900,
-      "created_at": "2026-01-17T11:00:00",
-      "updated_at": "2026-01-17T11:00:00"
+      "id_leccion": 6,
+      "nombre": "Modelo de Atkinson y Shiffrin",
+      "contenido": [{ "titulo": "Intro", "cuerpo_delta": [{"insert": "Flujo de la memoria.\n"}]}],
+      "tiempo_total": 950, "created_at": "2026-03-12T10:00:00", "updated_at": "2026-03-12T10:00:00"
     }
   ],
   "materiales": [
@@ -333,34 +350,16 @@
       "id_leccion_fk": 1,
       "nombre": "Diapositivas — Lógica Proposicional",
       "url": "https://example.com/materiales/logica.pdf",
-      "descripcion": "Presentación con definiciones, ejemplos y ejercicios resueltos.",
+      "descripcion": "Presentación con definiciones y ejemplos.",
       "tipo": "pdf",
       "tamano_bytes": 2048000
     },
     {
       "id_material": 2,
-      "id_leccion_fk": 2,
-      "nombre": "Video — Conjuntos en la práctica",
-      "url": "https://example.com/materiales/conjuntos.mp4",
-      "descripcion": "Video explicativo de 12 minutos con ejemplos del mundo real.",
-      "tipo": "video",
-      "tamano_bytes": 45000000
-    },
-    {
-      "id_material": 3,
       "id_leccion_fk": 3,
-      "nombre": "Guía — Complejidad paso a paso",
-      "url": "https://example.com/materiales/complejidad.pdf",
-      "descripcion": "Ejercicios graduales de análisis de complejidad con soluciones.",
-      "tipo": "pdf",
-      "tamano_bytes": 1536000
-    },
-    {
-      "id_material": 4,
-      "id_leccion_fk": 4,
-      "nombre": "Video — Visualización de Sorting",
+      "nombre": "Video — Big O en 5 minutos",
       "url": "https://example.com/materiales/sorting.mp4",
-      "descripcion": "Animación comparativa de los principales algoritmos de ordenamiento.",
+      "descripcion": "Animación que explica rápidamente la complejidad.",
       "tipo": "video",
       "tamano_bytes": 38000000
     }

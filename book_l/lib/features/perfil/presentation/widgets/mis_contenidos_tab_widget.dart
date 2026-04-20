@@ -5,7 +5,8 @@ import '../../../../shared/widgets/search_filter_bar.dart';
 import '../../../../shared/widgets/content_cards.dart';
 
 class MisContenidosTabWidget extends StatefulWidget {
-  const MisContenidosTabWidget({super.key});
+  final int idUsuario;
+  const MisContenidosTabWidget({super.key, required this.idUsuario});
 
   @override
   State<MisContenidosTabWidget> createState() => _MisContenidosTabWidgetState();
@@ -28,7 +29,7 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
     return ListenableBuilder(
       listenable: BooklService(),
       builder: (context, _) {
-        final userId = AppSession().usuarioId;
+        final userId = widget.idUsuario;
         var misLecciones = BooklService().lecciones.where((l) => l.idUsuarioFk == userId).toList();
         var misCursos = BooklService().cursos.where((c) => c.idUsuarioFk == userId).toList();
 
