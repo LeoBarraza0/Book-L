@@ -88,16 +88,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           
                           for (int i = 0; i < maxLen; i++) {
                             if (i < cursos.length) {
-                               mixedList.add(Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: SharedCursoCard(curso: cursos[i]),
-                               ));
+                               mixedList.add(FypCursoCard(curso: cursos[i]));
                             }
                             if (i < lecciones.length) {
-                               mixedList.add(Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: SharedLeccionCard(leccion: lecciones[i]),
-                               ));
+                               mixedList.add(FypLeccionCard(leccion: lecciones[i]));
                             }
                           }
                           
