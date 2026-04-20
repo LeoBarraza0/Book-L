@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../../core/services/bookl_service.dart';
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key});
@@ -172,7 +173,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 if (Navigator.canPop(context)) {
                   Navigator.pop(context);
                 } else {
-                  Navigator.pushReplacementNamed(context, '/home');
+                  final role = BooklService().currentRole;
+                  Navigator.pushReplacementNamed(
+                    context,
+                    role == 'admin' ? '/admin_Home' : '/home',
+                  );
                 }
               },
             ),

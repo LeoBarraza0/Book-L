@@ -38,6 +38,17 @@ class BooklService extends ChangeNotifier {
   bool _loaded = false;
 
   // ── "Tablas" en memoria ────────────────────────────────────────────────────
+  String currentRole = 'user'; // 'user' o 'admin'
+  
+  void setRole(String role) {
+    if (role.toLowerCase().contains('admin')) {
+      currentRole = 'admin';
+    } else {
+      currentRole = 'user';
+    }
+    notifyListeners();
+  }
+
   List<UsuarioDto> usuariosDto = []; // con contraseña — solo para auth
   List<Usuario> usuarios = [];       // sin contraseña — exposición pública
   List<Curso> cursos = [];
