@@ -28,6 +28,8 @@ import 'features/leccion/presentation/screens/capitulo_editar_screen.dart';
 import 'features/leccion/presentation/screens/crear_capitulo_screen.dart';
 import 'features/usuarios/presentation/screens/usuarios_screen.dart';
 import 'features/usuarios/presentation/screens/edit_usuario_screen.dart';
+import 'features/reportes/presentation/screens/reportes_screen.dart';
+import 'features/reportes/presentation/screens/reporte_detail_screen.dart';
 
 import 'core/storage/local_storage.dart';
 
@@ -125,6 +127,15 @@ class BookLApp extends StatelessWidget {
                     ),
                 '/users_admin': (context) => const UsuariosScreen(),
                 '/crear_capitulo': (context) => const CrearCapituloScreen(),
+                '/reportes': (context) => const ReportesScreen(),
+                '/reporte_detail': (context) {
+                  final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+                  return ReporteDetailScreen(
+                    idLeccion: args?['id_leccion'] as int? ?? 0,
+                    leccionNombre: args?['nombre'] as String? ?? 'Desconocido',
+                    tipo: args?['tipo'] as String? ?? 'Lección',
+                  );
+                },
               },
             );
           },
