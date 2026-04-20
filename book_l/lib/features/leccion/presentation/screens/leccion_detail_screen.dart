@@ -706,7 +706,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
     return GestureDetector(
       onTap: () {
         if (!isLocked) {
-          Navigator.pushNamed(context, '/capitulo_detail');
+          Navigator.pushNamed(context, '/capitulo_detail', arguments: capitulo?.idCapitulo);
         }
       },
       child: Container(

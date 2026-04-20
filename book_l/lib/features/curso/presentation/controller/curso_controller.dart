@@ -75,12 +75,14 @@ class CursoController extends ChangeNotifier {
     required int idUsuario,
     required String nombre,
     List<dynamic>? contenido,
+    String? imagenUrl,
   }) async {
     final nuevo = Curso(
       idCurso: 0, // el impl asigna el ID real
       idUsuarioFk: idUsuario,
       nombre: nombre,
       contenido: contenido,
+      imagenUrl: imagenUrl,
       estado: 'activo',
     );
     await _addCurso(nuevo);

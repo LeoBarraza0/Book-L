@@ -54,49 +54,59 @@ class _CapituloScreenState extends State<CapituloScreen> {
                           if (cap != null && cap.contenido != null && cap.contenido!.isNotEmpty) {
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: cap.contenido!.map((s) {
-                                final titulo = s['titulo'] as String? ?? '';
-                                final deltaData = s['cuerpo_delta'] as List<dynamic>?;
+                              children: [
+                                Text(
+                                  cap.nombre,
+                                  style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87),
+                                ),
+                                const SizedBox(height: 16),
+                                ...cap.contenido!.map((s) {
+                                  final titulo = s['titulo'] as String? ?? '';
+                                  final deltaData = s['cuerpo_delta'] as List<dynamic>?;
 
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 24),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      if (titulo.isNotEmpty) ...[
-                                        Text(
-                                          titulo,
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 24),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        if (titulo.isNotEmpty) ...[
+                                          Text(
+                                            titulo,
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                          ),
+                                          const SizedBox(height: 8),
+                                        ],
+                                        QuillReadOnlyView(
+                                          delta: deltaData,
+                                          fontSize: 16,
+                                          color: const Color(0xFF787878),
                                         ),
-                                        const SizedBox(height: 8),
+                                        if (s['tiene_imagen'] == true) ...[
+                                          const SizedBox(height: 12),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: (s['imagen_path'] != null && s['imagen_path'].toString().isNotEmpty)
+                                                ? (s['imagen_path'].toString().startsWith('http') || s['imagen_path'].toString().startsWith('assets/'))
+                                                    ? Image.network(s['imagen_path'], width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
+                                                    : Image.file(File(s['imagen_path']), width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
+                                                : _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)),
+                                          ),
+                                        ],
+                                        if (s['tiene_video'] == true) ...[
+                                          const SizedBox(height: 12),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: _buildMediaItem(Icons.play_circle_filled, 'Video adjunto', const Color(0xFFFF606F)),
+                                          ),
+                                        ],
                                       ],
-                                      QuillReadOnlyView(
-                                        delta: deltaData,
-                                        fontSize: 16,
-                                        color: const Color(0xFF787878),
-                                      ),
-                                      if (s['tiene_imagen'] == true) ...[
-                                        const SizedBox(height: 12),
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(12),
-                                          child: (s['imagen_path'] != null && s['imagen_path'].toString().isNotEmpty)
-                                              ? (s['imagen_path'].toString().startsWith('http') || s['imagen_path'].toString().startsWith('assets/'))
-                                                  ? Image.network(s['imagen_path'], width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
-                                                  : Image.file(File(s['imagen_path']), width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
-                                              : _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)),
-                                        ),
-                                      ],
-                                      if (s['tiene_video'] == true) ...[
-                                        const SizedBox(height: 12),
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(12),
-                                          child: _buildMediaItem(Icons.play_circle_filled, 'Video adjunto', const Color(0xFFFF606F)),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
+                                    ),
+                                  );
+                                }).toList()
+                              ],
                             );
                           } else {
                             return Column(

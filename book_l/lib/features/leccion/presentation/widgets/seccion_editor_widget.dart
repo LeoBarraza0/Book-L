@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:image_picker/image_picker.dart';
 
@@ -70,12 +71,15 @@ class SeccionEditorWidget extends StatefulWidget {
   final SeccionData data;
   final int index;
   final VoidCallback onEliminar;
+  /// Cuando es true el título no es editable y no aparece el botón de eliminar.
+  final bool tituloFijo;
 
   const SeccionEditorWidget({
     super.key,
     required this.data,
     required this.index,
     required this.onEliminar,
+    this.tituloFijo = false,
   });
 
   @override
@@ -164,25 +168,44 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
             ),
           ),
           const Spacer(),
-          GestureDetector(
-            onTap: widget.onEliminar,
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFEBEB),
-                shape: BoxShape.circle,
+          // Ocultar botón eliminar si el título está fijo
+          if (!widget.tituloFijo)
+            GestureDetector(
+              onTap: widget.onEliminar,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFEBEB),
+                  shape: BoxShape.circle,
+                ),
+                child:
+                    const Icon(Icons.close, color: Color(0xFFD63030), size: 18),
               ),
-              child:
-                  const Icon(Icons.close, color: Color(0xFFD63030), size: 18),
             ),
-          ),
         ],
       ),
     );
   }
 
   Widget _buildTituloField() {
+    // Si el título está fijo, mostrar como etiqueta estática no editable
+    if (widget.tituloFijo) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: Text(
+          widget.data.tituloCtrl.text.isEmpty
+              ? 'Introducción'
+              : widget.data.tituloCtrl.text,
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1A1A1A),
+          ),
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: TextField(
@@ -326,12 +349,19 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
                             width: double.infinity,
                             errorBuilder: (_, __, ___) => _buildIconContent(icon, label, color),
                           )
-                        : Image.file(
-                            File(path),
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (_, __, ___) => _buildIconContent(icon, label, color),
-                          ),
+                        : kIsWeb
+                            ? Image.network(
+                                path,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                errorBuilder: (_, __, ___) => _buildIconContent(icon, label, color),
+                              )
+                            : Image.file(
+                                File(path),
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                errorBuilder: (_, __, ___) => _buildIconContent(icon, label, color),
+                              ),
                   )
                 : _buildIconContent(icon, label, color),
           ),

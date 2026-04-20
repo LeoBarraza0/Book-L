@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:book_l/shared/domain/models/capitulo_model.dart';
+import '../../domain/entities/capitulo.dart';
 import 'package:book_l/shared/domain/models/ejercicio_model.dart';
 import 'package:book_l/core/services/bookl_service.dart';
 import '../widgets/seccion_editor_widget.dart';
@@ -189,11 +189,14 @@ class _CrearCapituloScreenState extends State<CrearCapituloScreen>
                 bottomLeft: Radius.circular(25),
                 bottomRight: Radius.circular(25),
               ),
-              child: Image.asset(
-                'assets/images/green_bg.png',
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    Container(color: const Color(0xFF4DC130)),
+              child: Transform.scale(
+                scale: 1.15,
+                child: Image.asset(
+                  'assets/images/green_bg.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      Container(color: const Color(0xFF4DC130)),
+                ),
               ),
             ),
           ),
@@ -366,17 +369,37 @@ class _CrearCapituloScreenState extends State<CrearCapituloScreen>
 
   void _guardarCapitulo() {
     final nombre = _nombreCtrl.text.trim();
-    final nuevoCapitulo = CapituloModel(
-      id: BooklService().generateId(),
+    
+    // Unificamos secciones y ejercicios en una sola lista de "contenido"
+    final List<Map<String, dynamic>> contenidoFinal = [];
+    
+    // 1. Agregar secciones de texto (Quill)
+    for (final s in _secciones) {
+      contenidoFinal.add({
+        'tipo': 'seccion',
+        'titulo': s.tituloCtrl.text,
+        'cuerpo_delta': s.cuerpoCtrl.document.toDelta().toJson(),
+        'tiene_imagen': false, // Expandir luego si se necesita
+        'tiene_video': false,
+      });
+    }
+    
+    // 2. Agregar ejercicios
+    for (final ex in _ejercicios) {
+      contenidoFinal.add({
+        'tipo': 'ejercicio',
+        'ejercicio_data': ex.toJson(),
+      });
+    }
+
+    final nuevoCapitulo = Capitulo(
+      idCapitulo: BooklService().generateId(),
+      idLeccion: 0, // Se asignará al guardar la lección
       nombre: nombre.isEmpty ? 'Capítulo sin nombre' : nombre,
-      ejercicios: List.from(_ejercicios),
-      secciones: _secciones
-          .map((s) => {
-                'nombre': s.tituloCtrl.text,
-                'contenido': s.cuerpoCtrl.document.toPlainText(),
-              })
-          .toList(),
+      contenido: contenidoFinal,
+      tiempoTotal: _secciones.length * 300, // Estimación simple: 5 min por sección
     );
+
     // Retorna el capítulo a la pantalla anterior
     Navigator.pop(context, nuevoCapitulo);
   }

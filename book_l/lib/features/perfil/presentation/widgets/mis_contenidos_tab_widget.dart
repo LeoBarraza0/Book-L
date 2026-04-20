@@ -37,7 +37,7 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
     return ListenableBuilder(
       listenable: BooklService(),
       builder: (context, _) {
-        final userId = AppSession().usuarioId;
+        final userId = widget.idUsuario;
 
         // Fuente única: BooklService. Filtramos por usuario activo.
         final misLecciones = BooklService()

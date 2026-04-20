@@ -84,20 +84,23 @@ class LeccionController extends ChangeNotifier {
 
   // ── CREATE — Lección ───────────────────────────────────────────────────────
 
-  Future<void> agregarLeccion({
+  Future<int> agregarLeccion({
     required int idUsuario,
     required String nombre,
     List<dynamic>? contenido,
+    String? imagenUrl,
   }) async {
     final nueva = Leccion(
       idLeccion: 0, // el impl asigna el ID real
       idUsuarioFk: idUsuario,
       nombre: nombre,
       contenido: contenido,
+      imagenUrl: imagenUrl,
       estado: 'activa',
     );
-    await _addLeccion(nueva);
+    final newId = await _addLeccion(nueva);
     await cargarLecciones();
+    return newId;
   }
 
   // ── UPDATE — Lección ───────────────────────────────────────────────────────
@@ -144,7 +147,7 @@ class LeccionController extends ChangeNotifier {
 
   // ── CREATE — Capítulo ──────────────────────────────────────────────────────
 
-  Future<void> agregarCapitulo({
+  Future<int> agregarCapitulo({
     required int idLeccion,
     required String nombre,
     List<dynamic>? contenido,
@@ -157,12 +160,13 @@ class LeccionController extends ChangeNotifier {
       contenido: contenido,
       tiempoTotal: tiempoTotal,
     );
-    await _addCapitulo(nuevo);
+    final newId = await _addCapitulo(nuevo);
     // Refresca la lista de capítulos si la lección seleccionada coincide
     if (state.selected?.idLeccion == idLeccion) {
       capitulosDeLeccion = await _getCapitulos(idLeccion);
       notifyListeners();
     }
+    return newId;
   }
 
   // ── UPDATE — Capítulo ──────────────────────────────────────────────────────

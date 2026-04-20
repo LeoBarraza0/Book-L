@@ -26,9 +26,11 @@ class CapituloRepositoryImpl implements CapituloRepository {
   // ── CREATE ─────────────────────────────────────────────────────────────────
 
   @override
-  Future<void> addCapitulo(Capitulo capitulo) async {
-    final nuevo = capitulo.copyWith(idCapitulo: _service.nextCapituloId());
+  Future<int> addCapitulo(Capitulo capitulo) async {
+    final newId = _service.nextCapituloId();
+    final nuevo = capitulo.copyWith(idCapitulo: newId);
     _service.capitulos.add(nuevo);
+    return newId;
   }
 
   // ── UPDATE ─────────────────────────────────────────────────────────────────
