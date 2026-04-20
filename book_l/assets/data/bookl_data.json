@@ -513,5 +513,47 @@
       "perfil_publico": 1
     }
   ],
-  "sugerencias": []
+  "sugerencias": [],
+  "reportes": [
+    {
+      "id_reporte": 1,
+      "id_usuario_fk": 2,
+      "entidad_tipo": "Curso",
+      "entidad_id": 1,
+      "motivo": "Contenido obsceno. La maestra mostraba demás.",
+      "created_at": "2026-03-11T10:00:00"
+    },
+    {
+      "id_reporte": 2,
+      "id_usuario_fk": 3,
+      "entidad_tipo": "Lección",
+      "entidad_id": 1,
+      "motivo": "¿Pueden agregar la funcionalidad de reproducir los vídeos mientras la pantalla está apagada? Es que me gusta dormir mientras escucho la lección",
+      "created_at": "2026-02-11T12:00:00"
+    },
+    {
+      "id_reporte": 3,
+      "id_usuario_fk": 5,
+      "entidad_tipo": "Lección",
+      "entidad_id": 1,
+      "motivo": "Explicación confusa sobre tablas de verdad, falta material de apoyo.",
+      "created_at": "2026-02-15T14:30:00"
+    },
+    {
+      "id_reporte": 4,
+      "id_usuario_fk": 2,
+      "entidad_tipo": "Capítulo",
+      "entidad_id": 4,
+      "motivo": "El enlace del material PDF sobre Big O está roto.",
+      "created_at": "2026-04-10T09:15:00"
+    },
+    {
+      "id_reporte": 5,
+      "id_usuario_fk": 4,
+      "entidad_tipo": "Curso",
+      "entidad_id": 3,
+      "motivo": "Información desactualizada respecto a las últimas reformas constitucionales.",
+      "created_at": "2026-03-20T16:45:00"
+    }
+  ]
 }
