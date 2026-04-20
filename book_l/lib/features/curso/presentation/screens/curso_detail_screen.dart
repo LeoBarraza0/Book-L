@@ -165,9 +165,9 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                             return Row(
                               children: [
                                 _buildCircularIconButton(
-                                  Icons.edit_rounded,
-                                  () => Navigator.push(context, _slideRoute(const CursoEditarScreen(
-                                    // TODO: pasar idCurso a la pantalla de edición si admite parámetro
+                                  Icons.edit,
+                                  () => Navigator.push(context, _slideRoute(CursoEditarScreen(
+                                    idCurso: widget.idCurso,
                                   ))),
                                   color: const Color(0xFFFEB95C),
                                 ),
