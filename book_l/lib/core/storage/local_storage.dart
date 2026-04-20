@@ -82,6 +82,7 @@ class AppSession {
   // ── Consultas ──────────────────────────────────────────────────────────────
   bool get estaLogueado => token != null && token!.isNotEmpty;
   bool get esProfesor => rol == 'Profesor' || rol == 'Administrador';
+  bool get esAdministrador => rol == 'Administrador' || rol == 'Admin';
 
   // ── Persistencia de sesión (llamado por auth_repository_impl al login) ─────
   Future<void> guardarSesion({

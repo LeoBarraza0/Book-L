@@ -46,6 +46,7 @@ class BooklService extends ChangeNotifier {
   List<MaterialEducativo> materiales = [];
   List<Configuracion> configuraciones = [];
   List<Map<String, dynamic>> sugerencias = [];
+  List<Map<String, dynamic>> reportes = [];
 
   // Pivote M:N lecciones ↔ cursos
   // Cada elemento es { 'id_leccion': int, 'id_curso': int }
@@ -109,6 +110,20 @@ class BooklService extends ChangeNotifier {
       sugerencias = [];
     }
 
+    if (data.containsKey('reportes')) {
+      reportes = List<Map<String, dynamic>>.from(data['reportes']);
+    } else {
+      // Si la caché antigua no tiene los reportes, los leemos del archivo JSON
+      final rawFallback = await rootBundle.loadString('assets/data/bookl_data.json');
+      final fallbackData = json.decode(rawFallback);
+      if (fallbackData.containsKey('reportes')) {
+        reportes = List<Map<String, dynamic>>.from(fallbackData['reportes']);
+        // Guardamos para actualizar la caché
+        _save();
+      } else {
+        reportes = [];
+      }
+    }
     _loaded = true;
     notifyListeners();
   }
@@ -125,6 +140,7 @@ class BooklService extends ChangeNotifier {
         'materiales': materiales.map((m) => MaterialDto.toJson(m)).toList(),
         'configuraciones': configuraciones.map((c) => ConfiguracionDto.fromEntity(c).toJson()).toList(),
         'sugerencias': sugerencias,
+        'reportes': reportes,
         'lecciones_cursos': leccionesCursos,
       };
       await prefs.setString(_storageKey, json.encode(fullData));

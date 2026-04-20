@@ -14,7 +14,13 @@
       "semestre": 8,
       "nacimiento": "2000-05-15",
       "programa": "Ingenieria de Sistemas",
-      "preferencias": { "intereses": ["matematicas", "programacion"], "tema_oscuro": true },
+      "preferencias": {
+        "intereses": [
+          "matematicas",
+          "programacion"
+        ],
+        "tema_oscuro": true
+      },
       "activo": true,
       "avatar_url": "https://ui-avatars.com/api/?name=Emanuel+Barranco&background=random",
       "rol": "Profesor"
@@ -29,7 +35,13 @@
       "semestre": 5,
       "nacimiento": "2002-11-20",
       "programa": "Psicologia",
-      "preferencias": { "intereses": ["salud_mental", "desarrollo_infantil"], "tema_oscuro": false },
+      "preferencias": {
+        "intereses": [
+          "salud_mental",
+          "desarrollo_infantil"
+        ],
+        "tema_oscuro": false
+      },
       "activo": true,
       "avatar_url": "https://ui-avatars.com/api/?name=Ana+Torres&background=random",
       "rol": "Estudiante"
@@ -44,7 +56,13 @@
       "semestre": 10,
       "nacimiento": "1998-05-15",
       "programa": "Ingenieria de Sistemas",
-      "preferencias": { "intereses": ["inteligencia_artificial", "apps"], "tema_oscuro": true },
+      "preferencias": {
+        "intereses": [
+          "inteligencia_artificial",
+          "apps"
+        ],
+        "tema_oscuro": true
+      },
       "activo": true,
       "avatar_url": "https://ui-avatars.com/api/?name=Arthur+Barraza&background=random",
       "rol": "Estudiante"
@@ -59,8 +77,14 @@
       "semestre": 7,
       "nacimiento": "1999-01-05",
       "programa": "Derecho",
-      "preferencias": { "intereses": ["penal", "constitucional"], "tema_oscuro": false },
-      "activo": true,
+      "preferencias": {
+        "intereses": [
+          "penal",
+          "constitucional"
+        ],
+        "tema_oscuro": false
+      },
+      "activo": false,
       "avatar_url": "https://ui-avatars.com/api/?name=Juan+Perez&background=random",
       "rol": "Profesor"
     },
@@ -74,10 +98,37 @@
       "semestre": 2,
       "nacimiento": "2004-08-30",
       "programa": "Medicina",
-      "preferencias": { "intereses": ["anatomia", "biologia"], "tema_oscuro": true },
+      "preferencias": {
+        "intereses": [
+          "anatomia",
+          "biologia"
+        ],
+        "tema_oscuro": true
+      },
       "activo": true,
       "avatar_url": "https://ui-avatars.com/api/?name=Maria+Lopez&background=random",
       "rol": "Estudiante"
+    },
+    {
+      "id_usuario": 6,
+      "nombre_completo": "Administrador",
+      "correo": "admin@bookl.com",
+      "contrasena": "1234",
+      "username": "admin",
+      "celular": 3158877665,
+      "semestre": 2,
+      "nacimiento": "2004-08-30",
+      "programa": "Ingenieria de Sistemas",
+      "preferencias": {
+        "intereses": [
+          "administracion",
+          "Flutter"
+        ],
+        "tema_oscuro": true
+      },
+      "activo": true,
+      "avatar_url": "https://ui-avatars.com/api/?name=Administrador&background=random",
+      "rol": "Administrador"
     }
   ],
   "cursos": [
@@ -167,12 +218,30 @@
     }
   ],
   "lecciones_cursos": [
-    { "id_leccion": 1, "id_curso": 1 },
-    { "id_leccion": 2, "id_curso": 1 },
-    { "id_leccion": 3, "id_curso": 2 },
-    { "id_leccion": 4, "id_curso": 2 },
-    { "id_leccion": 5, "id_curso": 3 },
-    { "id_leccion": 6, "id_curso": 4 }
+    {
+      "id_leccion": 1,
+      "id_curso": 1
+    },
+    {
+      "id_leccion": 2,
+      "id_curso": 1
+    },
+    {
+      "id_leccion": 3,
+      "id_curso": 2
+    },
+    {
+      "id_leccion": 4,
+      "id_curso": 2
+    },
+    {
+      "id_leccion": 5,
+      "id_curso": 3
+    },
+    {
+      "id_leccion": 6,
+      "id_curso": 4
+    }
   ],
   "lecciones": [
     {
@@ -305,43 +374,109 @@
       "id_capitulo": 1,
       "id_leccion": 1,
       "nombre": "Proposiciones y Conectivos",
-      "contenido": [{ "titulo": "Intro", "cuerpo_delta": [{"insert": "Definicion y lógica.\n"}]}],
-      "tiempo_total": 900, "created_at": "2026-01-12T10:00:00", "updated_at": "2026-01-12T10:00:00"
+      "contenido": [
+        {
+          "titulo": "Intro",
+          "cuerpo_delta": [
+            {
+              "insert": "Definicion y lógica.\n"
+            }
+          ]
+        }
+      ],
+      "tiempo_total": 900,
+      "created_at": "2026-01-12T10:00:00",
+      "updated_at": "2026-01-12T10:00:00"
     },
     {
       "id_capitulo": 2,
       "id_leccion": 1,
       "nombre": "Tablas de Verdad",
-      "contenido": [{ "titulo": "Intro", "cuerpo_delta": [{"insert": "Construccion de tablas.\n"}]}],
-      "tiempo_total": 1200, "created_at": "2026-01-12T11:00:00", "updated_at": "2026-01-12T11:00:00"
+      "contenido": [
+        {
+          "titulo": "Intro",
+          "cuerpo_delta": [
+            {
+              "insert": "Construccion de tablas.\n"
+            }
+          ]
+        }
+      ],
+      "tiempo_total": 1200,
+      "created_at": "2026-01-12T11:00:00",
+      "updated_at": "2026-01-12T11:00:00"
     },
     {
       "id_capitulo": 3,
       "id_leccion": 2,
       "nombre": "Operaciones con Conjuntos",
-      "contenido": [{ "titulo": "Intro", "cuerpo_delta": [{"insert": "Unión e intersección.\n"}]}],
-      "tiempo_total": 900, "created_at": "2026-01-13T10:00:00", "updated_at": "2026-01-13T10:00:00"
+      "contenido": [
+        {
+          "titulo": "Intro",
+          "cuerpo_delta": [
+            {
+              "insert": "Unión e intersección.\n"
+            }
+          ]
+        }
+      ],
+      "tiempo_total": 900,
+      "created_at": "2026-01-13T10:00:00",
+      "updated_at": "2026-01-13T10:00:00"
     },
     {
       "id_capitulo": 4,
       "id_leccion": 3,
       "nombre": "Notación Asintótica",
-      "contenido": [{ "titulo": "Intro", "cuerpo_delta": [{"insert": "Big O.\n"}]}],
-      "tiempo_total": 1080, "created_at": "2026-01-16T10:00:00", "updated_at": "2026-01-16T10:00:00"
+      "contenido": [
+        {
+          "titulo": "Intro",
+          "cuerpo_delta": [
+            {
+              "insert": "Big O.\n"
+            }
+          ]
+        }
+      ],
+      "tiempo_total": 1080,
+      "created_at": "2026-01-16T10:00:00",
+      "updated_at": "2026-01-16T10:00:00"
     },
     {
       "id_capitulo": 5,
       "id_leccion": 5,
       "nombre": "Leyes Estatutarias explicadas",
-      "contenido": [{ "titulo": "Intro", "cuerpo_delta": [{"insert": "Derechos fundamentales.\n"}]}],
-      "tiempo_total": 1200, "created_at": "2026-02-05T10:00:00", "updated_at": "2026-02-05T10:00:00"
+      "contenido": [
+        {
+          "titulo": "Intro",
+          "cuerpo_delta": [
+            {
+              "insert": "Derechos fundamentales.\n"
+            }
+          ]
+        }
+      ],
+      "tiempo_total": 1200,
+      "created_at": "2026-02-05T10:00:00",
+      "updated_at": "2026-02-05T10:00:00"
     },
     {
       "id_capitulo": 6,
       "id_leccion": 6,
       "nombre": "Modelo de Atkinson y Shiffrin",
-      "contenido": [{ "titulo": "Intro", "cuerpo_delta": [{"insert": "Flujo de la memoria.\n"}]}],
-      "tiempo_total": 950, "created_at": "2026-03-12T10:00:00", "updated_at": "2026-03-12T10:00:00"
+      "contenido": [
+        {
+          "titulo": "Intro",
+          "cuerpo_delta": [
+            {
+              "insert": "Flujo de la memoria.\n"
+            }
+          ]
+        }
+      ],
+      "tiempo_total": 950,
+      "created_at": "2026-03-12T10:00:00",
+      "updated_at": "2026-03-12T10:00:00"
     }
   ],
   "materiales": [
@@ -378,5 +513,47 @@
       "perfil_publico": 1
     }
   ],
-  "sugerencias": []
+  "sugerencias": [],
+  "reportes": [
+    {
+      "id_reporte": 1,
+      "id_usuario_fk": 2,
+      "entidad_tipo": "Curso",
+      "entidad_id": 1,
+      "motivo": "Contenido obsceno. La maestra mostraba demás.",
+      "created_at": "2026-03-11T10:00:00"
+    },
+    {
+      "id_reporte": 2,
+      "id_usuario_fk": 3,
+      "entidad_tipo": "Lección",
+      "entidad_id": 1,
+      "motivo": "¿Pueden agregar la funcionalidad de reproducir los vídeos mientras la pantalla está apagada? Es que me gusta dormir mientras escucho la lección",
+      "created_at": "2026-02-11T12:00:00"
+    },
+    {
+      "id_reporte": 3,
+      "id_usuario_fk": 5,
+      "entidad_tipo": "Lección",
+      "entidad_id": 1,
+      "motivo": "Explicación confusa sobre tablas de verdad, falta material de apoyo.",
+      "created_at": "2026-02-15T14:30:00"
+    },
+    {
+      "id_reporte": 4,
+      "id_usuario_fk": 2,
+      "entidad_tipo": "Capítulo",
+      "entidad_id": 4,
+      "motivo": "El enlace del material PDF sobre Big O está roto.",
+      "created_at": "2026-04-10T09:15:00"
+    },
+    {
+      "id_reporte": 5,
+      "id_usuario_fk": 4,
+      "entidad_tipo": "Curso",
+      "entidad_id": 3,
+      "motivo": "Información desactualizada respecto a las últimas reformas constitucionales.",
+      "created_at": "2026-03-20T16:45:00"
+    }
+  ]
 }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../../domain/entities/usuarios.dart';
 
 /// DTO para mapear un objeto JSON del archivo bookl_data.json
@@ -19,7 +20,9 @@ class UsuarioDto {
           ? DateTime.tryParse(json['nacimiento'] as String)
           : null,
       programa: json['programa'] as String?,
-      preferencias: json['preferencias'] as String?,
+      preferencias: json['preferencias'] != null 
+          ? (json['preferencias'] is String ? json['preferencias'] as String : jsonEncode(json['preferencias'])) 
+          : null,
       activo: (json['activo'] as bool?) ?? true,
       rol: json['rol'] as String?,
       avatarUrl: json['avatar_url'] as String?,

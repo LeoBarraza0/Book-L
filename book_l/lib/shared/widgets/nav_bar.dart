@@ -37,7 +37,7 @@ class SharedBottomNavBar extends StatelessWidget {
             onTap: () {
               if (selectedIndex != 0) {
                 if (role == 'admin') {
-                  Navigator.pushReplacementNamed(context, '/admin_home');
+                  Navigator.pushReplacementNamed(context, '/admin_Home');
                 } else {
                   Navigator.pushReplacementNamed(context, '/home');
                 }
@@ -51,8 +51,7 @@ class SharedBottomNavBar extends StatelessWidget {
             onTap: () {
               if (selectedIndex != 1) {
                 if (role == 'admin') {
-                  // Aún no hay pantalla de búsqueda para admin, hacemos print o nada
-                  debugPrint('Buscar admin clickeado');
+                  Navigator.pushReplacementNamed(context, '/admin_leccion');
                 } else {
                   Navigator.pushReplacementNamed(context, '/busqueda');
                 }
@@ -93,7 +92,7 @@ class SharedBottomNavBar extends StatelessWidget {
             onTap: () {
               if (selectedIndex != 2) {
                 if (role == 'admin') {
-                  debugPrint('Perfil admin clickeado');
+                  Navigator.pushReplacementNamed(context, '/users_admin');
                 } else {
                   Navigator.pushReplacementNamed(context, '/perfil');
                 }
@@ -107,7 +106,7 @@ class SharedBottomNavBar extends StatelessWidget {
             onTap: () {
               if (selectedIndex != 3) {
                 if (role == 'admin') {
-                  debugPrint('Booki/Guardados admin clickeado');
+                  Navigator.pushReplacementNamed(context, '/reportes');
                 } else {
                   Navigator.pushReplacementNamed(context, '/chatbot');
                 }
