@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
+import '../../../discusion/presentation/controller/discusion_controller.dart';
 import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
-import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../../core/services/bookl_service.dart';
@@ -28,6 +28,7 @@ class LeccionDetailScreen extends StatefulWidget {
 class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
   int _selectedTab = 0; // 0: Contenido, 1: Ejercicios, 2: Discusión
   final LeccionController _ctrl = LeccionController();
+  final DiscusionController _discCtrl = DiscusionController();
 
   @override
   void initState() {
@@ -111,7 +112,12 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                                       ? const EjerciciosScreen(key: ValueKey(1))
                                       : Container(
                                           key: const ValueKey(2),
-                                          child: const DiscusionScreen(showRating: true),
+                                          child: DiscusionScreen(
+                                            key: const ValueKey(2),
+                                            showRating: true,
+                                            idLeccion: widget.idLeccion,
+                                            controller: _discCtrl,
+                                          ),
                                         ),
                             ),
                             const SizedBox(
@@ -137,7 +143,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 400),
                 opacity: _selectedTab == 2 ? 1.0 : 0.0,
-                child: const ComentarioInput(),
+                child: ComentarioInput(ctrl: _discCtrl),
               ),
             ),
           ),
