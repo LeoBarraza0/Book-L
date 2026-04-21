@@ -20,6 +20,7 @@ import 'features/curso/presentation/screens/publicar_curso_screen.dart';
 import 'features/leccion/presentation/screens/publicar_leccion_screen.dart';
 import 'features/ejercicio/presentation/screens/crear_ejercicio_teorico_screen.dart';
 import 'features/ejercicio/presentation/screens/crear_ejercicio_practico_screen.dart';
+import 'features/ejercicio/domain/entities/ejercicio.dart';
 import 'features/home/presentation/screens/admin_home_screen.dart';
 import 'features/leccion/presentation/screens/admin_leccion_screen.dart';
 import 'features/curso/presentation/screens/curso_editar_screen.dart';
@@ -27,7 +28,6 @@ import 'features/leccion/presentation/screens/leccion_editar_screen.dart';
 import 'features/leccion/presentation/screens/capitulo_editar_screen.dart';
 import 'features/leccion/presentation/screens/crear_capitulo_screen.dart';
 import 'features/usuarios/presentation/screens/usuarios_screen.dart';
-import 'features/usuarios/presentation/screens/edit_usuario_screen.dart';
 import 'features/reportes/presentation/screens/reportes_screen.dart';
 import 'features/reportes/presentation/screens/reporte_detail_screen.dart';
 
@@ -115,7 +115,9 @@ class BookLApp extends StatelessWidget {
                     ),
                 '/busqueda': (context) => const BusquedaScreen(),
                 '/resultado': (context) => const ResultadoScreen(),
-                '/teorico': (context) => const TeoricoScreen(),
+                '/teorico': (context) => TeoricoScreen(
+                      ejercicio: ModalRoute.of(context)?.settings.arguments as Ejercicio,
+                    ),
                 '/calificacion': (context) => const EjercicioResultadoScreen(),
                 '/publicar_curso': (context) => const PublicarCursoScreen(),
                 '/publicar_leccion': (context) => const PublicarLeccionScreen(),

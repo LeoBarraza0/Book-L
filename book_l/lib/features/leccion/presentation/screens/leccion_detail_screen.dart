@@ -109,7 +109,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                               child: _selectedTab == 0
                                   ? Container(key: const ValueKey(0), child: _buildContenido())
                                   : _selectedTab == 1
-                                      ? const EjerciciosScreen(key: ValueKey(1))
+                                      ? EjerciciosScreen(key: const ValueKey(1), idLeccion: widget.idLeccion ?? 0)
                                       : Container(
                                           key: const ValueKey(2),
                                           child: DiscusionScreen(

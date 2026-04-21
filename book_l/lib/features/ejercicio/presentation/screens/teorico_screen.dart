@@ -2,28 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../calificacion/presentation/screens/resultado_screen.dart';
+import '../../domain/entities/ejercicio.dart';
+import '../../domain/entities/opcion.dart';
 
 class TeoricoScreen extends StatefulWidget {
-  const TeoricoScreen({super.key});
+  final Ejercicio ejercicio;
+  
+  const TeoricoScreen({super.key, required this.ejercicio});
 
   @override
   State<TeoricoScreen> createState() => _TeoricoScreenState();
 }
 
 class _TeoricoScreenState extends State<TeoricoScreen> {
+  int _currentQuestionIndex = 0;
   int? _selectedIndex;
   bool _hasAnswered = false;
 
-  final List<String> _optionsText = ['2x', 'X^2', 'X', '2'];
-  final List<String> _optionsLetter = ['A', 'B', 'C', 'D'];
-
-  // Respuesta correcta: '2x' (índice 0)
-  final int _correctIndex = 0;
+  final List<String> _letters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   @override
   Widget build(BuildContext context) {
-    // Definir si la respuesta dada es correcta
-    final bool isCorrect = _selectedIndex == _correctIndex;
+    if (widget.ejercicio.preguntas.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.ejercicio.titulo)),
+        body: const Center(child: Text("Este ejercicio aún no tiene preguntas configuradas.")),
+      );
+    }
+
+    final preguntaActual = widget.ejercicio.preguntas[_currentQuestionIndex];
+    
+    // Obtiene la opción correcta desde la entidad
+    final correctIndex = preguntaActual.opciones.indexWhere((o) => o.correcta);
+    final isCorrect = _selectedIndex == correctIndex;
 
     return Scaffold(
       backgroundColor: const Color(0xFFEBEBEB),
@@ -57,10 +68,10 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
                               size: 42,
                             ),
                             const SizedBox(width: 15),
-                            const Expanded(
+                            Expanded(
                               child: Text(
-                                'Cual es la derivada de f(x)\n= x^2?',
-                                style: TextStyle(
+                                preguntaActual.contenido,
+                                style: const TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -77,11 +88,12 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
                       ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _optionsText.length,
+                        itemCount: preguntaActual.opciones.length,
                         separatorBuilder: (context, index) =>
                             const SizedBox(height: 15),
                         itemBuilder: (context, index) {
                           final isSelected = _selectedIndex == index;
+                          final opcion = preguntaActual.opciones[index];
 
                           return GestureDetector(
                             onTap: _hasAnswered
@@ -117,7 +129,7 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
                                     ),
                                     child: Center(
                                       child: Text(
-                                        _optionsLetter[index],
+                                        index < _letters.length ? _letters[index] : '-',
                                         style: TextStyle(
                                           fontFamily: 'Inter',
                                           color: isSelected
@@ -130,15 +142,17 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 15),
-                                  Text(
-                                    _optionsText[index],
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.black87,
+                                  Expanded(
+                                    child: Text(
+                                      opcion.contenido,
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : Colors.black87,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -149,8 +163,8 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
                       ),
                       const SizedBox(height: 30),
 
-                      // Cuadro de feedback al responder
-                      if (_hasAnswered) _buildFeedbackBox(isCorrect),
+                      // Feedback Box
+                      if (_hasAnswered) _buildFeedbackBox(isCorrect, preguntaActual.opciones, correctIndex, preguntaActual.explicacion),
 
                       // Botón Inferior dinámico
                       Center(
@@ -165,14 +179,21 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
                                         _hasAnswered = true;
                                       });
                                     } else {
-                                      // Acción al hacer clic en 'Terminar intento' o 'Siguiente pregunta'
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const EjercicioResultadoScreen(),
-                                        ),
-                                      );
+                                      // Next question or Final Screen
+                                      if (_currentQuestionIndex < widget.ejercicio.preguntas.length - 1) {
+                                        setState(() {
+                                          _currentQuestionIndex++;
+                                          _selectedIndex = null;
+                                          _hasAnswered = false;
+                                        });
+                                      } else {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const EjercicioResultadoScreen(),
+                                          ),
+                                        );
+                                      }
                                     }
                                   }
                                 : null,
@@ -187,7 +208,9 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
                             child: Text(
                               !_hasAnswered
                                   ? 'Confirmar respuesta'
-                                  : 'Terminar intento',
+                                  : (_currentQuestionIndex < widget.ejercicio.preguntas.length - 1 
+                                      ? 'Siguiente pregunta' 
+                                      : 'Terminar intento'),
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 16,
@@ -219,18 +242,22 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
     );
   }
 
-  Widget _buildFeedbackBox(bool isCorrect) {
-    final bgColor =
-        isCorrect ? const Color(0xFFC7EBB8) : const Color(0xFFF4BDBE);
-    final iconBgColor =
-        isCorrect ? const Color(0xFF4DC130) : const Color(0xFFD63030);
-    final titleTextColor =
-        isCorrect ? const Color(0xFF4DC130) : const Color(0xFFD63030);
+  Widget _buildFeedbackBox(bool isCorrect, List<Opcion> opciones, int correctIndex, String? explicacion) {
+    final bgColor = isCorrect ? const Color(0xFFC7EBB8) : const Color(0xFFF4BDBE);
+    final iconBgColor = isCorrect ? const Color(0xFF4DC130) : const Color(0xFFD63030);
+    final titleTextColor = isCorrect ? const Color(0xFF4DC130) : const Color(0xFFD63030);
 
     final title = isCorrect ? '¡Correcto!' : '¡Incorrecto!';
-    final subtitle = isCorrect
-        ? '¡Excelente trabajo! Has respondido correctamente'
-        : 'La respuesta correcta es: 2x ¡Suerte para la próxima!';
+    
+    String subtitle = '¡Excelente trabajo! Has respondido correctamente';
+    if (!isCorrect) {
+       final textoCorrecto = correctIndex != -1 ? opciones[correctIndex].contenido : 'ninguna';
+       subtitle = 'La respuesta correcta es: $textoCorrecto\n${explicacion ?? ""}';
+    } else {
+       if (explicacion != null && explicacion.isNotEmpty) {
+         subtitle += '\n$explicacion';
+       }
+    }
 
     return Container(
       width: double.infinity,
@@ -334,17 +361,28 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
             ],
           ),
           const SizedBox(height: 15),
-          const Text(
-            'Ejercicio teórico',
-            style: TextStyle(
+          Text(
+            widget.ejercicio.titulo,
+            style: const TextStyle(
               fontFamily: 'Inter',
               fontWeight: FontWeight.w700,
               fontSize: 24,
               color: Colors.black,
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+             'Pregunta ${_currentQuestionIndex + 1} de ${widget.ejercicio.preguntas.length}',
+             style: const TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+                color: Colors.black45,
+             ),
+          ),
         ],
       ),
     );
   }
 }
+
