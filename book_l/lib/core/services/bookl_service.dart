@@ -14,6 +14,13 @@ import '../../features/leccion/domain/entities/leccion.dart';
 import '../../features/leccion/domain/entities/material_educativo.dart';
 import '../../features/configuracion/data/dto/configuracion_dto.dart';
 import '../../features/configuracion/domain/entities/configuracion.dart';
+import '../../features/discusion/domain/entities/discusion.dart';
+import '../../features/discusion/domain/entities/comentario.dart';
+import '../../features/discusion/data/dto/discusion_dto.dart';
+import '../../features/ejercicio/data/dto/ejercicio_dto.dart';
+import '../../features/ejercicio/domain/entities/ejercicio.dart';
+import '../../features/ejercicio/domain/entities/pregunta.dart';
+import '../../features/ejercicio/domain/entities/opcion.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -58,10 +65,22 @@ class BooklService extends ChangeNotifier {
   List<Configuracion> configuraciones = [];
   List<Map<String, dynamic>> sugerencias = [];
   List<Map<String, dynamic>> reportes = [];
+  List<String> programas = [];
 
   // Pivote M:N lecciones ↔ cursos
   // Cada elemento es { 'id_leccion': int, 'id_curso': int }
   List<Map<String, int>> leccionesCursos = [];
+
+  List<Map<String, dynamic>> seguidores = [];
+
+  // Discusiones y comentarios
+  List<Discusion> discusiones = [];
+  List<Comentario> comentarios = [];
+
+  // Ejercicios
+  List<Ejercicio> ejercicios = [];
+  List<Pregunta> preguntas = [];
+  List<Opcion> opciones = [];
 
   // ── Inicialización (llamar una sola vez desde main.dart) ───────────────────
   Future<void> init() async {
@@ -84,6 +103,11 @@ class BooklService extends ChangeNotifier {
       final raw = await rootBundle.loadString('assets/data/bookl_data.json');
       data = json.decode(raw);
     }
+
+    // Cargar datos estáticos directamente del JSON (no se persisten simuladamente)
+    final rawStatic = await rootBundle.loadString('assets/data/bookl_data.json');
+    final staticData = json.decode(rawStatic);
+    programas = List<String>.from(staticData['programas'] ?? []);
 
     usuariosDto = (data['usuarios'] as List)
         .map((e) => UsuarioDto.fromJson(e as Map<String, dynamic>))
@@ -128,6 +152,79 @@ class BooklService extends ChangeNotifier {
       sugerencias = [];
     }
 
+    if (data.containsKey('seguidores')) {
+      seguidores = List<Map<String, dynamic>>.from(data['seguidores']);
+    } else {
+      seguidores = [];
+    }
+
+    if (data.containsKey('discusiones')) {
+      discusiones = (data['discusiones'] as List)
+          .map((e) => DiscusionDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      discusiones = [];
+    }
+
+    if (data.containsKey('comentarios')) {
+      comentarios = (data['comentarios'] as List)
+          .map((e) => ComentarioDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      comentarios = [];
+    }
+
+    if (data.containsKey('ejercicios')) {
+      ejercicios = (data['ejercicios'] as List)
+          .map<Ejercicio>((e) => EjercicioDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      ejercicios = [];
+    }
+
+    if (data.containsKey('preguntas')) {
+      preguntas = (data['preguntas'] as List)
+          .map<Pregunta>((e) => PreguntaDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      preguntas = [];
+    }
+
+    if (data.containsKey('opciones')) {
+      opciones = (data['opciones'] as List)
+          .map<Opcion>((e) => OpcionDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+      
+      // Anidar opciones en preguntas
+      for (var p in preguntas) {
+        final ops = opciones.where((o) => o.idPreguntaFk == p.idPregunta).toList();
+        final i = preguntas.indexOf(p);
+        preguntas[i] = Pregunta(
+          idPregunta: p.idPregunta,
+          idEjercicioFk: p.idEjercicioFk,
+          contenido: p.contenido,
+          explicacion: p.explicacion,
+          opciones: ops,
+        );
+      }
+
+      // Anidar preguntas en ejercicios
+      for (var e in ejercicios) {
+        final pregs = preguntas.where((p) => p.idEjercicioFk == e.idEjercicio).toList();
+        final i = ejercicios.indexOf(e);
+        ejercicios[i] = Ejercicio(
+          idEjercicio: e.idEjercicio,
+          idCapitulo: e.idCapitulo,
+          tipo: e.tipo,
+          titulo: e.titulo,
+          descripcion: e.descripcion,
+          preguntas: pregs,
+        );
+      }
+    } else {
+      opciones = [];
+    }
+
     // ── Cargar Reportes con MERGE de Assets ─────────────────────────────────
     if (data.containsKey('reportes')) {
       reportes = List<Map<String, dynamic>>.from(data['reportes']);
@@ -152,6 +249,35 @@ class BooklService extends ChangeNotifier {
       if (kDebugMode) print("Error merging reportes from asset: $e");
     }
 
+    // ── Anidación Relacional Final ──────────────────────────────────────────
+    // Anidar comentarios en discusiones
+    for (var d in discusiones) {
+      final coms = comentarios.where((c) => c.idDiscusionFk == d.idDiscusion).toList();
+      final i = discusiones.indexOf(d);
+      discusiones[i] = d.copyWith(comentarios: coms);
+    }
+
+    // Anidar discusiones en cursos
+    for (var c in cursos) {
+      final disc = discusiones.where((d) => d.idCursoFk == c.idCurso).toList();
+      final i = cursos.indexOf(c);
+      cursos[i] = c.copyWith(discusiones: disc);
+    }
+
+    // Anidar discusiones en lecciones
+    for (var l in lecciones) {
+      final disc = discusiones.where((d) => d.idLeccionFk == l.idLeccion).toList();
+      final i = lecciones.indexOf(l);
+      lecciones[i] = l.copyWith(discusiones: disc);
+    }
+
+    // Anidar ejercicios en capitulos
+    for (var c in capitulos) {
+      final ejs = ejercicios.where((e) => e.idCapitulo == c.idCapitulo).toList();
+      final i = capitulos.indexOf(c);
+      capitulos[i] = c.copyWith(ejercicios: ejs);
+    }
+
     _loaded = true;
     notifyListeners();
   }
@@ -168,6 +294,12 @@ class BooklService extends ChangeNotifier {
         'materiales': materiales.map((m) => MaterialDto.toJson(m)).toList(),
         'configuraciones': configuraciones.map((c) => ConfiguracionDto.fromEntity(c).toJson()).toList(),
         'sugerencias': sugerencias,
+        'seguidores': seguidores,
+        'discusiones': discusiones.map((d) => DiscusionDto.toJson(d)).toList(),
+        'comentarios': comentarios.map((c) => ComentarioDto.toJson(c)).toList(),
+        'ejercicios': ejercicios.map((e) => EjercicioDto.toJson(e)).toList(),
+        'preguntas': preguntas.map((p) => PreguntaDto.toJson(p)).toList(),
+        'opciones': opciones.map((o) => OpcionDto.toJson(o)).toList(),
         'reportes': reportes,
         'lecciones_cursos': leccionesCursos,
       };
@@ -239,6 +371,56 @@ class BooklService extends ChangeNotifier {
   void saveSugerencia(Map<String, dynamic> sugerencia) {
     sugerencias.add(sugerencia);
     _save();
+  }
+
+  // ── Operaciones Discusión ─────────────────────────────────────────────────
+  void addDiscusion(Discusion d) {
+    discusiones.add(d);
+    _save();
+  }
+
+  void addComentario(Comentario c) {
+    comentarios.add(c);
+    _save();
+  }
+
+  int getComentariosCount(int idDiscusion) {
+    return comentarios.where((c) => c.idDiscusionFk == idDiscusion).length;
+  }
+
+  bool isFollowing(int idSeguidor, int idSeguido) {
+    return seguidores.any((s) =>
+        s['id_seguidor'] == idSeguidor &&
+        s['id_seguido'] == idSeguido &&
+        s['estado'] == 'activo');
+  }
+
+  void toggleSeguir(int idSeguidor, int idSeguido) {
+    final idx = seguidores.indexWhere(
+        (s) => s['id_seguidor'] == idSeguidor && s['id_seguido'] == idSeguido);
+    if (idx != -1) {
+      if (seguidores[idx]['estado'] == 'activo') {
+        seguidores[idx]['estado'] = 'bloqueado';
+      } else {
+        seguidores[idx]['estado'] = 'activo';
+      }
+    } else {
+      seguidores.add({
+        'id_seguidor': idSeguidor,
+        'id_seguido': idSeguido,
+        'estado': 'activo',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    }
+    _save();
+  }
+
+  int getFollowersCount(int idUsuario) {
+    return seguidores.where((s) => s['id_seguido'] == idUsuario && s['estado'] == 'activo').length;
+  }
+
+  int getFollowingCount(int idUsuario) {
+    return seguidores.where((s) => s['id_seguidor'] == idUsuario && s['estado'] == 'activo').length;
   }
 
   void clearAllData() async {

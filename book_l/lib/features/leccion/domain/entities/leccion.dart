@@ -1,5 +1,7 @@
 // Entidad pura de dominio — sin imports de Flutter ni de paquetes externos.
 // Corresponde a Tbl_leccion del modelo relacional.
+import '../../../discusion/domain/entities/discusion.dart';
+
 class Leccion {
   final int idLeccion;
   final int idUsuarioFk;
@@ -13,6 +15,8 @@ class Leccion {
   final int? tagColor;
   final bool esNuevo;
   final String estado; // 'activa' | 'inactiva' | 'en_revision' | 'suspendida'
+  final List<Discusion> discusiones; // Agregado para mapeo relacional
+
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -29,6 +33,7 @@ class Leccion {
     this.tagColor,
     this.esNuevo = true,
     required this.estado,
+    this.discusiones = const [],
     this.createdAt,
     this.updatedAt,
   });
@@ -46,6 +51,7 @@ class Leccion {
     int? tagColor,
     bool? esNuevo,
     String? estado,
+    List<Discusion>? discusiones,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -62,8 +68,10 @@ class Leccion {
       tagColor: tagColor ?? this.tagColor,
       esNuevo: esNuevo ?? this.esNuevo,
       estado: estado ?? this.estado,
+      discusiones: discusiones ?? this.discusiones,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
+

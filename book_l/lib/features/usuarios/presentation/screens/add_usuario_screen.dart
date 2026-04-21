@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../domain/entities/usuarios.dart';
+import '../../../../core/services/bookl_service.dart';
 
 class AddUsuarioScreen extends StatefulWidget {
   const AddUsuarioScreen({super.key});
@@ -16,27 +17,20 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
   late TextEditingController _passwordController;
   late TextEditingController _celularController;
   late TextEditingController _preferenciasController;
-  
+
   DateTime? _selectedDate;
   String? _selectedPrograma;
   int? _selectedSemestre;
+  String? _selectedRol = 'Estudiante';
 
-  final List<String> _programas = [
-    'Ingenieria de Sistemas',
-    'Ingenieria Industrial',
-    'Ingenieria Civil',
-    'Contaduria Publica',
-    'Administracion de Empresas',
-    'Derecho',
-    'Medicina',
-    'Psicologia',
-    'Enfermeria',
-    'Arquitectura'
-  ];
+  final List<String> _roles = ['Estudiante', 'Profesor'];
+
+  late final List<String> _programas;
 
   @override
   void initState() {
     super.initState();
+    _programas = BooklService().programas;
     _nombreController = TextEditingController();
     _usernameController = TextEditingController();
     _correoController = TextEditingController();
@@ -94,53 +88,60 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
             child: Column(
               children: [
                 // ── HEADER ────────────────────────────────────────────────
-                SizedBox(
-                  height: 200,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: Image.asset(
-                          'assets/images/yellow_bg.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        top: topPadding + 8,
-                        left: 20,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            shape: BoxShape.circle,
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                  child: SizedBox(
+                    height: 200,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Image.asset(
+                            'assets/images/yellow_bg.png',
+                            fit: BoxFit.cover,
                           ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () => Navigator.pop(context),
-                              customBorder: const CircleBorder(),
-                              child: const Icon(Icons.arrow_back, color: Colors.white),
+                        ),
+                        Positioned(
+                          top: topPadding + 8,
+                          left: 20,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => Navigator.pop(context),
+                                customBorder: const CircleBorder(),
+                                child: const Icon(Icons.arrow_back,
+                                    color: Colors.white),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const Positioned(
-                        left: 0,
-                        right: 0,
-                        top: 80,
-                        child: Center(
-                          child: Text(
-                            'Añadir Usuario',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontFamily: 'Baloo',
-                              fontWeight: FontWeight.w400,
+                        const Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 80,
+                          child: Center(
+                            child: Text(
+                              'Añadir Usuario',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontFamily: 'Baloo',
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 
@@ -162,7 +163,8 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                                   color: Colors.white,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.person, size: 50, color: Colors.grey),
+                                child: const Icon(Icons.person,
+                                    size: 50, color: Colors.grey),
                               ),
                               Positioned(
                                 bottom: 0,
@@ -173,7 +175,8 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                                     color: Color(0xFF44BD32),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(Icons.add, color: Colors.white, size: 16),
+                                  child: const Icon(Icons.add,
+                                      color: Colors.white, size: 16),
                                 ),
                               ),
                             ],
@@ -182,9 +185,11 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                           Expanded(
                             child: Column(
                               children: [
-                                _buildTextField('Nombre completo: *', _nombreController),
+                                _buildTextField(
+                                    'Nombre completo: *', _nombreController),
                                 const SizedBox(height: 10),
-                                _buildTextField('Usuario:', _usernameController),
+                                _buildTextField(
+                                    'Usuario:', _usernameController),
                               ],
                             ),
                           ),
@@ -202,20 +207,21 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                                 child: _buildTextField(
                                   'Fecha de nacimiento:',
                                   TextEditingController(
-                                    text: _selectedDate == null 
-                                      ? '' 
-                                      : "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}"
-                                  ),
+                                      text: _selectedDate == null
+                                          ? ''
+                                          : "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}"),
                                   suffixIcon: Icons.calendar_today,
                                 ),
                               ),
                             ),
                           ),
                           const SizedBox(width: 15),
-                          Expanded(child: _buildTextField('Correo electrónico: *', _correoController)),
+                          Expanded(
+                              child: _buildTextField(
+                                  'Correo electrónico: *', _correoController)),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 20),
 
                       // Fila 3: Contraseña & Celular
@@ -226,16 +232,20 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildTextField('Contraseña: *', _passwordController, obscureText: true),
+                                _buildTextField(
+                                    'Contraseña: *', _passwordController,
+                                    obscureText: true),
                                 const SizedBox(height: 5),
                                 const Row(
                                   children: [
-                                    Icon(Icons.info_outline, size: 12, color: Colors.grey),
+                                    Icon(Icons.info_outline,
+                                        size: 12, color: Colors.grey),
                                     SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
                                         'La contraseña debe contener mínimo 8 caracteres',
-                                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                                        style: TextStyle(
+                                            fontSize: 10, color: Colors.grey),
                                       ),
                                     ),
                                   ],
@@ -246,12 +256,9 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                           ),
                           const SizedBox(width: 15),
                           Expanded(
-                            child: _buildTextField(
-                              'Celular: *', 
-                              _celularController, 
-                              keyboardType: TextInputType.phone
-                            )
-                          ),
+                              child: _buildTextField(
+                                  'Celular: *', _celularController,
+                                  keyboardType: TextInputType.phone)),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -260,30 +267,39 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: _buildDropdownField('Programa: *', _programas, _selectedPrograma, (val) {
+                            child: _buildDropdownField(
+                                'Programa: *', _programas, _selectedPrograma,
+                                (val) {
                               setState(() => _selectedPrograma = val);
                             }),
                           ),
                           const SizedBox(width: 15),
                           Expanded(
                             child: _buildDropdownField(
-                              'Semestre: *', 
-                              List.generate(10, (i) => (i + 1).toString()), 
-                              _selectedSemestre?.toString(), 
-                              (val) {
-                                setState(() => _selectedSemestre = int.tryParse(val!));
-                              }
-                            ),
+                                'Semestre: *',
+                                List.generate(10, (i) => (i + 1).toString()),
+                                _selectedSemestre?.toString(), (val) {
+                              setState(
+                                  () => _selectedSemestre = int.tryParse(val!));
+                            }),
                           ),
                         ],
                       ),
                       const SizedBox(height: 20),
 
+                      // Fila 5: Rol
+                      _buildDropdownField('Rol: *', _roles, _selectedRol,
+                          (val) {
+                        setState(() => _selectedRol = val);
+                      }),
+                      const SizedBox(height: 20),
+
                       // Preferencias
-                      _buildTextField('Preferencias', _preferenciasController, maxLines: 4),
-                      
+                      _buildTextField('Preferencias', _preferenciasController,
+                          maxLines: 4),
+
                       const SizedBox(height: 30),
-                      
+
                       Container(
                         decoration: ShapeDecoration(
                           color: const Color(0xFFFDCD51),
@@ -292,7 +308,8 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                           ),
                           shadows: const [
                             BoxShadow(
-                              color: Color(0x3F000000), // 0x3F = ~0.247 de opacidad
+                              color: Color(
+                                  0x3F000000), // 0x3F = ~0.247 de opacidad
                               blurRadius: 4,
                               offset: Offset(0, 4),
                               spreadRadius: 0,
@@ -304,7 +321,8 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                           child: InkWell(
                             onTap: () {
                               final newUser = Usuario(
-                                idUsuario: DateTime.now().millisecondsSinceEpoch,
+                                idUsuario:
+                                    DateTime.now().millisecondsSinceEpoch,
                                 nombreCompleto: _nombreController.text,
                                 username: _usernameController.text,
                                 correo: _correoController.text,
@@ -315,7 +333,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                                 semestre: _selectedSemestre,
                                 preferencias: _preferenciasController.text,
                                 activo: true,
-                                rol: 'User',
+                                rol: _selectedRol ?? 'Estudiante',
                               );
                               Navigator.pop(context, newUser);
                             },
@@ -326,7 +344,10 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                               child: const Center(
                                 child: Text(
                                   'Guardar',
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
                                 ),
                               ),
                             ),
@@ -353,11 +374,17 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {bool obscureText = false, IconData? suffixIcon, TextInputType? keyboardType, int maxLines = 1}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {bool obscureText = false,
+      IconData? suffixIcon,
+      TextInputType? keyboardType,
+      int maxLines = 1}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
         const SizedBox(height: 5),
         TextField(
           controller: controller,
@@ -368,23 +395,29 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
             isDense: true,
             filled: true,
             fillColor: Colors.white,
-            suffixIcon: suffixIcon != null ? Icon(suffixIcon, color: Colors.grey, size: 20) : null,
+            suffixIcon: suffixIcon != null
+                ? Icon(suffixIcon, color: Colors.grey, size: 20)
+                : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDropdownField(String label, List<String> items, String? value, ValueChanged<String?> onChanged) {
+  Widget _buildDropdownField(String label, List<String> items, String? value,
+      ValueChanged<String?> onChanged) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
         const SizedBox(height: 5),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -396,7 +429,9 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
             child: DropdownButton<String>(
               isExpanded: true,
               value: value,
-              hint: const Text('Seleccionar...', style: TextStyle(fontSize: 14)),
+              menuMaxHeight: 250, // Permite scrollear si la lista es grande
+              hint:
+                  const Text('Seleccionar...', style: TextStyle(fontSize: 14)),
               items: items.map((String item) {
                 return DropdownMenuItem<String>(
                   value: item,

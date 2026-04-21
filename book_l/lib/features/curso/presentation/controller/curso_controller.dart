@@ -6,7 +6,8 @@ import '../../data/repositories/curso_repository_impl.dart';
 import '../../domain/entities/curso.dart';
 import '../../domain/usecases/curso_usecases.dart';
 import '../../../leccion/domain/entities/leccion.dart';
-
+import '../../../leccion/presentation/controller/leccion_controller.dart';
+import '../../../../core/storage/local_storage.dart';
 // Adaptador primario — orquesta los casos de uso y notifica a la UI.
 // La UI solo lo instancia e invoca sus métodos; nunca toca repositorios.
 class CursoController extends ChangeNotifier {
@@ -127,6 +128,25 @@ class CursoController extends ChangeNotifier {
       leccionesDeCurso = (await _getLecciones(idCurso)).cast<Leccion>();
       notifyListeners();
     }
+  }
+
+  /// Calcula el progreso de un curso basado en el progreso de sus lecciones.
+  double calcularProgresoCurso(int idCurso) {
+    final leccs = BooklService()
+        .leccionesCursos
+        .where((lc) => lc['id_curso'] == idCurso)
+        .map((lc) => lc['id_leccion'])
+        .toList();
+
+    if (leccs.isEmpty) return 0.0;
+
+    final leccionCtrl = LeccionController();
+    double totalProgress = 0.0;
+    for (var idL in leccs) {
+      totalProgress += leccionCtrl.calcularProgresoLeccion(idL!);
+    }
+
+    return totalProgress / leccs.length;
   }
 
   @override

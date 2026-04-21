@@ -7,6 +7,7 @@ import '../../data/repositories/capitulo_repository_impl.dart';
 import '../../domain/entities/leccion.dart';
 import '../../domain/entities/capitulo.dart';
 import '../../domain/usecases/leccion_usecases.dart';
+import '../../../../core/storage/local_storage.dart';
 
 // Adaptador primario — maneja Lección y Capítulo juntos porque en la UI
 // siempre se navegan en conjunto (lección → lista de capítulos).
@@ -144,6 +145,19 @@ class LeccionController extends ChangeNotifier {
   /// Consulta directa a BooklService (síncrona) para uso en cards de lista.
   List<Capitulo> capitulosDe(int idLeccion) =>
       BooklService().capitulos.where((c) => c.idLeccion == idLeccion).toList();
+
+  /// Calcula el progreso de una lección basado en capítulos completados.
+  double calcularProgresoLeccion(int idLeccion) {
+    final caps = capitulosDe(idLeccion);
+    if (caps.isEmpty) return 0.0;
+    
+    final completados = AppSession().completedCapitulos.value;
+    int count = 0;
+    for (var c in caps) {
+      if (completados.contains(c.idCapitulo)) count++;
+    }
+    return count / caps.length;
+  }
 
   // ── CREATE — Capítulo ──────────────────────────────────────────────────────
 

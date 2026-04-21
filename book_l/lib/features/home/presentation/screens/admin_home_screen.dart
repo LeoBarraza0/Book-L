@@ -1,9 +1,46 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 
-class AdminHomeScreen extends StatelessWidget {
+import '../controller/admin_home_controller.dart';
+import '../controller/admin_home_state.dart';
+import '../../../reportes/domain/entities/reporte.dart';
+import '../../../reportes/domain/usecases/get_estadisticas_reportes_usecase.dart';
+import '../../../reportes/data/repositories/reportes_repository_impl.dart';
+import '../../domain/entities/novedad.dart';
+import '../../domain/usecases/get_novedades_usecase.dart';
+
+AdminHomeController _buildController() {
+  final repo = ReportesRepositoryImpl();
+  return AdminHomeController(
+    getEstadisticasReportes: GetEstadisticasReportesUseCase(repo),
+    getNovedades: GetNovedadesUseCase(),
+  );
+}
+
+class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
+
+  @override
+  State<AdminHomeScreen> createState() => _AdminHomeScreenState();
+}
+
+class _AdminHomeScreenState extends State<AdminHomeScreen> {
+  late final AdminHomeController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = _buildController();
+    _controller.cargarDashboard();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,9 +64,15 @@ class AdminHomeScreen extends StatelessWidget {
                       const SizedBox(height: 30),
                       _buildQuickActionsGrid(context),
                       const SizedBox(height: 30),
-                      _buildActividadSection(),
+                      ListenableBuilder(
+                        listenable: _controller,
+                        builder: (context, _) => _buildActividadSection(),
+                      ),
                       const SizedBox(height: 30),
-                      _buildNovedadesSection(),
+                      ListenableBuilder(
+                        listenable: _controller,
+                        builder: (context, _) => _buildNovedadesSection(),
+                      ),
                       const SizedBox(height: 100), // Bottom nav space
                     ],
                   ),
@@ -197,6 +240,14 @@ class AdminHomeScreen extends StatelessWidget {
   }
 
   Widget _buildActividadSection() {
+    final state = _controller.state;
+    List<ReportePuntoChart> chartData = [];
+    PeriodoFiltro currentFiltro = _controller.periodoActual;
+
+    if (state is AdminHomeLoaded) {
+      chartData = state.chartData;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -207,7 +258,7 @@ class AdminHomeScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           child: const Text(
-            'Actividad',
+            'Actividad (Reportes)',
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -218,7 +269,7 @@ class AdminHomeScreen extends StatelessWidget {
         const SizedBox(height: 16),
         Container(
           width: double.infinity,
-          height: 200,
+          height: 220,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -231,13 +282,75 @@ class AdminHomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          child: CustomPaint(painter: _LineChartPainter()),
+          child: state is AdminHomeLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF4DC130)))
+              : state is AdminHomeError
+                  ? Center(
+                      child: Text(
+                        'Error al cargar',
+                        style: TextStyle(color: Colors.red.shade300),
+                      ),
+                    )
+                  : CustomPaint(
+                      painter: _LineChartPainter(chartData),
+                    ),
+        ),
+        const SizedBox(height: 16),
+        // BOTONES DE FILTRO ESTILO DASHBOARD PREMIUM
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildChartFilterButton('Diarios', PeriodoFiltro.diario, currentFiltro),
+            const SizedBox(width: 8),
+            _buildChartFilterButton('Semanales', PeriodoFiltro.semanal, currentFiltro),
+            const SizedBox(width: 8),
+            _buildChartFilterButton('Mensuales', PeriodoFiltro.mensual, currentFiltro),
+          ],
         ),
       ],
     );
   }
 
+  Widget _buildChartFilterButton(
+      String label, PeriodoFiltro targetFiltro, PeriodoFiltro currentFiltro) {
+    final isSelected = targetFiltro == currentFiltro;
+    return GestureDetector(
+      onTap: () => _controller.cambiarPeriodo(targetFiltro),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF4DC130) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? Colors.transparent : const Color(0xFFE0E0E0),
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF4DC130).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : const Color(0xFF676767),
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildNovedadesSection() {
+    final state = _controller.state;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -250,29 +363,40 @@ class AdminHomeScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        _buildNovedadCard(
-          tagLabel: 'Cálculo diferencial',
-          tagColor: const Color(0xFF4EBE59),
-          title: 'Derivadas',
-          subtitle: '1 Hora | 4.9 | 1.200 estudiantes',
-        ),
-        const SizedBox(height: 12),
-        _buildNovedadCard(
-          tagLabel: 'Álgebra lineal',
-          tagColor: const Color(0xFFF6B55C),
-          title: 'Matrices',
-          subtitle: '2 Horas | 4.8 | 800 estudiantes',
-        ),
+        if (state is AdminHomeLoading)
+          const Center(child: CircularProgressIndicator(color: Color(0xFF4DC130)))
+        else if (state is AdminHomeLoaded && state.novedades.isNotEmpty) ...
+          [
+            for (int i = 0; i < state.novedades.length; i++) ...[
+              _buildNovedadCard(state.novedades[i]),
+              if (i < state.novedades.length - 1) const SizedBox(height: 12),
+            ],
+          ]
+        else
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              'Sin novedades recientes.',
+              style: TextStyle(color: Colors.black54),
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildNovedadCard({
-    required String tagLabel,
-    required Color tagColor,
-    required String title,
-    required String subtitle,
-  }) {
+  Widget _buildNovedadCard(Novedad novedad) {
+    final IconData icon;
+    switch (novedad.tipo) {
+      case 'Curso':
+        icon = Icons.school_outlined;
+        break;
+      case 'Lección':
+        icon = Icons.menu_book_outlined;
+        break;
+      default:
+        icon = Icons.article_outlined;
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -289,15 +413,15 @@ class AdminHomeScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Thumbnail Placeholder
+          // Thumbnail con icono coloreado según tipo
           Container(
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: const Color(0xFFD9D9D9),
+              color: novedad.colorTema.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.class_outlined, color: Colors.black26),
+            child: Icon(icon, color: novedad.colorTema, size: 30),
           ),
           const SizedBox(width: 12),
           // Info
@@ -305,17 +429,18 @@ class AdminHomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Tag tipo (Curso / Lección / Capítulo)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: tagColor,
+                    color: novedad.colorTema,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    tagLabel,
+                    novedad.tipo,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
@@ -325,46 +450,36 @@ class AdminHomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  title,
+                  novedad.titulo,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  subtitle,
+                  '${novedad.autorNombre} · ${novedad.fechaRelativa}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF676767),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          // Actions / Info
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Icon(
-                Icons.favorite_border,
-                color: Color(0xFFFF606F),
-                size: 20,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: const [
-                  Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
-                  SizedBox(width: 4),
-                  Text(
-                    '4.9',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ],
+          // Indicador de nuevo
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: novedad.colorTema,
+              shape: BoxShape.circle,
+            ),
           ),
         ],
       ),
@@ -373,15 +488,25 @@ class AdminHomeScreen extends StatelessWidget {
 }
 
 class _LineChartPainter extends CustomPainter {
+  final List<ReportePuntoChart> data;
+
+  _LineChartPainter(this.data);
+
   @override
   void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
     final gridPaint = Paint()
       ..color = Colors.grey.withValues(alpha: 0.3)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
-    // Dash horizontal lines
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+    );
+
     int horizontalLines = 4;
+    // Líneas horizontales de guía
     for (int i = 0; i <= horizontalLines; i++) {
       double y = size.height * (i / horizontalLines);
       for (double x = 0; x < size.width; x += 10) {
@@ -389,31 +514,89 @@ class _LineChartPainter extends CustomPainter {
       }
     }
 
+    int maxVal = data.map((e) => e.cantidad).reduce(max);
+    if (maxVal == 0) maxVal = 1; // Prevenir division por 0
+
+    // Para evitar que los puntos toquen los costados, agreamos padding interno
+    final innerPaddingX = 20.0;
+    final availableWidth = size.width - (innerPaddingX * 2);
+    final spacingX = data.length > 1 ? availableWidth / (data.length - 1) : availableWidth;
+
+    List<Offset> points = [];
+
+    for (int i = 0; i < data.length; i++) {
+      final val = data[i].cantidad;
+      // Invertir Y porque 0 está arriba en el canvas
+      double x = innerPaddingX + (i * spacingX);
+      
+      // Dejamos 20% despacio en Y para no golpear el techo
+      final realHeight = size.height * 0.8;
+      double y = size.height - (realHeight * (val / maxVal));
+
+      // Si es un solo punto, lo dibujamos en el centro
+      if (data.length == 1) {
+        x = size.width / 2;
+      }
+      points.add(Offset(x, y));
+
+      // Dibujar Label (Lun, Mar, Sem, etc) en la parte de abajo
+      textPainter.text = TextSpan(
+        text: data[i].label,
+        style: const TextStyle(
+          color: Colors.grey,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(x - (textPainter.width / 2), size.height - 18), // Movido mas arriba pq se cortaba
+      );
+      
+      // Dibujar valor encima del punto principal
+      if (val > 0) {
+        textPainter.text = TextSpan(
+          text: val.toString(),
+          style: const TextStyle(
+            color: Color(0xFF4DC130),
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+        textPainter.layout();
+        textPainter.paint(
+          canvas,
+          Offset(x - (textPainter.width / 2), y - 20),
+        );
+      }
+    }
+
     final linePaint = Paint()
       ..color = const Color(0xFF4DC130)
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
     final path = Path();
-    path.moveTo(0, size.height * 0.7);
-    path.lineTo(size.width * 0.2, size.height * 0.5);
-    path.lineTo(size.width * 0.4, size.height * 0.6);
-    path.lineTo(size.width * 0.6, size.height * 0.2);
-    path.lineTo(size.width * 0.8, size.height * 0.4);
-    path.lineTo(size.width, size.height * 0.1);
+    if (points.isNotEmpty) {
+      path.moveTo(points.first.dx, points.first.dy);
+      for (int i = 1; i < points.length; i++) {
+        path.lineTo(points[i].dx, points[i].dy);
+      }
+      canvas.drawPath(path, linePaint);
 
-    canvas.drawPath(path, linePaint);
-
-    final fillPaint = Paint()
-      ..color = const Color(0xFF4DC130).withValues(alpha: 0.1)
-      ..style = PaintingStyle.fill;
-
-    final fillPath = Path.from(path);
-    fillPath.lineTo(size.width, size.height);
-    fillPath.lineTo(0, size.height);
-    fillPath.close();
-    canvas.drawPath(fillPath, fillPaint);
+      // Sombreado bajo la línea
+      final fillPaint = Paint()
+        ..color = const Color(0xFF4DC130).withValues(alpha: 0.1)
+        ..style = PaintingStyle.fill;
+      final fillPath = Path.from(path);
+      fillPath.lineTo(points.last.dx, size.height);
+      fillPath.lineTo(points.first.dx, size.height);
+      fillPath.close();
+      canvas.drawPath(fillPath, fillPaint);
+    }
 
     final dotPaint = Paint()
       ..color = Colors.white
@@ -424,15 +607,6 @@ class _LineChartPainter extends CustomPainter {
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
-    final points = [
-      Offset(0, size.height * 0.7),
-      Offset(size.width * 0.2, size.height * 0.5),
-      Offset(size.width * 0.4, size.height * 0.6),
-      Offset(size.width * 0.6, size.height * 0.2),
-      Offset(size.width * 0.8, size.height * 0.4),
-      Offset(size.width, size.height * 0.1),
-    ];
-
     for (var point in points) {
       canvas.drawCircle(point, 5, dotPaint);
       canvas.drawCircle(point, 5, borderDotPaint);
@@ -440,5 +614,7 @@ class _LineChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _LineChartPainter oldDelegate) {
+    return oldDelegate.data != data;
+  }
 }

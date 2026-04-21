@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
+import '../../../discusion/presentation/controller/discusion_controller.dart';
 import '../../../leccion/presentation/screens/leccion_detail_screen.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
 import '../controller/curso_controller.dart';
 import 'curso_editar_screen.dart';
-import '../../../../core/storage/local_storage.dart';
+import '../../../leccion/presentation/controller/leccion_controller.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
+import '../../../../core/storage/local_storage.dart';
 import '../../../../core/services/bookl_service.dart';
 
 class CursoDetailScreen extends StatefulWidget {
@@ -21,6 +23,7 @@ class CursoDetailScreen extends StatefulWidget {
 class _CursoDetailScreenState extends State<CursoDetailScreen> {
   int _selectedTab = 0;
   final CursoController _ctrl = CursoController();
+  final DiscusionController _discCtrl = DiscusionController();
 
   @override
   void initState() {
@@ -107,7 +110,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 400),
               opacity: _selectedTab == 1 ? 1.0 : 0.0,
-              child: const ComentarioInput(),
+              child: ComentarioInput(ctrl: _discCtrl),
             ),
           ),
 
@@ -329,29 +332,39 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 ],
               ),
             ),
-            const SizedBox(
-              width: 65,
-              height: 65,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 65,
-                    height: 65,
-                    child: CircularProgressIndicator(
-                      value: 0.2,
-                      strokeWidth: 6,
-                      backgroundColor: Color(0xFFD9D9D9),
-                      color: Color(0xFF4DC130),
-                      strokeAlign: CircularProgressIndicator.strokeAlignCenter,
-                    ),
+            ListenableBuilder(
+              listenable: AppSession().completedCapitulos,
+              builder: (context, _) {
+                final progress = curso != null 
+                    ? _ctrl.calcularProgresoCurso(curso.idCurso) 
+                    : 0.0;
+                final percent = (progress * 100).toInt();
+
+                return SizedBox(
+                  width: 65,
+                  height: 65,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 65,
+                        height: 65,
+                        child: CircularProgressIndicator(
+                          value: progress,
+                          strokeWidth: 6,
+                          backgroundColor: const Color(0xFFD9D9D9),
+                          color: const Color(0xFF4DC130),
+                          strokeAlign: CircularProgressIndicator.strokeAlignCenter,
+                        ),
+                      ),
+                      Text(
+                        '$percent%',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '20%',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ],
         );
@@ -494,7 +507,14 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
 
   Widget _buildDiscusionContent() {
     return Column(
-      children: const [SizedBox(height: 10), DiscusionScreen(showRating: true)],
+      children: [
+        const SizedBox(height: 10),
+        DiscusionScreen(
+          showRating: true,
+          idCurso: widget.idCurso,
+          controller: _discCtrl,
+        )
+      ],
     );
   }
 
@@ -774,28 +794,37 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                     },
                   ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        value: progress,
-                        backgroundColor: Colors.transparent,
-                        color: const Color(0xFF4DC130),
-                        strokeWidth: 4,
-                        strokeCap: StrokeCap.round,
+                ListenableBuilder(
+                  listenable: AppSession().completedCapitulos,
+                  builder: (context, _) {
+                    final dynProgress = idLeccion != null 
+                        ? LeccionController().calcularProgresoLeccion(idLeccion)
+                        : 0.0;
+                    
+                    return SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            value: dynProgress,
+                            backgroundColor: Colors.transparent,
+                            color: const Color(0xFF4DC130),
+                            strokeWidth: 4,
+                            strokeCap: StrokeCap.round,
+                          ),
+                          Text(
+                            '${(dynProgress * 100).toInt()}%',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '${(progress * 100).toInt()}%',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ],
             ),
