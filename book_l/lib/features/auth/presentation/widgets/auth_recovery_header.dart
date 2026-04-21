@@ -12,7 +12,7 @@ class AuthRecoveryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 300,
+      height: 280,
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -32,47 +32,58 @@ class AuthRecoveryHeader extends StatelessWidget {
           children: [
             const SizedBox(height: 10),
 
-            // Botón volver
+            // Top Row: Botón Volver y Logo
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4DC130).withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Color(0xFF4DC130),
-                      size: 20,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF94D684),
+                      shape: BoxShape.circle,
                     ),
-                    onPressed: () => Navigator.pop(context),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
-                ),
+                  Image.asset(
+                    'assets/images/Book-L.png',
+                    height: 35,
+                    fit: BoxFit.contain,
+                  ),
+                ],
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
+            
+            // Icono Central
             SvgPicture.asset(
               'assets/images/padlock_icon.svg',
               height: 90,
+              width: 90,
               fit: BoxFit.contain,
             ),
 
             const SizedBox(height: 20),
 
-            // 📝 Título
+            // Título
             Text(
               title,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: Color(0xFF4A4A4A),
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF737373),
+                fontFamily: 'Inter',
                 letterSpacing: -0.3,
               ),
             ),

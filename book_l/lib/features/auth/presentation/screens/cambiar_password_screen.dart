@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/auth_recovery_header.dart';
 import '../widgets/auth_pro_tip.dart';
+import '../../../../shared/widgets/custom_text_field.dart';
 
 class CambiarPasswordScreen extends StatefulWidget {
   const CambiarPasswordScreen({super.key});
@@ -22,11 +23,29 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
   bool _hasSpecialChar = false;
   bool _passwordsMatch = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _newPassController.addListener(() {
+      _validatePassword(_newPassController.text);
+    });
+    _confirmPassController.addListener(() {
+      _validateConfirm(_confirmPassController.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    _newPassController.dispose();
+    _confirmPassController.dispose();
+    super.dispose();
+  }
+
   void _validatePassword(String value) {
     setState(() {
       _hasEightChars = value.length >= 8;
       _hasUppercase = value.contains(RegExp(r'[A-Z]'));
-      _hasSpecialChar = value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+      _hasSpecialChar = value.contains(RegExp(r'[^a-zA-Z0-9\s]'));
       _passwordsMatch =
           value == _confirmPassController.text && value.isNotEmpty;
     });
@@ -68,13 +87,19 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
                   ),
                   const SizedBox(height: 20),
                   
-                  _buildLabel('Nueva contraseña:'),
-                  _buildPasswordField(
+                  CustomTextField(
                     controller: _newPassController,
-                    obscure: _obscureNew,
-                    onChanged: _validatePassword,
-                    toggleObscure: () =>
-                        setState(() => _obscureNew = !_obscureNew),
+                    label: 'Nueva contraseña:',
+                    hint: 'Ingrese su nueva contraseña',
+                    obscureText: _obscureNew,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureNew ? Icons.visibility_off : Icons.visibility,
+                        color: const Color(0xFF828282),
+                        size: 20,
+                      ),
+                      onPressed: () => setState(() => _obscureNew = !_obscureNew),
+                    ),
                   ),
                   const SizedBox(height: 15),
                   _buildStrengthIndicator(),
@@ -87,13 +112,19 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
                       'Un carácter especial (!@#)', _hasSpecialChar),
                       
                   const SizedBox(height: 30),
-                  _buildLabel('Confirmar contraseña:'),
-                  _buildPasswordField(
+                  CustomTextField(
                     controller: _confirmPassController,
-                    obscure: _obscureConfirm,
-                    onChanged: _validateConfirm,
-                    toggleObscure: () =>
-                        setState(() => _obscureConfirm = !_obscureConfirm),
+                    label: 'Confirmar contraseña:',
+                    hint: 'Confirme su nueva contraseña',
+                    obscureText: _obscureConfirm,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                        color: const Color(0xFF828282),
+                        size: 20,
+                      ),
+                      onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   _buildCheckItem('Las contraseñas coinciden', _passwordsMatch),
@@ -104,10 +135,11 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
                       width: 220,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: (_hasEightChars &&
-                                _hasUppercase &&
-                                _hasSpecialChar &&
-                                _passwordsMatch)
+                        onPressed: (_passwordsMatch &&
+                                ((_hasEightChars ? 1 : 0) +
+                                        (_hasUppercase ? 1 : 0) +
+                                        (_hasSpecialChar ? 1 : 0)) >=
+                                    2)
                             ? () {
                                 Navigator.pushNamedAndRemoveUntil(
                                     context, '/login', (route) => false);
@@ -161,60 +193,7 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
     );
   }
 
-  Widget _buildPasswordField({
-    required TextEditingController controller,
-    required bool obscure,
-    required Function(String) onChanged,
-    required VoidCallback toggleObscure,
-  }) {
-    return Container(
-      width: double.infinity,
-      height: 58,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E5E5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscure,
-        onChanged: onChanged,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-            color: Color(0xFF2E2E2E),
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Inter',
-            fontSize: 16),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          prefixIcon: Padding(
-            padding: const EdgeInsets.all(14.0),
-            child: SvgPicture.asset(
-              'assets/images/padlock_icon.svg',
-              colorFilter: const ColorFilter.mode(
-                Color(0xFF4DC130),
-                BlendMode.srcIn,
-              ),
-            ),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          suffixIcon: IconButton(
-            icon: Icon(obscure ? Icons.visibility_off : Icons.visibility,
-                color: const Color(0xFFBDBDBD), size: 22),
-            onPressed: toggleObscure,
-          ),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildCheckItem(String label, bool isChecked) {
     return Padding(

@@ -13,23 +13,10 @@ class _BienvenidaScreenState extends State<BienvenidaScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<OnboardingData> _pages = [
-    OnboardingData(
-      title: 'Aprende a tu ritmo',
-      subtitle: 'Lecciones cortas y enfocadas para avanzar cada dia.',
-      image: 'assets/images/picstart_1.svg',
-      buttonText: 'Siguiente',
-    ),
-    OnboardingData(
-      title: 'Mide tu progreso',
-      subtitle: 'Dashboards y evaluaciones para monitorear tus avances.',
-      image: 'assets/images/picstart_2.svg',
-      buttonText: 'Comenzar',
-    ),
-  ];
+  final List<String> _buttonTexts = ['Siguiente', 'Comenzar'];
 
   void _onNext() {
-    if (_currentPage < _pages.length - 1) {
+    if (_currentPage < 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -69,24 +56,106 @@ class _BienvenidaScreenState extends State<BienvenidaScreen> {
               ),
             ),
             Expanded(
-              child: PageView.builder(
+              child: PageView(
                 controller: _pageController,
                 onPageChanged: (index) {
                   setState(() {
                     _currentPage = index;
                   });
                 },
-                itemCount: _pages.length,
-                itemBuilder: (context, index) {
-                  return _buildPage(_pages[index]);
-                },
+                children: [
+                  Center(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 20),
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.35,
+                              width: MediaQuery.of(context).size.width * 0.8,
+                              child: SvgPicture.asset(
+                                'assets/images/picstart_1.svg',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                            const SizedBox(height: 40),
+                            const Text(
+                              'Aprende a tu ritmo',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xCC000000),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              'Lecciones cortas y enfocadas para avanzar cada dia.',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0x99000000),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Center(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 20),
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.35,
+                              width: MediaQuery.of(context).size.width * 0.8,
+                              child: SvgPicture.asset(
+                                'assets/images/picstart_2.svg',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                            const SizedBox(height: 40),
+                            const Text(
+                              'Mide tu progreso',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xCC000000),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              'Dashboards y evaluaciones para monitorear tus avances.',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0x99000000),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                _pages.length,
+                2,
                 (index) => _buildDot(index),
               ),
             ),
@@ -106,7 +175,7 @@ class _BienvenidaScreenState extends State<BienvenidaScreen> {
                     elevation: 0,
                   ),
                   child: Text(
-                    _pages[_currentPage].buttonText,
+                    _buttonTexts[_currentPage],
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -123,76 +192,26 @@ class _BienvenidaScreenState extends State<BienvenidaScreen> {
     );
   }
 
-  Widget _buildPage(OnboardingData data) {
-    return Center(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 20),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 300),
-                child: SvgPicture.asset(
-                  data.image,
-                  height: MediaQuery.of(context).size.height * 0.35,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              const SizedBox(height: 40),
-              Text(
-                data.title,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xCC000000),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              Text(
-                data.subtitle,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Color(0x99000000),
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
+  Widget _buildDot(int index) {
+    return GestureDetector(
+      onTap: () {
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      },
+      child: Container(
+        height: 13,
+        width: 13,
+        margin: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: _currentPage == index
+              ? const Color(0xFF4DC130)
+              : const Color(0xFFD9D9D9),
+          shape: BoxShape.circle,
         ),
       ),
     );
   }
-
-  Widget _buildDot(int index) {
-    return Container(
-      height: 13,
-      width: 13,
-      margin: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: _currentPage == index
-            ? const Color(0xFF4DC130)
-            : const Color(0xFFD9D9D9),
-        shape: BoxShape.circle,
-      ),
-    );
-  }
-}
-
-class OnboardingData {
-  final String title;
-  final String subtitle;
-  final String image;
-  final String buttonText;
-
-  OnboardingData({
-    required this.title,
-    required this.subtitle,
-    required this.image,
-    required this.buttonText,
-  });
 }

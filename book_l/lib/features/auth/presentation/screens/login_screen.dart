@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/book_l_header.dart';
 import '../../../../core/services/bookl_service.dart';
@@ -150,11 +152,34 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 2),
 
           GestureDetector(
-            onTap: () {
+            onTap: () async {
               final email = _emailController.text.trim();
               if (email.isNotEmpty) {
-                _ctrl.setRecoveryData(email);
-                Navigator.pushNamed(context, '/recuperar_correo');
+                try {
+                  final String jsonString = await rootBundle.loadString('assets/data/bookl_data.json');
+                  final Map<String, dynamic> jsonData = json.decode(jsonString);
+                  final List<dynamic> users = jsonData['usuarios'];
+                  
+                  final bool userExists = users.any((u) => u['correo'] == email);
+                  
+                  if (!mounted) return;
+                  
+                  if (userExists) {
+                    _ctrl.setRecoveryData(email);
+                    Navigator.pushNamed(context, '/recuperar_correo');
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No existe una cuenta con este correo'),
+                        backgroundColor: Color(0xFFFF5252),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (!mounted) return;
+                  _ctrl.setRecoveryData(email);
+                  Navigator.pushNamed(context, '/recuperar_correo');
+                }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

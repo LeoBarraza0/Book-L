@@ -24,12 +24,10 @@ class AuthProTip extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             padding: const EdgeInsets.all(10),
-            child: SvgPicture.asset(
-              'assets/images/padlock_icon.svg',
-              colorFilter: const ColorFilter.mode(
-                const Color(0xFF4DC130),
-                BlendMode.srcIn,
-              ),
+            child: const Icon(
+              Icons.menu_book,
+              color: Color(0xFF4DC130),
+              size: 26,
             ),
           ),
           const SizedBox(width: 15),
