@@ -17,7 +17,13 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
   final _leccionCtrl = LeccionController();
   String _query = '';
 
-  final List<String> _filtros = ['Todas', 'Recientes', 'Calificación', 'Populares', 'Duración'];
+  final List<String> _filtros = [
+    'Todas',
+    'Recientes',
+    'Calificación',
+    'Activas',
+    'Inactivas'
+  ];
   int _filtroSeleccionado = 0;
 
   @override
@@ -30,6 +36,36 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  List<Leccion> _applyFilters(List<Leccion> items) {
+    var result = items.toList();
+
+    // 1. Filtrar por texto
+    if (_query.isNotEmpty) {
+      result = result
+          .where((l) => l.nombre.toLowerCase().contains(_query.toLowerCase()))
+          .toList();
+    }
+
+    // 2. Filtrar por estado / Ordenar
+    switch (_filtroSeleccionado) {
+      case 1: // Recientes
+        result.sort((a, b) =>
+            (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+        break;
+      case 2: // Calificación
+        result.sort((a, b) => b.rating.compareTo(a.rating));
+        break;
+      case 3: // Activas
+        result = result.where((l) => l.estado == 'activa').toList();
+        break;
+      case 4: // Inactivas
+        result = result.where((l) => l.estado == 'inactiva').toList();
+        break;
+    }
+
+    return result;
   }
 
   @override
@@ -45,62 +81,68 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── HEADER: SVG completo como fondo con overlay de contenido
-              SizedBox(
-                height: 200,
-                child: Stack(
-                  children: [
-                    // Fondo SVG
-                    SvgPicture.asset(
-                      'assets/images/green_bg.svg',
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                    // Botón atrás (esquina superior izquierda)
-                    Positioned(
-                      top: topPadding + 8,
-                      left: 20,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            '/admin_Home',
-                          );
-                        },
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 24,
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+                child: SizedBox(
+                  height: 200,
+                  child: Stack(
+                    children: [
+                      // Fondo SVG
+                      SvgPicture.asset(
+                        'assets/images/green_bg.svg',
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                      // ... rest of the Stack children
+                      // Botón atrás (esquina superior izquierda)
+                      Positioned(
+                        top: topPadding + 8,
+                        left: 20,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/admin_Home',
+                            );
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    // Título "Lecciones" (centrado horizontalmente y con ajuste vertical)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      top:
-                          80, // Se cambia este valor para subir o bajar el título
-                      child: const Center(
-                        child: Text(
-                          'Lecciones',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 40,
-                            fontFamily: 'Baloo',
-                            fontWeight: FontWeight.w400,
+                      // Título "Lecciones"
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        top: 80,
+                        child: const Center(
+                          child: Text(
+                            'Lecciones',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 40,
+                              fontFamily: 'Baloo',
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
@@ -120,7 +162,8 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                       },
                       filtros: _filtros,
                       filtroSeleccionado: _filtroSeleccionado,
-                      onFiltroChanged: (index) => setState(() => _filtroSeleccionado = index),
+                      onFiltroChanged: (index) =>
+                          setState(() => _filtroSeleccionado = index),
                     ),
                     Expanded(
                       child: ListenableBuilder(
@@ -133,19 +176,14 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                                   color: Color(0xFF4DC130)),
                             );
                           }
-                          var lecciones = state.items.toList();
-                          if (_query.isNotEmpty) {
-                            lecciones = lecciones
-                                .where((l) => l.nombre
-                                    .toLowerCase()
-                                    .contains(_query.toLowerCase()))
-                                .toList();
-                          }
+
+                          final lecciones = _applyFilters(state.items);
+
                           if (lecciones.isEmpty) {
                             return const Center(
                                 child: Text('No hay lecciones disponibles',
-                                    style: TextStyle(
-                                        color: Color(0xFF888888))));
+                                    style:
+                                        TextStyle(color: Color(0xFF888888))));
                           }
                           return ListView.builder(
                             padding: const EdgeInsets.only(
@@ -220,8 +258,8 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
               children: [
                 // Estado badge
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
                     color: item.estado == 'activa'
                         ? const Color(0xFF67C947)
@@ -251,9 +289,7 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  nCapitulos == 1
-                      ? '1 Capítulo'
-                      : '$nCapitulos Capítulos',
+                  nCapitulos == 1 ? '1 Capítulo' : '$nCapitulos Capítulos',
                   style: const TextStyle(
                       fontSize: 12,
                       color: Color(0xFF888888),
@@ -293,8 +329,7 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                   splashColor: Colors.black.withValues(alpha: 0.18),
                   child: Container(
                     height: 28,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -320,8 +355,7 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                   splashColor: Colors.black.withValues(alpha: 0.18),
                   child: Container(
                     height: 28,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -397,8 +431,7 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                     TextButton(
                       onPressed: () async {
                         Navigator.pop(ctx);
-                        await _leccionCtrl
-                            .eliminarLeccion(item.idLeccion);
+                        await _leccionCtrl.eliminarLeccion(item.idLeccion);
                       },
                       child: const Text('Aceptar',
                           style: TextStyle(

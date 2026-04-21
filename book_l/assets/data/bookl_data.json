@@ -13,7 +13,7 @@
       "celular": 3001234567,
       "semestre": 8,
       "nacimiento": "2000-05-15",
-      "programa": "Ingenieria de Sistemas",
+      "programa": "Ingeniería de Sistemas",
       "preferencias": {
         "intereses": [
           "matematicas",
@@ -34,7 +34,7 @@
       "celular": 3009876543,
       "semestre": 5,
       "nacimiento": "2002-11-20",
-      "programa": "Psicologia",
+      "programa": "Psicología",
       "preferencias": {
         "intereses": [
           "salud_mental",
@@ -55,7 +55,7 @@
       "celular": 3101122334,
       "semestre": 10,
       "nacimiento": "1998-05-15",
-      "programa": "Ingenieria de Sistemas",
+      "programa": "Ingeniería de Sistemas",
       "preferencias": {
         "intereses": [
           "inteligencia_artificial",
@@ -118,7 +118,7 @@
       "celular": 3158877665,
       "semestre": 2,
       "nacimiento": "2004-08-30",
-      "programa": "Ingenieria de Sistemas",
+      "programa": "Ingeniería de Sistemas",
       "preferencias": {
         "intereses": [
           "administracion",
@@ -560,5 +560,17 @@
       "motivo": "Información desactualizada respecto a las últimas reformas constitucionales.",
       "created_at": "2026-03-20T16:45:00"
     }
+  ],
+  "programas": [
+    "Ingeniería de Sistemas",
+    "Ingeniería Industrial",
+    "Ingeniería Civil",
+    "Contaduría Pública",
+    "Administración de Empresas",
+    "Derecho",
+    "Medicina",
+    "Psicología",
+    "Enfermería",
+    "Arquitectura"
   ]
 }

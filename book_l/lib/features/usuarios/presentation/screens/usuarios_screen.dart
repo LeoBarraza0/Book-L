@@ -62,7 +62,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
     } else if (_filtroSeleccionado == 3) {
       result = result.where((u) => !u.activo).toList();
     }
-    
+
     if (_query.isNotEmpty) {
       result = result
           .where((u) =>
@@ -96,28 +96,52 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // ── HEADER: Imagen PNG de fondo con overlay de contenido ──
-                  SizedBox(
-                    height: 200,
-                    child: Stack(
-                      children: [
-                        // Fondo PNG
-                        Positioned.fill(
-                          child: Image.asset(
-                            'assets/images/yellow_bg.png',
-                            fit: BoxFit.cover,
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                    child: SizedBox(
+                      height: 200,
+                      child: Stack(
+                        children: [
+                          // Fondo PNG
+                          Positioned.fill(
+                            child: Image.asset(
+                              'assets/images/yellow_bg.png',
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                        ),
-                        // Botón atrás (esquina superior izquierda)
-                        Positioned(
-                          top: topPadding + 8,
-                          left: 20,
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.pushReplacementNamed(
-                                context,
-                                '/admin_Home',
-                              );
-                            },
+                          // Botón atrás (esquina superior izquierda)
+                          Positioned(
+                            top: topPadding + 8,
+                            left: 20,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  '/admin_Home',
+                                );
+                              },
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_back,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Icono campana (esquina superior derecha)
+                          Positioned(
+                            top: topPadding + 8,
+                            right: 20,
                             child: Container(
                               width: 40,
                               height: 40,
@@ -126,49 +150,31 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
-                                Icons.arrow_back,
+                                Icons.notifications_none,
                                 color: Colors.white,
                                 size: 24,
                               ),
                             ),
                           ),
-                        ),
-                        // Icono campana (esquina superior derecha)
-                        Positioned(
-                          top: topPadding + 8,
-                          right: 20,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.notifications_none,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                        ),
-                        // Título "Usuarios"
-                        const Positioned(
-                          left: 0,
-                          right: 0,
-                          top: 80,
-                          child: Center(
-                            child: Text(
-                              'Usuarios',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 40,
-                                fontFamily: 'Baloo',
-                                fontWeight: FontWeight.w400,
+                          // Título "Usuarios"
+                          const Positioned(
+                            left: 0,
+                            right: 0,
+                            top: 80,
+                            child: Center(
+                              child: Text(
+                                'Usuarios',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 40,
+                                  fontFamily: 'Baloo',
+                                  fontWeight: FontWeight.w400,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 
@@ -442,7 +448,8 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                     height: 32,
                     width: 32,
                     alignment: Alignment.center,
-                    child: const Icon(Icons.edit, color: Colors.white, size: 18),
+                    child:
+                        const Icon(Icons.edit, color: Colors.white, size: 18),
                   ),
                 ),
               ),
@@ -458,7 +465,8 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                     height: 32,
                     width: 32,
                     alignment: Alignment.center,
-                    child: const Icon(Icons.delete_outline, color: Colors.white, size: 18),
+                    child: const Icon(Icons.delete_outline,
+                        color: Colors.white, size: 18),
                   ),
                 ),
               ),

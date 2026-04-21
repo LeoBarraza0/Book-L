@@ -58,6 +58,7 @@ class BooklService extends ChangeNotifier {
   List<Configuracion> configuraciones = [];
   List<Map<String, dynamic>> sugerencias = [];
   List<Map<String, dynamic>> reportes = [];
+  List<String> programas = [];
 
   // Pivote M:N lecciones ↔ cursos
   // Cada elemento es { 'id_leccion': int, 'id_curso': int }
@@ -86,6 +87,11 @@ class BooklService extends ChangeNotifier {
       final raw = await rootBundle.loadString('assets/data/bookl_data.json');
       data = json.decode(raw);
     }
+
+    // Cargar datos estáticos directamente del JSON (no se persisten simuladamente)
+    final rawStatic = await rootBundle.loadString('assets/data/bookl_data.json');
+    final staticData = json.decode(rawStatic);
+    programas = List<String>.from(staticData['programas'] ?? []);
 
     usuariosDto = (data['usuarios'] as List)
         .map((e) => UsuarioDto.fromJson(e as Map<String, dynamic>))
