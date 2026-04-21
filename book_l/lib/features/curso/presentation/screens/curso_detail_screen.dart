@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
+import '../../../discusion/presentation/controller/discusion_controller.dart';
 import '../../../leccion/presentation/screens/leccion_detail_screen.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
 import '../controller/curso_controller.dart';
 import 'curso_editar_screen.dart';
 import '../../../leccion/presentation/controller/leccion_controller.dart';
-import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../../core/services/bookl_service.dart';
@@ -23,6 +23,7 @@ class CursoDetailScreen extends StatefulWidget {
 class _CursoDetailScreenState extends State<CursoDetailScreen> {
   int _selectedTab = 0;
   final CursoController _ctrl = CursoController();
+  final DiscusionController _discCtrl = DiscusionController();
 
   @override
   void initState() {
@@ -109,7 +110,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 400),
               opacity: _selectedTab == 1 ? 1.0 : 0.0,
-              child: const ComentarioInput(),
+              child: ComentarioInput(ctrl: _discCtrl),
             ),
           ),
 
@@ -506,7 +507,14 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
 
   Widget _buildDiscusionContent() {
     return Column(
-      children: const [SizedBox(height: 10), DiscusionScreen(showRating: true)],
+      children: [
+        const SizedBox(height: 10),
+        DiscusionScreen(
+          showRating: true,
+          idCurso: widget.idCurso,
+          controller: _discCtrl,
+        )
+      ],
     );
   }
 

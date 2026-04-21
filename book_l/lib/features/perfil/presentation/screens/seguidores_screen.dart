@@ -1,62 +1,116 @@
 import 'package:flutter/material.dart';
-import 'usuario_perfil_screen.dart';
+import 'perfil_screen.dart';
+import '../../../../core/services/bookl_service.dart';
+import '../../../../core/storage/local_storage.dart';
+import '../../../auth/domain/entities/usuario.dart';
 
-class SeguidoresScreen extends StatelessWidget {
-  const SeguidoresScreen({super.key});
+class SeguidoresScreen extends StatefulWidget {
+  final int idUsuarioFocus;
+  final bool isSeguidores;
+
+  const SeguidoresScreen({
+    super.key,
+    required this.idUsuarioFocus,
+    this.isSeguidores = true,
+  });
+
+  @override
+  State<SeguidoresScreen> createState() => _SeguidoresScreenState();
+}
+
+class _SeguidoresScreenState extends State<SeguidoresScreen> {
+  List<Usuario> usuariosList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  void _loadData() {
+    final bookl = BooklService();
+    if (widget.isSeguidores) {
+      // Seguidores del usuario focus (id_seguido = focus, buscando id_seguidor)
+      final refs = bookl.seguidores
+          .where((s) => s['id_seguido'] == widget.idUsuarioFocus && s['estado'] == 'activo')
+          .map((s) => s['id_seguidor'] as int)
+          .toList();
+      usuariosList = bookl.usuarios.where((u) => refs.contains(u.idUsuario)).toList();
+    } else {
+      // Usuarios a los que sigue el focus (id_seguidor = focus, buscando id_seguido)
+      final refs = bookl.seguidores
+          .where((s) => s['id_seguidor'] == widget.idUsuarioFocus && s['estado'] == 'activo')
+          .map((s) => s['id_seguido'] as int)
+          .toList();
+      usuariosList = bookl.usuarios.where((u) => refs.contains(u.idUsuario)).toList();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FB), // General BackGround
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFF88D288),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-              onPressed: () {
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ),
-        ),
-        title: const Text(
-          'Seguidores',
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        centerTitle: true,
-      ),
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 20),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: 15, // Followers Placeholder
-                itemBuilder: (context, index) {
-                  return _buildSeguidorItem(
-                    context: context,
-                    name: 'Usuario ${index + 1}',
-                    username: '@user${index + 1}',
-                    imageUrl:
-                        'https://ui-avatars.com/api/?name=User+${index + 1}&background=random', // Random Images
-                    isFollowing: index % 3 == 0,
-                  );
-                },
+            const SizedBox(height: 10),
+            // Custom Header alineado idéntico al de PerfilScreen
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF88D288),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                      onPressed: () {
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        }
+                      },
+                    ),
+                  ),
+                  Text(
+                    widget.isSeguidores ? 'Seguidores' : 'Seguidos',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(width: 48), // Spacer to balance back button
+                ],
               ),
+            ),
+            const SizedBox(height: 25),
+            Expanded(
+              child: usuariosList.isEmpty
+                  ? Center(
+                      child: Text(
+                        widget.isSeguidores 
+                            ? 'No tiene seguidores aún.' 
+                            : 'No sigue a nadie.',
+                        style: const TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: usuariosList.length,
+                      itemBuilder: (context, index) {
+                        return _buildSeguidorItem(
+                          context: context,
+                          usuario: usuariosList[index],
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -66,23 +120,24 @@ class SeguidoresScreen extends StatelessWidget {
 
   Widget _buildSeguidorItem({
     required BuildContext context,
-    required String name,
-    required String username,
-    required String imageUrl,
-    required bool isFollowing,
+    required Usuario usuario,
   }) {
+    final usernameStr = '@${usuario.nombreCompleto.replaceAll(" ", "").toLowerCase()}';
+    final avatar = usuario.avatarUrl ?? 'https://ui-avatars.com/api/?name=${usuario.nombreCompleto}&background=random';
+    
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UsuarioPerfilScreen(
-              name: name,
-              username: username,
-              imageUrl: imageUrl,
-            ),
+            builder: (context) => PerfilScreen(idUsuario: usuario.idUsuario),
           ),
-        );
+        ).then((_) {
+            // Actualizar vista al regresar por si cambió el estado siguiendo
+            setState(() {
+              _loadData();
+            });
+        });
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
@@ -111,7 +166,7 @@ class SeguidoresScreen extends StatelessWidget {
               child: CircleAvatar(
                 radius: 25,
                 backgroundColor: Colors.white,
-                backgroundImage: NetworkImage(imageUrl),
+                backgroundImage: NetworkImage(avatar),
               ),
             ),
             const SizedBox(width: 15),
@@ -122,7 +177,9 @@ class SeguidoresScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    name,
+                    usuario.nombreCompleto,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -130,34 +187,45 @@ class SeguidoresScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    username,
+                    usernameStr,
                     style: const TextStyle(color: Colors.grey, fontSize: 13),
                   ),
                 ],
               ),
             ),
 
-            // Action Button
-            ElevatedButton(
-              onPressed: () {
-                // Logic to follow or unfollow
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isFollowing
-                    ? const Color(0xFFE3EFFC)
-                    : const Color(0xFF4DC130),
-                foregroundColor: isFollowing ? Colors.black87 : Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                minimumSize: const Size(0, 36),
-              ),
-              child: Text(
-                isFollowing ? 'Siguiendo' : 'Seguir',
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-              ),
+            // Action Button reactivo
+            ListenableBuilder(
+              listenable: BooklService(),
+              builder: (context, _) {
+                final myId = AppSession().usuarioId ?? 0;
+                if (myId == usuario.idUsuario) {
+                  return const SizedBox.shrink(); // Es el usuario mismo
+                }
+                final isFollowing = BooklService().isFollowing(myId, usuario.idUsuario);
+                
+                return ElevatedButton(
+                  onPressed: () {
+                    BooklService().toggleSeguir(myId, usuario.idUsuario);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isFollowing
+                        ? const Color(0xFFE3EFFC)
+                        : const Color(0xFF4DC130),
+                    foregroundColor: isFollowing ? Colors.black87 : Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    minimumSize: const Size(0, 36),
+                  ),
+                  child: Text(
+                    isFollowing ? 'Siguiendo' : 'Seguir',
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                );
+              }
             ),
           ],
         ),

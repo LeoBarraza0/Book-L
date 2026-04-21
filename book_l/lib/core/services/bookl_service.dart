@@ -14,6 +14,9 @@ import '../../features/leccion/domain/entities/leccion.dart';
 import '../../features/leccion/domain/entities/material_educativo.dart';
 import '../../features/configuracion/data/dto/configuracion_dto.dart';
 import '../../features/configuracion/domain/entities/configuracion.dart';
+import '../../features/discusion/domain/entities/discusion.dart';
+import '../../features/discusion/domain/entities/comentario.dart';
+import '../../features/discusion/data/dto/discusion_dto.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -63,6 +66,12 @@ class BooklService extends ChangeNotifier {
   // Pivote M:N lecciones ↔ cursos
   // Cada elemento es { 'id_leccion': int, 'id_curso': int }
   List<Map<String, int>> leccionesCursos = [];
+
+  List<Map<String, dynamic>> seguidores = [];
+
+  // Discusiones y comentarios
+  List<Discusion> discusiones = [];
+  List<Comentario> comentarios = [];
 
   // ── Inicialización (llamar una sola vez desde main.dart) ───────────────────
   Future<void> init() async {
@@ -134,6 +143,28 @@ class BooklService extends ChangeNotifier {
       sugerencias = [];
     }
 
+    if (data.containsKey('seguidores')) {
+      seguidores = List<Map<String, dynamic>>.from(data['seguidores']);
+    } else {
+      seguidores = [];
+    }
+
+    if (data.containsKey('discusiones')) {
+      discusiones = (data['discusiones'] as List)
+          .map((e) => DiscusionDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      discusiones = [];
+    }
+
+    if (data.containsKey('comentarios')) {
+      comentarios = (data['comentarios'] as List)
+          .map((e) => ComentarioDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      comentarios = [];
+    }
+
     // ── Cargar Reportes con MERGE de Assets ─────────────────────────────────
     if (data.containsKey('reportes')) {
       reportes = List<Map<String, dynamic>>.from(data['reportes']);
@@ -174,6 +205,9 @@ class BooklService extends ChangeNotifier {
         'materiales': materiales.map((m) => MaterialDto.toJson(m)).toList(),
         'configuraciones': configuraciones.map((c) => ConfiguracionDto.fromEntity(c).toJson()).toList(),
         'sugerencias': sugerencias,
+        'seguidores': seguidores,
+        'discusiones': discusiones.map((d) => DiscusionDto.toJson(d)).toList(),
+        'comentarios': comentarios.map((c) => ComentarioDto.toJson(c)).toList(),
         'reportes': reportes,
         'lecciones_cursos': leccionesCursos,
       };
@@ -245,6 +279,56 @@ class BooklService extends ChangeNotifier {
   void saveSugerencia(Map<String, dynamic> sugerencia) {
     sugerencias.add(sugerencia);
     _save();
+  }
+
+  // ── Operaciones Discusión ─────────────────────────────────────────────────
+  void addDiscusion(Discusion d) {
+    discusiones.add(d);
+    _save();
+  }
+
+  void addComentario(Comentario c) {
+    comentarios.add(c);
+    _save();
+  }
+
+  int getComentariosCount(int idDiscusion) {
+    return comentarios.where((c) => c.idDiscusionFk == idDiscusion).length;
+  }
+
+  bool isFollowing(int idSeguidor, int idSeguido) {
+    return seguidores.any((s) =>
+        s['id_seguidor'] == idSeguidor &&
+        s['id_seguido'] == idSeguido &&
+        s['estado'] == 'activo');
+  }
+
+  void toggleSeguir(int idSeguidor, int idSeguido) {
+    final idx = seguidores.indexWhere(
+        (s) => s['id_seguidor'] == idSeguidor && s['id_seguido'] == idSeguido);
+    if (idx != -1) {
+      if (seguidores[idx]['estado'] == 'activo') {
+        seguidores[idx]['estado'] = 'bloqueado';
+      } else {
+        seguidores[idx]['estado'] = 'activo';
+      }
+    } else {
+      seguidores.add({
+        'id_seguidor': idSeguidor,
+        'id_seguido': idSeguido,
+        'estado': 'activo',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    }
+    _save();
+  }
+
+  int getFollowersCount(int idUsuario) {
+    return seguidores.where((s) => s['id_seguido'] == idUsuario && s['estado'] == 'activo').length;
+  }
+
+  int getFollowingCount(int idUsuario) {
+    return seguidores.where((s) => s['id_seguidor'] == idUsuario && s['estado'] == 'activo').length;
   }
 
   void clearAllData() async {
