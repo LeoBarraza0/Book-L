@@ -89,7 +89,9 @@ class BookLApp extends StatelessWidget {
                   child: child!,
                 );
               },
-              initialRoute: AppSession().estaLogueado ? '/home' : '/login',
+              initialRoute: AppSession().estaLogueado 
+                  ? (AppSession().esAdministrador ? '/admin_Home' : '/home') 
+                  : '/login',
               routes: {
                 '/login': (context) => const LoginScreen(),
                 '/register': (context) => const RegisterScreen(),
@@ -108,7 +110,9 @@ class BookLApp extends StatelessWidget {
                 '/editar_capitulo': (context) => CapituloEditarScreen(
                       idCapitulo: ModalRoute.of(context)?.settings.arguments as int?,
                     ),
-                '/capitulo_detail': (context) => const CapituloScreen(),
+                '/capitulo_detail': (context) => CapituloScreen(
+                      idCapitulo: ModalRoute.of(context)?.settings.arguments as int?,
+                    ),
                 '/busqueda': (context) => const BusquedaScreen(),
                 '/resultado': (context) => const ResultadoScreen(),
                 '/teorico': (context) => const TeoricoScreen(),

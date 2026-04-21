@@ -42,7 +42,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (ok) {
       final role = BooklService().currentRole;
-      Navigator.pushReplacementNamed(context, role == 'admin' ? '/admin_Home' : '/home');
+      Navigator.pushReplacementNamed(
+          context, role == 'admin' ? '/admin_Home' : '/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

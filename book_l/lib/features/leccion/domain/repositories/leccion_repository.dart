@@ -5,7 +5,7 @@ import '../entities/capitulo.dart';
 abstract class LeccionRepository {
   Future<List<Leccion>> getLecciones();
   Future<Leccion?> getLeccionById(int id);
-  Future<void> addLeccion(Leccion leccion);
+  Future<int> addLeccion(Leccion leccion);
   Future<void> updateLeccion(Leccion leccion);
   Future<void> deleteLeccion(int id);
 

@@ -5,7 +5,7 @@ import 'core/storage/local_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppSession().init();   // SharedPreferences — sesión del usuario
+  await AppSession().init(); // SharedPreferences — sesión del usuario
   await BooklService().init(); // JSON asset — datos de negocio en memoria
   runApp(const BookLApp());
 }

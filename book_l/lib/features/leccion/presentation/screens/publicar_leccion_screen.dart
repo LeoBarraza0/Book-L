@@ -1,11 +1,12 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:book_l/shared/data/leccion_repository.dart';
-import 'package:book_l/shared/domain/models/leccion_model.dart';
-import 'package:book_l/shared/domain/models/capitulo_model.dart';
-import 'package:book_l/core/services/bookl_service.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../../core/storage/local_storage.dart';
+import '../controller/leccion_controller.dart';
 import '../widgets/agregar_seccion_button.dart';
 import '../widgets/seccion_editor_widget.dart';
+import '../../domain/entities/capitulo.dart';
 
 class PublicarLeccionScreen extends StatefulWidget {
   const PublicarLeccionScreen({super.key});
@@ -19,8 +20,10 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
   final _nombreCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   final List<SeccionData> _secciones = [];
-  final List<CapituloModel> _capitulosEnMemoria = [];
+  final List<Capitulo> _capitulosEnMemoria = [];
+  final _leccionCtrl = LeccionController();
   bool _guardando = false;
+  String? _imagenPath; // imagen de portada seleccionada
 
   // Animaciones
   late AnimationController _headerAnimCtrl;
@@ -34,7 +37,7 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
     super.initState();
 
     // Sección inicial por defecto
-    _secciones.add(SeccionData(titulo: 'Descripción'));
+    _secciones.add(SeccionData(titulo: 'Introducción'));
 
     // Header: fade + slide desde arriba
     _headerAnimCtrl = AnimationController(
@@ -50,7 +53,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _headerAnimCtrl, curve: Curves.easeOut));
 
-    // Botón Guardar: pulso al entrar
     _guardarAnimCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
@@ -98,6 +100,14 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
     });
   }
 
+  Future<void> _seleccionarImagen() async {
+    final picker = ImagePicker();
+    final img = await picker.pickImage(source: ImageSource.gallery);
+    if (img != null && mounted) {
+      setState(() => _imagenPath = img.path);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,7 +117,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
           CustomScrollView(
             controller: _scrollCtrl,
             slivers: [
-              // Header verde
               SliverToBoxAdapter(
                 child: FadeTransition(
                   opacity: _headerFadeAnim,
@@ -117,8 +126,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
                   ),
                 ),
               ),
-
-              // Cuerpo
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -128,19 +135,18 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Nombre editable inline
                       _buildNombreEditable(),
                       const SizedBox(height: 28),
-
-                      // Secciones — material de apoyo/descripción
                       _buildSeccionLabel('Material de apoyo'),
                       const SizedBox(height: 12),
+                      // Sección 0 (Introducción) con título fijo
                       ...List.generate(_secciones.length, (i) {
                         return SeccionEditorWidget(
                           key: ValueKey(_secciones[i].hashCode),
                           data: _secciones[i],
                           index: i,
                           onEliminar: () => _eliminarSeccion(i),
+                          tituloFijo: i == 0,
                         );
                       }),
                       const SizedBox(height: 8),
@@ -148,30 +154,21 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
                         alignment: Alignment.centerLeft,
                         child: AgregarSeccionButton(onTap: _agregarSeccion),
                       ),
-
                       const SizedBox(height: 28),
-
-                      // Sección capítulos
                       _buildSeccionLabel('Capítulos'),
                       const SizedBox(height: 12),
                       ..._capitulosEnMemoria.asMap().entries.map(
                             (e) => _buildCapituloChip(e.key, e.value),
                           ),
                       const SizedBox(height: 8),
-
-                      // Botón centrado "Añadir Capítulo"
                       Center(
                         child: AgregarSeccionButton(
                           titulo: 'Añadir Capítulo',
                           onTap: _irACrearCapitulo,
                         ),
                       ),
-
                       const SizedBox(height: 36),
-
-                      // Botón Guardar
                       _buildGuardarButton(),
-
                       const SizedBox(height: 120),
                     ],
                   ),
@@ -191,22 +188,40 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
       width: double.infinity,
       child: Stack(
         children: [
+          // Imagen de portada o fondo por defecto (escalado para ocultar borde blanco)
           Positioned.fill(
             child: ClipRRect(
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(25),
                 bottomRight: Radius.circular(25),
               ),
-              child: Image.asset(
-                'assets/images/green_bg.png',
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    Container(color: const Color(0xFF4DC130)),
-              ),
+              child: _imagenPath != null
+                  ? (kIsWeb
+                      ? Image.network(
+                          _imagenPath!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Container(color: const Color(0xFF4DC130)),
+                        )
+                      : Image.file(
+                          File(_imagenPath!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Container(color: const Color(0xFF4DC130)),
+                        ))
+                  : Transform.scale(
+                      scale: 1.15,
+                      child: Image.asset(
+                        'assets/images/green_bg.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            Container(color: const Color(0xFF4DC130)),
+                      ),
+                    ),
             ),
           ),
 
-          // Overlay
+          // Overlay degradado
           Positioned.fill(
             child: ClipRRect(
               borderRadius: const BorderRadius.only(
@@ -229,25 +244,7 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
             ),
           ),
 
-          // Logo centrado
-          Positioned(
-            top: 60,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: SvgPicture.asset(
-                'assets/images/logo_white.svg',
-                width: 80,
-                height: 35,
-                colorFilter: const ColorFilter.mode(
-                  Colors.white,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
-          ),
-
-          // Badge "Nueva Lección"
+          // Badge «Nueva Lección»
           Positioned(
             bottom: 20,
             left: 0,
@@ -287,13 +284,24 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
             ),
           ),
 
-          // Botón back
+          // Botones superiores (back + seleccionar imagen)
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: _buildCircularIconButton(
-                Icons.arrow_back_rounded,
-                () => Navigator.pop(context),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildCircularIconButton(
+                    Icons.arrow_back_rounded,
+                    () => Navigator.pop(context),
+                  ),
+                  _buildCircularIconButton(
+                    _imagenPath != null
+                        ? Icons.image_rounded
+                        : Icons.add_photo_alternate_outlined,
+                    _seleccionarImagen,
+                  ),
+                ],
               ),
             ),
           ),
@@ -324,7 +332,7 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
     );
   }
 
-  // ─── Nombre editable inline ─────────────────────────────────────────────────
+  // ─── Nombre editable ───────────────────────────────────────────────────────
   Widget _buildNombreEditable() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -369,7 +377,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
     );
   }
 
-  // ─── Label de sección ───────────────────────────────────────────────────────
   Widget _buildSeccionLabel(String texto) {
     return Text(
       texto,
@@ -382,75 +389,93 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
     );
   }
 
-  // ─── Chip de capítulo añadido ────────────────────────────────────────────────
-  Widget _buildCapituloChip(int index, CapituloModel capitulo) {
+  // ─── Componente de capítulo estandarizado ──────────────────────────────────
+  Widget _buildCapituloChip(int index, Capitulo capitulo) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0C000000),
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
+        color: const Color(0xFFD9D9D9),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 48,
+            height: 48,
             decoration: const BoxDecoration(
-              color: Color(0xFF4DC130),
+              color: Color(0xFFBDBDBD),
               shape: BoxShape.circle,
             ),
-            child: Center(
-              child: Text(
-                '${index + 1}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+            alignment: Alignment.center,
+            child: Text(
+              '${index + 1}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              capitulo.nombre.isEmpty
-                  ? 'Capítulo ${index + 1}'
-                  : capitulo.nombre,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  capitulo.nombre.isEmpty ? 'Capítulo ${index + 1}' : capitulo.nombre,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _formatDuracion(capitulo.tiempoTotal),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF676767),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
           GestureDetector(
             onTap: () => setState(() => _capitulosEnMemoria.removeAt(index)),
-            child: const Icon(Icons.close_rounded,
-                size: 18, color: Color(0xFFAAAAAA)),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFEBEB),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.delete_outline,
+                  size: 20, color: Color(0xFFD63030)),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ─── Navegar a crear capítulo ────────────────────────────────────────────────
+  String _formatDuracion(int segundos) {
+    if (segundos < 60) return '$segundos seg';
+    final mins = segundos ~/ 60;
+    if (mins < 60) return '$mins min';
+    final horas = mins ~/ 60;
+    final resto = mins % 60;
+    return resto == 0 ? '${horas}h' : '${horas}h ${resto}min';
+  }
+
   Future<void> _irACrearCapitulo() async {
     final resultado = await Navigator.pushNamed(context, '/crear_capitulo');
-    if (resultado != null && resultado is CapituloModel) {
+    if (resultado != null && resultado is Capitulo) {
       setState(() => _capitulosEnMemoria.add(resultado));
     }
   }
 
-  // ─── Botón Guardar ───────────────────────────────────────────────────────────
+  // ─── Botón Guardar ─────────────────────────────────────────────────────────
   Widget _buildGuardarButton() {
     return ScaleTransition(
       scale: _guardarScaleAnim,
@@ -458,6 +483,7 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
         child: SizedBox(
           width: 220,
           child: _GuardarButton(
+            label: _guardando ? 'Guardando...' : 'Guardar lección',
             onTap: _guardando ? null : _guardarLeccion,
           ),
         ),
@@ -465,7 +491,6 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
     );
   }
 
-  // ─── Lógica de guardado ──────────────────────────────────────────────────────
   Future<void> _guardarLeccion() async {
     final nombre = _nombreCtrl.text.trim();
     if (nombre.isEmpty) {
@@ -480,22 +505,25 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
 
     setState(() => _guardando = true);
     try {
-      // Construir el contenido de secciones como texto plano
-      final contenido = _secciones
-          .map((s) =>
-              '${s.tituloCtrl.text}: ${s.cuerpoCtrl.document.toPlainText().trim()}')
-          .where((s) => s.trim().isNotEmpty)
-          .join('\n');
+      final idUsuario = AppSession().usuarioId ?? 1;
+      final contenido = _secciones.map((s) => s.toJson()).toList();
 
-      final nuevaLeccion = LeccionModel(
-        id: BooklService().generateId(),
+      final newIdLeccion = await _leccionCtrl.agregarLeccion(
+        idUsuario: idUsuario,
         nombre: nombre,
         contenido: contenido,
-        tipo: 'teorica',
-        capitulos: _capitulosEnMemoria,
+        imagenUrl: _imagenPath,
       );
 
-      await LeccionRepository.instance.addLeccion(nuevaLeccion);
+      // Agregar los capítulos vinculados a la verdadera nueva ID de lección
+      for (final cap in _capitulosEnMemoria) {
+        await _leccionCtrl.agregarCapitulo(
+          idLeccion: newIdLeccion,
+          nombre: cap.nombre,
+          contenido: cap.contenido,
+          tiempoTotal: cap.tiempoTotal,
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -519,16 +547,26 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
         );
         Navigator.pop(context);
       }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar: $e'),
+            backgroundColor: const Color(0xFFFF606F),
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _guardando = false);
     }
   }
 }
 
-// ─── Botón Guardar animado ────────────────────────────────────────────────────
+// ─── Botón animado reutilizable ───────────────────────────────────────────────
 class _GuardarButton extends StatefulWidget {
+  final String label;
   final VoidCallback? onTap;
-  const _GuardarButton({required this.onTap});
+  const _GuardarButton({required this.label, this.onTap});
 
   @override
   State<_GuardarButton> createState() => _GuardarButtonState();
@@ -589,14 +627,14 @@ class _GuardarButtonState extends State<_GuardarButton>
             ],
           ),
           alignment: Alignment.center,
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.save_rounded, color: Colors.white, size: 20),
-              SizedBox(width: 8),
+              const Icon(Icons.save_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
               Text(
-                'Guardar lección',
-                style: TextStyle(
+                widget.label,
+                style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 15,
                   fontWeight: FontWeight.w700,

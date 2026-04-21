@@ -68,6 +68,13 @@ class BooklService extends ChangeNotifier {
     if (_loaded) return;
 
     final prefs = await SharedPreferences.getInstance();
+    
+    // Sincronizar el rol desde la sesión guardada si existe
+    final savedRol = prefs.getString('rol');
+    if (savedRol != null) {
+      setRole(savedRol);
+    }
+
     final localData = prefs.getString(_storageKey);
 
     Map<String, dynamic> data;
@@ -121,20 +128,30 @@ class BooklService extends ChangeNotifier {
       sugerencias = [];
     }
 
+    // ── Cargar Reportes con MERGE de Assets ─────────────────────────────────
     if (data.containsKey('reportes')) {
       reportes = List<Map<String, dynamic>>.from(data['reportes']);
     } else {
-      // Si la caché antigua no tiene los reportes, los leemos del archivo JSON
-      final rawFallback = await rootBundle.loadString('assets/data/bookl_data.json');
-      final fallbackData = json.decode(rawFallback);
-      if (fallbackData.containsKey('reportes')) {
-        reportes = List<Map<String, dynamic>>.from(fallbackData['reportes']);
-        // Guardamos para actualizar la caché
-        _save();
-      } else {
-        reportes = [];
-      }
+      reportes = [];
     }
+
+    // Leemos siempre del asset para ver si hay reportes nuevos agregados manualmente
+    try {
+      final rawAsset = await rootBundle.loadString('assets/data/bookl_data.json');
+      final assetData = json.decode(rawAsset);
+      if (assetData.containsKey('reportes')) {
+        final assetReportes = List<Map<String, dynamic>>.from(assetData['reportes']);
+        for (var ar in assetReportes) {
+          // Si el ID de reporte no está en memoria, lo agregamos
+          if (!reportes.any((r) => r['id_reporte'] == ar['id_reporte'])) {
+            reportes.add(ar);
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print("Error merging reportes from asset: $e");
+    }
+
     _loaded = true;
     notifyListeners();
   }

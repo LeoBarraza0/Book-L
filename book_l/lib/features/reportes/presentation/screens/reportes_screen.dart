@@ -204,11 +204,17 @@ class _ReportesScreenState extends State<ReportesScreen> {
           );
         }
 
-        // Agrupar los reportes por tipo y id: "Curso-1"
+        // Agrupar los reportes por tipo y id
         final reportCounts = <String, int>{};
+        final reportTypeMap = <String, String>{}; // Para mantener el nombre original del tipo
+        
         for (var r in reportesReales) {
-          final key = '${r['entidad_tipo']}-${r['entidad_id']}';
+          final String tipo = r['entidad_tipo']?.toString() ?? 'Desconocido';
+          final int id = r['entidad_id'] is int ? r['entidad_id'] : int.tryParse(r['entidad_id']?.toString() ?? '0') ?? 0;
+          
+          final key = '${tipo.toLowerCase().replaceAll('ó', 'o')}-$id';
           reportCounts[key] = (reportCounts[key] ?? 0) + 1;
+          reportTypeMap[key] = tipo;
         }
 
         final List<Map<String, dynamic>> reportItems = [];
@@ -216,22 +222,23 @@ class _ReportesScreenState extends State<ReportesScreen> {
         // Generar items solo para los que tienen reportes
         for (var key in reportCounts.keys) {
           final parts = key.split('-');
-          final String tipo = parts[0];
+          final String normalizedTipo = parts[0];
           final int id = int.tryParse(parts[1]) ?? 0;
           final int count = reportCounts[key]!;
+          final String originalTipo = reportTypeMap[key]!;
 
           String nombre = 'Elemento Desconocido';
           Color boxColor = const Color(0xFFD9D9D9);
 
-          if (tipo == 'Curso') {
+          if (normalizedTipo == 'curso') {
             final curso = service.cursos.where((c) => c.idCurso == id).firstOrNull;
             if (curso != null) nombre = curso.nombre;
             boxColor = const Color(0xFFFF606F);
-          } else if (tipo == 'Lección') {
+          } else if (normalizedTipo == 'leccion') {
             final leccion = service.lecciones.where((l) => l.idLeccion == id).firstOrNull;
             if (leccion != null) nombre = leccion.nombre;
             boxColor = const Color(0xFF5AB639);
-          } else if (tipo == 'Capítulo') {
+          } else if (normalizedTipo == 'capitulo') {
             final capitulo = service.capitulos.where((c) => c.idCapitulo == id).firstOrNull;
             if (capitulo != null) nombre = capitulo.nombre;
             boxColor = const Color(0xFFFFB800);
@@ -240,8 +247,8 @@ class _ReportesScreenState extends State<ReportesScreen> {
           reportItems.add({
             'id': id,
             'nombre': nombre,
-            'tipo': tipo,
-            'tag': tipo,
+            'tipo': originalTipo,
+            'tag': originalTipo,
             'boxColor': boxColor,
             'reportCount': count,
           });

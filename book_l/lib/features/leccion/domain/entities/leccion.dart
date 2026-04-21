@@ -5,6 +5,7 @@ class Leccion {
   final int idUsuarioFk;
   final String nombre;
   final List<dynamic>? contenido;
+  final String? imagenUrl; // URL o path de la imagen de portada
   final double rating;
   final String duracion;
   final int estudiantes;
@@ -20,6 +21,7 @@ class Leccion {
     required this.idUsuarioFk,
     required this.nombre,
     this.contenido,
+    this.imagenUrl,
     this.rating = 0.0,
     this.duracion = '',
     this.estudiantes = 0,
@@ -36,6 +38,7 @@ class Leccion {
     int? idUsuarioFk,
     String? nombre,
     List<dynamic>? contenido,
+    String? imagenUrl,
     double? rating,
     String? duracion,
     int? estudiantes,
@@ -51,6 +54,7 @@ class Leccion {
       idUsuarioFk: idUsuarioFk ?? this.idUsuarioFk,
       nombre: nombre ?? this.nombre,
       contenido: contenido ?? this.contenido,
+      imagenUrl: imagenUrl ?? this.imagenUrl,
       rating: rating ?? this.rating,
       duracion: duracion ?? this.duracion,
       estudiantes: estudiantes ?? this.estudiantes,

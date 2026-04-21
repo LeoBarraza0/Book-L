@@ -52,7 +52,7 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
       ),
       bottomNavigationBar: const Padding(
         padding: EdgeInsets.fromLTRB(16, 0, 16, 20),
-        child: SharedBottomNavBar(selectedIndex: 3, role: 'admin'),
+        child: SharedBottomNavBar(selectedIndex: 3),
       ),
     );
   }
@@ -123,6 +123,42 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
   }
 
   Widget _buildCourseInfo() {
+    final service = bookl.BooklService();
+    String authorName = 'Desconocido';
+    String authorRole = 'N/A';
+
+    if (widget.tipo == 'Curso') {
+      final curso = service.cursos.where((c) => c.idCurso == widget.idLeccion).firstOrNull;
+      if (curso != null) {
+        final author = service.usuarios.where((u) => u.idUsuario == curso.idUsuarioFk).firstOrNull;
+        if (author != null) {
+          authorName = author.nombreCompleto;
+          authorRole = author.rol;
+        }
+      }
+    } else if (widget.tipo == 'Lección') {
+      final leccion = service.lecciones.where((l) => l.idLeccion == widget.idLeccion).firstOrNull;
+      if (leccion != null) {
+        final author = service.usuarios.where((u) => u.idUsuario == leccion.idUsuarioFk).firstOrNull;
+        if (author != null) {
+          authorName = author.nombreCompleto;
+          authorRole = author.rol;
+        }
+      }
+    } else if (widget.tipo == 'Capítulo') {
+      final capitulo = service.capitulos.where((c) => c.idCapitulo == widget.idLeccion).firstOrNull;
+      if (capitulo != null) {
+        final leccion = service.lecciones.where((l) => l.idLeccion == capitulo.idLeccion).firstOrNull;
+        if (leccion != null) {
+          final author = service.usuarios.where((u) => u.idUsuario == leccion.idUsuarioFk).firstOrNull;
+          if (author != null) {
+            authorName = author.nombreCompleto;
+            authorRole = author.rol;
+          }
+        }
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -144,11 +180,17 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
                 color: Color(0xFF5AB639),
                 shape: BoxShape.circle,
               ),
+              child: Center(
+                child: Text(
+                  authorName.isNotEmpty ? authorName[0] : '?',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
             const SizedBox(width: 10),
-            const Text(
-              'Charlie Kirk',
-              style: TextStyle(
+            Text(
+              authorName,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
@@ -163,9 +205,9 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
                 color: const Color(0xFF7CB342),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Text(
-                'Estudiante',
-                style: TextStyle(
+              child: Text(
+                authorRole,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -179,6 +221,28 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
   }
 
   Widget _buildStatsCards() {
+    final service = bookl.BooklService();
+    final reports = service.reportes.where((r) => 
+      r['entidad_tipo'] == widget.tipo && r['entidad_id'] == widget.idLeccion).toList();
+    
+    String fechaCreacion = 'N/A';
+    if (widget.tipo == 'Curso') {
+      final curso = service.cursos.where((c) => c.idCurso == widget.idLeccion).firstOrNull;
+      if (curso != null && curso.createdAt != null) {
+        fechaCreacion = curso.createdAt!.toString().split(' ')[0];
+      }
+    } else if (widget.tipo == 'Lección') {
+      final leccion = service.lecciones.where((l) => l.idLeccion == widget.idLeccion).firstOrNull;
+      if (leccion != null && leccion.createdAt != null) {
+        fechaCreacion = leccion.createdAt!.toString().split(' ')[0];
+      }
+    } else if (widget.tipo == 'Capítulo') {
+      final capitulo = service.capitulos.where((c) => c.idCapitulo == widget.idLeccion).firstOrNull;
+      if (capitulo != null && capitulo.createdAt != null) {
+        fechaCreacion = capitulo.createdAt!.toString().split(' ')[0];
+      }
+    }
+
     return Row(
       children: [
         Expanded(
@@ -198,8 +262,8 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         'Creación',
                         style: TextStyle(
                             fontSize: 16,
@@ -207,8 +271,8 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
                             color: Colors.black87),
                       ),
                       Text(
-                        '1 Marzo 2026',
-                        style: TextStyle(
+                        fechaCreacion,
+                        style: const TextStyle(
                             fontSize: 12,
                             color: Colors.black54,
                             fontWeight: FontWeight.w500),
@@ -231,23 +295,23 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.star_border_rounded,
+                const Icon(Icons.error_outline_rounded,
                     color: Colors.black87, size: 40),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       Text(
-                        'Rate: 4.9',
-                        style: TextStyle(
+                        'Reportes: ${reports.length}',
+                        style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.black87),
                       ),
-                      Text(
-                        '167 comentarios',
+                      const Text(
+                        'Pendientes revisión',
                         style: TextStyle(
                             fontSize: 11,
                             color: Colors.black54,
@@ -302,9 +366,11 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
   Widget _buildCommentsList() {
     final service = bookl.BooklService();
     
-    // Filtrar los reportes reales según tipo e ID
+    // Filtrar los reportes reales según tipo e ID (Normalizado)
     final reportesAsociados = service.reportes.where((r) {
-      return r['entidad_tipo'] == widget.tipo && r['entidad_id'] == widget.idLeccion;
+      final rTipo = r['entidad_tipo']?.toString().toLowerCase().replaceAll('ó', 'o');
+      final wTipo = widget.tipo.toLowerCase().replaceAll('ó', 'o');
+      return rTipo == wTipo && r['entidad_id'] == widget.idLeccion;
     }).toList();
 
     if (reportesAsociados.isEmpty) {
@@ -316,17 +382,25 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
 
     return Column(
       children: reportesAsociados.map((r) {
-        final userId = r['id_usuario_fk'] as int;
+        final userId = r['id_usuario_fk'];
         final usuario = service.usuarios.where((u) => u.idUsuario == userId).firstOrNull;
-        final userName = usuario != null ? usuario.nombreCompleto : 'Usuario Desconocido';
-        final date = r['created_at'] != null ? r['created_at'].toString().split('T')[0] : 'Desconocida';
         
-        return _buildCommentItem(userName, r['motivo'] ?? 'Sin motivo provisto', date);
+        final userName = usuario != null ? usuario.nombreCompleto : 'Usuario ($userId)';
+        final date = r['created_at'] != null 
+            ? r['created_at'].toString().split('T')[0] 
+            : 'Hoy';
+        
+        return _buildCommentItem(
+          userName, 
+          r['motivo'] ?? 'Sin motivo provisto', 
+          date,
+          usuario?.avatarUrl
+        );
       }).toList(),
     );
   }
 
-  Widget _buildCommentItem(String name, String message, String date) {
+  Widget _buildCommentItem(String name, String message, String date, String? avatarUrl) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -343,13 +417,13 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
               children: [
                 Row(
                   children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF5AB639),
-                        shape: BoxShape.circle,
-                      ),
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: const Color(0xFF5AB639),
+                      backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                      child: avatarUrl == null 
+                        ? const Icon(Icons.person, size: 20, color: Colors.white)
+                        : null,
                     ),
                     const SizedBox(width: 10),
                     Text(

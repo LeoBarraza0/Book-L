@@ -49,15 +49,11 @@ class SharedBottomNavBar extends StatelessWidget {
           ),
           _buildNavItem(
             icon: Icons.search,
-            label: activeRole == 'admin' ? 'Contenido' : 'Buscar',
+            label: 'Buscar',
             isSelected: selectedIndex == 1,
             onTap: () {
               if (selectedIndex != 1) {
-                if (activeRole == 'admin') {
-                  Navigator.pushReplacementNamed(context, '/admin_leccion');
-                } else {
-                  Navigator.pushReplacementNamed(context, '/busqueda');
-                }
+                Navigator.pushReplacementNamed(context, '/busqueda');
               }
             },
           ),
@@ -65,17 +61,12 @@ class SharedBottomNavBar extends StatelessWidget {
           // Botón Circular Central (+)
           GestureDetector(
             onTap: () {
-              if (activeRole == 'admin') {
-                 // Acciones de creación para admin si las hay
-                 debugPrint('Crear admin clickeado');
-              } else {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return const lib_modal.CreateMenuModal();
-                  },
-                );
-              }
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return const lib_modal.CreateMenuModal();
+                },
+              );
             },
             child: Container(
               width: 50,
@@ -90,29 +81,21 @@ class SharedBottomNavBar extends StatelessWidget {
 
           _buildNavItem(
             icon: Icons.person_outline,
-            label: activeRole == 'admin' ? 'Usuarios' : 'Perfil',
+            label: 'Perfil',
             isSelected: selectedIndex == 2,
             onTap: () {
               if (selectedIndex != 2) {
-                if (activeRole == 'admin') {
-                  Navigator.pushReplacementNamed(context, '/users_admin');
-                } else {
-                  Navigator.pushReplacementNamed(context, '/perfil');
-                }
+                Navigator.pushReplacementNamed(context, '/perfil');
               }
             },
           ),
           _buildNavItem(
             icon: Icons.bookmark_outline,
-            label: activeRole == 'admin' ? 'Reportes' : 'Booki',
+            label: 'Booki',
             isSelected: selectedIndex == 3,
             onTap: () {
               if (selectedIndex != 3) {
-                if (activeRole == 'admin') {
-                  Navigator.pushReplacementNamed(context, '/reportes');
-                } else {
-                  Navigator.pushReplacementNamed(context, '/chatbot');
-                }
+                Navigator.pushReplacementNamed(context, '/chatbot');
               }
             },
           ),

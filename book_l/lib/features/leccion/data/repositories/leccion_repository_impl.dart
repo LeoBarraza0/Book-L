@@ -34,10 +34,12 @@ class LeccionRepositoryImpl implements LeccionRepository {
   // ── CREATE ─────────────────────────────────────────────────────────────────
 
   @override
-  Future<void> addLeccion(Leccion leccion) async {
-    final nueva = leccion.copyWith(idLeccion: _service.nextLeccionId());
+  Future<int> addLeccion(Leccion leccion) async {
+    final newId = _service.nextLeccionId();
+    final nueva = leccion.copyWith(idLeccion: newId);
     _service.lecciones.add(nueva);
     _service.notifyDataChanged();
+    return newId;
   }
 
   // ── UPDATE ─────────────────────────────────────────────────────────────────
