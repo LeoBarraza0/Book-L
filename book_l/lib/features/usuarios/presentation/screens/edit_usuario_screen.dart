@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../domain/entities/usuarios.dart';
+import '../../../../core/services/bookl_service.dart';
 
 class EditUsuarioScreen extends StatefulWidget {
   final Usuario usuario;
@@ -18,40 +19,41 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
   late TextEditingController _passwordController;
   late TextEditingController _celularController;
   late TextEditingController _preferenciasController;
-  
+
   DateTime? _selectedDate;
   String? _selectedPrograma;
   int? _selectedSemestre;
+  String? _selectedRol;
+  late List<String> _roles;
 
-  final List<String> _programas = [
-    'Ingeniería de Sistemas',
-    'Ingeniería Industrial',
-    'Ingeniería Civil',
-    'Contaduría Pública',
-    'Administración de Empresas',
-    'Derecho',
-    'Medicina',
-    'Psicología',
-    'Enfermería',
-    'Arquitectura',
-  ];
+  late final List<String> _programas;
 
   @override
   void initState() {
     super.initState();
-    _nombreController = TextEditingController(text: widget.usuario.nombreCompleto);
+    _programas = BooklService().programas;
+    _nombreController =
+        TextEditingController(text: widget.usuario.nombreCompleto);
     _usernameController = TextEditingController(text: widget.usuario.username);
     _correoController = TextEditingController(text: widget.usuario.correo);
     _passwordController = TextEditingController(text: widget.usuario.password);
-    _celularController = TextEditingController(text: widget.usuario.celular?.toString() ?? '');
-    _preferenciasController = TextEditingController(text: widget.usuario.preferencias ?? '');
+    _celularController =
+        TextEditingController(text: widget.usuario.celular?.toString() ?? '');
+    _preferenciasController =
+        TextEditingController(text: widget.usuario.preferencias ?? '');
     _selectedDate = widget.usuario.nacimiento;
     // Solo asigna el programa si existe en la lista; si no, deja null (sin selección).
     final programa = widget.usuario.programa;
-    _selectedPrograma = (programa != null && _programas.contains(programa))
-        ? programa
-        : null;
+    _selectedPrograma =
+        (programa != null && _programas.contains(programa)) ? programa : null;
     _selectedSemestre = widget.usuario.semestre;
+
+    final initialRol = widget.usuario.rol;
+    _roles = ['Estudiante', 'Profesor'];
+    if (initialRol != null && !_roles.contains(initialRol)) {
+      _roles.add(initialRol);
+    }
+    _selectedRol = initialRol ?? 'Estudiante';
   }
 
   @override
@@ -103,53 +105,60 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
             child: Column(
               children: [
                 // ── HEADER ────────────────────────────────────────────────
-                SizedBox(
-                  height: 200,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: Image.asset(
-                          'assets/images/yellow_bg.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        top: topPadding + 8,
-                        left: 20,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            shape: BoxShape.circle,
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                  child: SizedBox(
+                    height: 200,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Image.asset(
+                            'assets/images/yellow_bg.png',
+                            fit: BoxFit.cover,
                           ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () => Navigator.pop(context),
-                              customBorder: const CircleBorder(),
-                              child: const Icon(Icons.arrow_back, color: Colors.white),
+                        ),
+                        Positioned(
+                          top: topPadding + 8,
+                          left: 20,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => Navigator.pop(context),
+                                customBorder: const CircleBorder(),
+                                child: const Icon(Icons.arrow_back,
+                                    color: Colors.white),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const Positioned(
-                        left: 0,
-                        right: 0,
-                        top: 80,
-                        child: Center(
-                          child: Text(
-                            'Editar Usuario',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontFamily: 'Baloo',
-                              fontWeight: FontWeight.w400,
+                        const Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 80,
+                          child: Center(
+                            child: Text(
+                              'Editar Usuario',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontFamily: 'Baloo',
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 
@@ -171,7 +180,8 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                                   color: Colors.white,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.person, size: 50, color: Colors.grey),
+                                child: const Icon(Icons.person,
+                                    size: 50, color: Colors.grey),
                               ),
                               Positioned(
                                 bottom: 0,
@@ -182,7 +192,8 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                                     color: Color(0xFF44BD32),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(Icons.add, color: Colors.white, size: 16),
+                                  child: const Icon(Icons.add,
+                                      color: Colors.white, size: 16),
                                 ),
                               ),
                             ],
@@ -191,9 +202,11 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                           Expanded(
                             child: Column(
                               children: [
-                                _buildTextField('Nombre completo: *', _nombreController),
+                                _buildTextField(
+                                    'Nombre completo: *', _nombreController),
                                 const SizedBox(height: 10),
-                                _buildTextField('Usuario:', _usernameController),
+                                _buildTextField(
+                                    'Usuario:', _usernameController),
                               ],
                             ),
                           ),
@@ -211,20 +224,21 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                                 child: _buildTextField(
                                   'Fecha de nacimiento:',
                                   TextEditingController(
-                                    text: _selectedDate == null 
-                                      ? '' 
-                                      : "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}"
-                                  ),
+                                      text: _selectedDate == null
+                                          ? ''
+                                          : "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}"),
                                   suffixIcon: Icons.calendar_today,
                                 ),
                               ),
                             ),
                           ),
                           const SizedBox(width: 15),
-                          Expanded(child: _buildTextField('Correo electrónico: *', _correoController)),
+                          Expanded(
+                              child: _buildTextField(
+                                  'Correo electrónico: *', _correoController)),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 20),
 
                       // Fila 3: Contraseña & Celular
@@ -235,16 +249,20 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildTextField('Contraseña: *', _passwordController, obscureText: true),
+                                _buildTextField(
+                                    'Contraseña: *', _passwordController,
+                                    obscureText: true),
                                 const SizedBox(height: 5),
                                 const Row(
                                   children: [
-                                    Icon(Icons.info_outline, size: 12, color: Colors.grey),
+                                    Icon(Icons.info_outline,
+                                        size: 12, color: Colors.grey),
                                     SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
                                         'La contraseña debe contener mínimo 8 caracteres',
-                                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                                        style: TextStyle(
+                                            fontSize: 10, color: Colors.grey),
                                       ),
                                     ),
                                   ],
@@ -255,12 +273,9 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                           ),
                           const SizedBox(width: 15),
                           Expanded(
-                            child: _buildTextField(
-                              'Celular: *', 
-                              _celularController, 
-                              keyboardType: TextInputType.phone
-                            )
-                          ),
+                              child: _buildTextField(
+                                  'Celular: *', _celularController,
+                                  keyboardType: TextInputType.phone)),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -269,30 +284,39 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: _buildDropdownField('Programa: *', _programas, _selectedPrograma, (val) {
+                            child: _buildDropdownField(
+                                'Programa: *', _programas, _selectedPrograma,
+                                (val) {
                               setState(() => _selectedPrograma = val);
                             }),
                           ),
                           const SizedBox(width: 15),
                           Expanded(
                             child: _buildDropdownField(
-                              'Semestre: *', 
-                              List.generate(10, (i) => (i + 1).toString()), 
-                              _selectedSemestre?.toString(), 
-                              (val) {
-                                setState(() => _selectedSemestre = int.tryParse(val!));
-                              }
-                            ),
+                                'Semestre: *',
+                                List.generate(10, (i) => (i + 1).toString()),
+                                _selectedSemestre?.toString(), (val) {
+                              setState(
+                                  () => _selectedSemestre = int.tryParse(val!));
+                            }),
                           ),
                         ],
                       ),
                       const SizedBox(height: 20),
 
+                      // Fila 5: Rol
+                      _buildDropdownField('Rol: *', _roles, _selectedRol,
+                          (val) {
+                        setState(() => _selectedRol = val);
+                      }),
+                      const SizedBox(height: 20),
+
                       // Preferencias
-                      _buildTextField('Preferencias', _preferenciasController, maxLines: 4),
-                      
+                      _buildTextField('Preferencias', _preferenciasController,
+                          maxLines: 4),
+
                       const SizedBox(height: 30),
-                      
+
                       Container(
                         decoration: ShapeDecoration(
                           color: const Color(0xFFFDCD51),
@@ -301,7 +325,8 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                           ),
                           shadows: const [
                             BoxShadow(
-                              color: Color(0x3F000000), // 0x3F = ~0.247 de opacidad
+                              color: Color(
+                                  0x3F000000), // 0x3F = ~0.247 de opacidad
                               blurRadius: 4,
                               offset: Offset(0, 4),
                               spreadRadius: 0,
@@ -324,7 +349,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                                 semestre: _selectedSemestre,
                                 preferencias: _preferenciasController.text,
                                 activo: widget.usuario.activo,
-                                rol: widget.usuario.rol,
+                                rol: _selectedRol,
                                 avatarUrl: widget.usuario.avatarUrl,
                               );
                               Navigator.pop(context, updatedUser);
@@ -336,7 +361,10 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                               child: const Center(
                                 child: Text(
                                   'Guardar',
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
                                 ),
                               ),
                             ),
@@ -363,11 +391,17 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {bool obscureText = false, IconData? suffixIcon, TextInputType? keyboardType, int maxLines = 1}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {bool obscureText = false,
+      IconData? suffixIcon,
+      TextInputType? keyboardType,
+      int maxLines = 1}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
         const SizedBox(height: 5),
         TextField(
           controller: controller,
@@ -378,23 +412,29 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
             isDense: true,
             filled: true,
             fillColor: Colors.white,
-            suffixIcon: suffixIcon != null ? Icon(suffixIcon, color: Colors.grey, size: 20) : null,
+            suffixIcon: suffixIcon != null
+                ? Icon(suffixIcon, color: Colors.grey, size: 20)
+                : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDropdownField(String label, List<String> items, String? value, ValueChanged<String?> onChanged) {
+  Widget _buildDropdownField(String label, List<String> items, String? value,
+      ValueChanged<String?> onChanged) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
         const SizedBox(height: 5),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -406,6 +446,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
             child: DropdownButton<String>(
               isExpanded: true,
               value: value,
+              menuMaxHeight: 250,
               items: items.map((String item) {
                 return DropdownMenuItem<String>(
                   value: item,
