@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../widgets/reporte_card.dart';
-import '../../../../core/services/bookl_service.dart' as bookl;
+import '../controller/reportes_controller.dart';
+import '../../domain/usecases/get_reportes_agrupados_usecase.dart';
+import '../../data/repositories/reportes_repository_impl.dart';
+
+ReportesController _buildController() {
+  final repo = ReportesRepositoryImpl();
+  return ReportesController(
+    getReportesAgrupadosUseCase: GetReportesAgrupadosUseCase(repo),
+  );
+}
 
 class ReportesScreen extends StatefulWidget {
   const ReportesScreen({super.key});
@@ -12,8 +21,23 @@ class ReportesScreen extends StatefulWidget {
 
 class _ReportesScreenState extends State<ReportesScreen> {
   final TextEditingController _searchController = TextEditingController();
-  int _selectedFilterIndex = 0;
-  final List<String> _filters = ['Todas', 'Recientes', 'N° Reportes', '...'];
+  late final ReportesController _controller;
+  
+  final List<String> _filters = ['Todos', 'Cursos', 'Lecciones', 'Capítulos'];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = _buildController();
+    _controller.loadReportes();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +63,10 @@ class _ReportesScreenState extends State<ReportesScreen> {
                 _buildFilters(),
                 const SizedBox(height: 24),
                 // Report List
-                _buildReportList(),
+                ListenableBuilder(
+                  listenable: _controller,
+                  builder: (context, _) => _buildReportList(),
+                ),
                 const SizedBox(height: 120), // Espacio para el navbar flotante
               ]),
             ),
@@ -126,16 +153,20 @@ class _ReportesScreenState extends State<ReportesScreen> {
             ),
             child: TextField(
               controller: _searchController,
+              onChanged: (val) => _controller.onSearchChanged(val),
               decoration: InputDecoration(
                 border: InputBorder.none,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                hintText: '|',
+                hintText: 'Buscar por nombre...',
                 hintStyle: const TextStyle(color: Colors.black54),
                 suffixIcon: IconButton(
                   icon:
                       const Icon(Icons.close, size: 20, color: Colors.black54),
-                  onPressed: () => _searchController.clear(),
+                  onPressed: () {
+                    _searchController.clear();
+                    _controller.onSearchChanged('');
+                  },
                 ),
               ),
             ),
@@ -156,130 +187,99 @@ class _ReportesScreenState extends State<ReportesScreen> {
   }
 
   Widget _buildFilters() {
-    return SizedBox(
-      height: 40,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _filters.length,
-        itemBuilder: (context, index) {
-          final isSelected = _selectedFilterIndex == index;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedFilterIndex = index),
-            child: Container(
-              margin: const EdgeInsets.only(right: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? const Color(0xFF5AB639)
-                    : const Color(0xFFD9D9D9),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                _filters[index],
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.black87,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        return SizedBox(
+          height: 40,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _filters.length,
+            itemBuilder: (context, index) {
+              final filter = _filters[index];
+              final isSelected = _controller.selectedFilter == filter;
+              return GestureDetector(
+                onTap: () => _controller.onFilterChanged(filter),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.only(right: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFF5AB639)
+                        : const Color(0xFFD9D9D9),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    filter,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      }
     );
   }
 
   Widget _buildReportList() {
-    return ListenableBuilder(
-      listenable: bookl.BooklService(),
-      builder: (context, _) {
-        final service = bookl.BooklService();
-        final reportesReales = service.reportes;
+    if (_controller.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 50.0),
+        child: Center(child: CircularProgressIndicator(color: Color(0xFF5AB639))),
+      );
+    }
 
-        if (reportesReales.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(20.0),
-            child: Text('No hay contenido reportado aún.'),
-          );
-        }
+    if (_controller.errorMessage.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Text('Error: ${_controller.errorMessage}', style: const TextStyle(color: Colors.red)),
+      );
+    }
 
-        // Agrupar los reportes por tipo y id
-        final reportCounts = <String, int>{};
-        final reportTypeMap = <String, String>{}; // Para mantener el nombre original del tipo
-        
-        for (var r in reportesReales) {
-          final String tipo = r['entidad_tipo']?.toString() ?? 'Desconocido';
-          final int id = r['entidad_id'] is int ? r['entidad_id'] : int.tryParse(r['entidad_id']?.toString() ?? '0') ?? 0;
-          
-          final key = '${tipo.toLowerCase().replaceAll('ó', 'o')}-$id';
-          reportCounts[key] = (reportCounts[key] ?? 0) + 1;
-          reportTypeMap[key] = tipo;
-        }
+    final reportesAgrupados = _controller.reportes;
 
-        final List<Map<String, dynamic>> reportItems = [];
+    if (reportesAgrupados.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(20.0),
+        child: Text('No se encontraron reportes con estos criterios.', style: TextStyle(color: Colors.black54)),
+      );
+    }
 
-        // Generar items solo para los que tienen reportes
-        for (var key in reportCounts.keys) {
-          final parts = key.split('-');
-          final String normalizedTipo = parts[0];
-          final int id = int.tryParse(parts[1]) ?? 0;
-          final int count = reportCounts[key]!;
-          final String originalTipo = reportTypeMap[key]!;
+    return Column(
+      children: reportesAgrupados.map((item) {
+        Color boxColor = const Color(0xFFD9D9D9);
+        final tipoL = item.tipoEntidad.toLowerCase().replaceAll('ó', 'o');
+        if (tipoL == 'curso') boxColor = const Color(0xFFFF606F);
+        else if (tipoL == 'leccion') boxColor = const Color(0xFF5AB639);
+        else if (tipoL == 'capitulo') boxColor = const Color(0xFFFFB800);
 
-          String nombre = 'Elemento Desconocido';
-          Color boxColor = const Color(0xFFD9D9D9);
-
-          if (normalizedTipo == 'curso') {
-            final curso = service.cursos.where((c) => c.idCurso == id).firstOrNull;
-            if (curso != null) nombre = curso.nombre;
-            boxColor = const Color(0xFFFF606F);
-          } else if (normalizedTipo == 'leccion') {
-            final leccion = service.lecciones.where((l) => l.idLeccion == id).firstOrNull;
-            if (leccion != null) nombre = leccion.nombre;
-            boxColor = const Color(0xFF5AB639);
-          } else if (normalizedTipo == 'capitulo') {
-            final capitulo = service.capitulos.where((c) => c.idCapitulo == id).firstOrNull;
-            if (capitulo != null) nombre = capitulo.nombre;
-            boxColor = const Color(0xFFFFB800);
-          }
-
-          reportItems.add({
-            'id': id,
-            'nombre': nombre,
-            'tipo': originalTipo,
-            'tag': originalTipo,
-            'boxColor': boxColor,
-            'reportCount': count,
-          });
-        }
-
-        return Column(
-          children: reportItems.map((item) {
-            return ReporteCard(
-              title: item['nombre'],
-              subtitle: item['tipo'],
-              rating: 4.9,
-              reportCount: item['reportCount'],
-              tags: [item['tag']],
-              boxColor: item['boxColor'],
-              onTap: () {
-                Navigator.pushNamed(
-                  context, 
-                  '/reporte_detail',
-                  arguments: {
-                    'id_leccion': item['id'],
-                    'nombre': item['nombre'],
-                    'tipo': item['tipo'],
-                  },
-                );
+        return ReporteCard(
+          title: item.nombreEntidad,
+          subtitle: item.tipoEntidad,
+          rating: 4.9, // Podría parametrizarse
+          reportCount: item.cantidadReportes,
+          tags: [item.tipoEntidad],
+          boxColor: boxColor,
+          onTap: () {
+            Navigator.pushNamed(
+              context, 
+              '/reporte_detail',
+              arguments: {
+                'id_leccion': item.idEntidad,
+                'nombre': item.nombreEntidad,
+                'tipo': item.tipoEntidad,
               },
             );
-          }).toList(),
+          },
         );
-      },
+      }).toList(),
     );
   }
-
-
 }

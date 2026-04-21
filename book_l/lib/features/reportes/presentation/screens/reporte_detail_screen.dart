@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../core/services/bookl_service.dart' as bookl;
+import '../controller/reporte_detail_controller.dart';
+import '../../domain/usecases/get_reportes_por_entidad_usecase.dart';
+import '../../data/repositories/reportes_repository_impl.dart';
+
+ReporteDetailController _buildDetailController() {
+  final repo = ReportesRepositoryImpl();
+  return ReporteDetailController(
+    getReportesPorEntidadUseCase: GetReportesPorEntidadUseCase(repo),
+  );
+}
 
 class ReporteDetailScreen extends StatefulWidget {
   final int idLeccion;
@@ -19,8 +29,21 @@ class ReporteDetailScreen extends StatefulWidget {
 }
 
 class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
-  int _selectedFilterIndex = 0;
-  final List<String> _filters = ['Todas', 'Recientes', 'Ult. días', '...'];
+  late final ReporteDetailController _controller;
+  final List<String> _filters = ['Más Recientes', 'Más Antiguos'];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = _buildDetailController();
+    _controller.loadDetalles(widget.tipo, widget.idLeccion);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +66,10 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
                 const SizedBox(height: 24),
                 _buildFilters(),
                 const SizedBox(height: 24),
-                _buildCommentsList(),
+                ListenableBuilder(
+                  listenable: _controller,
+                  builder: (context, _) => _buildCommentsList(),
+                ),
                 const SizedBox(height: 120),
               ]),
             ),
@@ -122,6 +148,9 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
     );
   }
 
+  // NOTE: Se mantiene aquí por ser dependiente del mock DB, sin embargo
+  // arquitecturalmente debería cruzar desde el Home u obtenerse en el Backend.
+  // BooklService() es nuestro DB transitorio.
   Widget _buildCourseInfo() {
     final service = bookl.BooklService();
     String authorName = 'Desconocido';
@@ -223,7 +252,7 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
   Widget _buildStatsCards() {
     final service = bookl.BooklService();
     final reports = service.reportes.where((r) => 
-      r['entidad_tipo'] == widget.tipo && r['entidad_id'] == widget.idLeccion).toList();
+      r['entidad_tipo']?.toString().toLowerCase() == widget.tipo.toLowerCase() && r['entidad_id'] == widget.idLeccion).toList();
     
     String fechaCreacion = 'N/A';
     if (widget.tipo == 'Curso') {
@@ -303,16 +332,16 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Reportes: ${reports.length}',
-                        style: const TextStyle(
-                            fontSize: 16,
+                      const Text(
+                        'Reportes:',
+                        style: TextStyle(
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Colors.black87),
                       ),
-                      const Text(
-                        'Pendientes revisión',
-                        style: TextStyle(
+                      Text(
+                        '${reports.length} Pendientes',
+                        style: const TextStyle(
                             fontSize: 11,
                             color: Colors.black54,
                             fontWeight: FontWeight.w500),
@@ -329,72 +358,76 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
   }
 
   Widget _buildFilters() {
-    return SizedBox(
-      height: 40,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _filters.length,
-        itemBuilder: (context, index) {
-          final isSelected = _selectedFilterIndex == index;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedFilterIndex = index),
-            child: Container(
-              margin: const EdgeInsets.only(right: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? const Color(0xFF5AB639)
-                    : const Color(0xFFD9D9D9),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                _filters[index],
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.black87,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        return SizedBox(
+          height: 40,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _filters.length,
+            itemBuilder: (context, index) {
+              final filter = _filters[index];
+              final isSelected = _controller.selectedSort == filter;
+              return GestureDetector(
+                onTap: () => _controller.onChangeSort(filter),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.only(right: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFF5AB639)
+                        : const Color(0xFFD9D9D9),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    filter,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      }
     );
   }
 
   Widget _buildCommentsList() {
-    final service = bookl.BooklService();
+    if (_controller.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: Center(child: CircularProgressIndicator(color: Color(0xFF5AB639))),
+      );
+    }
     
-    // Filtrar los reportes reales según tipo e ID (Normalizado)
-    final reportesAsociados = service.reportes.where((r) {
-      final rTipo = r['entidad_tipo']?.toString().toLowerCase().replaceAll('ó', 'o');
-      final wTipo = widget.tipo.toLowerCase().replaceAll('ó', 'o');
-      return rTipo == wTipo && r['entidad_id'] == widget.idLeccion;
-    }).toList();
+    if (_controller.errorMessage.isNotEmpty) {
+      return Center(child: Text('Error: ${_controller.errorMessage}', style: const TextStyle(color: Colors.red)));
+    }
 
-    if (reportesAsociados.isEmpty) {
+    final comentarios = _controller.comentarios;
+
+    if (comentarios.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(20),
-        child: Text('No hay comentarios para este reporte.', style: TextStyle(color: Colors.black54)),
+        child: Text('Extrañamente no se encontraron motivos para este reporte.', style: TextStyle(color: Colors.black54)),
       );
     }
 
     return Column(
-      children: reportesAsociados.map((r) {
-        final userId = r['id_usuario_fk'];
-        final usuario = service.usuarios.where((u) => u.idUsuario == userId).firstOrNull;
-        
-        final userName = usuario != null ? usuario.nombreCompleto : 'Usuario ($userId)';
-        final date = r['created_at'] != null 
-            ? r['created_at'].toString().split('T')[0] 
-            : 'Hoy';
-        
+      children: comentarios.map((item) {
+        final date = item.reporte.createdAt.toString().split(' ')[0];
         return _buildCommentItem(
-          userName, 
-          r['motivo'] ?? 'Sin motivo provisto', 
+          item.nombreUsuario, 
+          item.reporte.motivo, 
           date,
-          usuario?.avatarUrl
+          item.avatarUrl
         );
       }).toList(),
     );
