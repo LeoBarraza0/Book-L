@@ -17,6 +17,10 @@ import '../../features/configuracion/domain/entities/configuracion.dart';
 import '../../features/discusion/domain/entities/discusion.dart';
 import '../../features/discusion/domain/entities/comentario.dart';
 import '../../features/discusion/data/dto/discusion_dto.dart';
+import '../../features/ejercicio/data/dto/ejercicio_dto.dart';
+import '../../features/ejercicio/domain/entities/ejercicio.dart';
+import '../../features/ejercicio/domain/entities/pregunta.dart';
+import '../../features/ejercicio/domain/entities/opcion.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -72,6 +76,11 @@ class BooklService extends ChangeNotifier {
   // Discusiones y comentarios
   List<Discusion> discusiones = [];
   List<Comentario> comentarios = [];
+
+  // Ejercicios
+  List<Ejercicio> ejercicios = [];
+  List<Pregunta> preguntas = [];
+  List<Opcion> opciones = [];
 
   // ── Inicialización (llamar una sola vez desde main.dart) ───────────────────
   Future<void> init() async {
@@ -165,6 +174,57 @@ class BooklService extends ChangeNotifier {
       comentarios = [];
     }
 
+    if (data.containsKey('ejercicios')) {
+      ejercicios = (data['ejercicios'] as List)
+          .map<Ejercicio>((e) => EjercicioDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      ejercicios = [];
+    }
+
+    if (data.containsKey('preguntas')) {
+      preguntas = (data['preguntas'] as List)
+          .map<Pregunta>((e) => PreguntaDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      preguntas = [];
+    }
+
+    if (data.containsKey('opciones')) {
+      opciones = (data['opciones'] as List)
+          .map<Opcion>((e) => OpcionDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+      
+      // Anidar opciones en preguntas
+      for (var p in preguntas) {
+        final ops = opciones.where((o) => o.idPreguntaFk == p.idPregunta).toList();
+        final i = preguntas.indexOf(p);
+        preguntas[i] = Pregunta(
+          idPregunta: p.idPregunta,
+          idEjercicioFk: p.idEjercicioFk,
+          contenido: p.contenido,
+          explicacion: p.explicacion,
+          opciones: ops,
+        );
+      }
+
+      // Anidar preguntas en ejercicios
+      for (var e in ejercicios) {
+        final pregs = preguntas.where((p) => p.idEjercicioFk == e.idEjercicio).toList();
+        final i = ejercicios.indexOf(e);
+        ejercicios[i] = Ejercicio(
+          idEjercicio: e.idEjercicio,
+          idCapitulo: e.idCapitulo,
+          tipo: e.tipo,
+          titulo: e.titulo,
+          descripcion: e.descripcion,
+          preguntas: pregs,
+        );
+      }
+    } else {
+      opciones = [];
+    }
+
     // ── Cargar Reportes con MERGE de Assets ─────────────────────────────────
     if (data.containsKey('reportes')) {
       reportes = List<Map<String, dynamic>>.from(data['reportes']);
@@ -189,6 +249,35 @@ class BooklService extends ChangeNotifier {
       if (kDebugMode) print("Error merging reportes from asset: $e");
     }
 
+    // ── Anidación Relacional Final ──────────────────────────────────────────
+    // Anidar comentarios en discusiones
+    for (var d in discusiones) {
+      final coms = comentarios.where((c) => c.idDiscusionFk == d.idDiscusion).toList();
+      final i = discusiones.indexOf(d);
+      discusiones[i] = d.copyWith(comentarios: coms);
+    }
+
+    // Anidar discusiones en cursos
+    for (var c in cursos) {
+      final disc = discusiones.where((d) => d.idCursoFk == c.idCurso).toList();
+      final i = cursos.indexOf(c);
+      cursos[i] = c.copyWith(discusiones: disc);
+    }
+
+    // Anidar discusiones en lecciones
+    for (var l in lecciones) {
+      final disc = discusiones.where((d) => d.idLeccionFk == l.idLeccion).toList();
+      final i = lecciones.indexOf(l);
+      lecciones[i] = l.copyWith(discusiones: disc);
+    }
+
+    // Anidar ejercicios en capitulos
+    for (var c in capitulos) {
+      final ejs = ejercicios.where((e) => e.idCapitulo == c.idCapitulo).toList();
+      final i = capitulos.indexOf(c);
+      capitulos[i] = c.copyWith(ejercicios: ejs);
+    }
+
     _loaded = true;
     notifyListeners();
   }
@@ -208,6 +297,9 @@ class BooklService extends ChangeNotifier {
         'seguidores': seguidores,
         'discusiones': discusiones.map((d) => DiscusionDto.toJson(d)).toList(),
         'comentarios': comentarios.map((c) => ComentarioDto.toJson(c)).toList(),
+        'ejercicios': ejercicios.map((e) => EjercicioDto.toJson(e)).toList(),
+        'preguntas': preguntas.map((p) => PreguntaDto.toJson(p)).toList(),
+        'opciones': opciones.map((o) => OpcionDto.toJson(o)).toList(),
         'reportes': reportes,
         'lecciones_cursos': leccionesCursos,
       };

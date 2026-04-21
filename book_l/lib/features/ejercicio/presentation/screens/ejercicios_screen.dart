@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'teorico_screen.dart';
+import 'banco_ejercicios_screen.dart';
 
 class EjerciciosScreen extends StatefulWidget {
-  const EjerciciosScreen({super.key});
+  final int idLeccion;
+  const EjerciciosScreen({super.key, required this.idLeccion});
 
   @override
   State<EjerciciosScreen> createState() => _EjerciciosScreenState();
@@ -64,6 +65,7 @@ class _EjerciciosScreenState extends State<EjerciciosScreen>
       title: title,
       imageUrl: imageUrl,
       delay: delay,
+      idLeccion: widget.idLeccion,
     );
   }
 }
@@ -72,11 +74,13 @@ class _HoverScaleCard extends StatefulWidget {
   final String title;
   final String imageUrl;
   final int delay;
+  final int idLeccion;
 
   const _HoverScaleCard({
     required this.title,
     required this.imageUrl,
     required this.delay,
+    required this.idLeccion,
   });
 
   @override
@@ -113,16 +117,15 @@ class _HoverScaleCardState extends State<_HoverScaleCard> {
           onTapDown: (_) => setState(() => _isPressed = true),
           onTapUp: (_) {
             setState(() => _isPressed = false);
-            if (widget.title == 'Teóricos') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const TeoricoScreen()),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Navegando a ejercicios ${widget.title.toLowerCase()}...')),
-              );
-            }
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BancoEjerciciosScreen(
+                  idLeccion: widget.idLeccion,
+                  title: 'Ejercicios ${widget.title.toLowerCase()}',
+                ),
+              ),
+            );
           },
           onTapCancel: () => setState(() => _isPressed = false),
           child: Container(
@@ -132,7 +135,7 @@ class _HoverScaleCardState extends State<_HoverScaleCard> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
+                  color: Colors.black.withValues(alpha: 0.15),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 )
@@ -142,10 +145,9 @@ class _HoverScaleCardState extends State<_HoverScaleCard> {
               borderRadius: BorderRadius.circular(16),
               child: Stack(
                 children: [
-                  // Imagen de fondo con Hero y BoxFit.cover
                   Positioned.fill(
                     child: Transform.scale(
-                      scale: 1.15, // Ajuste para evitar que se corte el contenido útil del PNG
+                      scale: 1.15,
                       child: Image.asset(
                         widget.imageUrl,
                         fit: BoxFit.cover,
@@ -163,14 +165,13 @@ class _HoverScaleCardState extends State<_HoverScaleCard> {
                       ),
                     ),
                   ),
-                  // Gradiente oscuro en la parte inferior para resaltar el texto
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.black.withOpacity(0.0),
-                            Colors.black.withOpacity(0.7),
+                            Colors.black.withValues(alpha: 0.0),
+                            Colors.black.withValues(alpha: 0.7),
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -178,7 +179,6 @@ class _HoverScaleCardState extends State<_HoverScaleCard> {
                       ),
                     ),
                   ),
-                  // Título
                   Positioned(
                     bottom: 20,
                     left: 20,
@@ -193,7 +193,6 @@ class _HoverScaleCardState extends State<_HoverScaleCard> {
                       ),
                     ),
                   ),
-                  // Icono de flecha en el lateral derecho, centrado verticalmente
                   const Positioned(
                     top: 0,
                     bottom: 0,

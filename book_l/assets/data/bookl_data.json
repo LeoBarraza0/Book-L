@@ -578,6 +578,44 @@
       "created_at": "2026-03-20T16:45:00"
     }
   ],
+  "ejercicios": [
+    { "id_ejercicio": 1, "id_capitulo": 1, "tipo": "multiple_choice", "titulo": "Cuestionario Lógico II", "descripcion": "Valida tus conocimientos previos sobre proposiciones de la materia." },
+    { "id_ejercicio": 2, "id_capitulo": 1, "tipo": "true_false", "titulo": "Conceptos de Verdad", "descripcion": "Ejercicios de falso y verdadero basándose en lectura del capítulo." },
+    { "id_ejercicio": 3, "id_capitulo": 2, "tipo": "multiple_choice", "titulo": "Teoría de la Intersección", "descripcion": "Preguntas avanzadas del uso de operadores AND y OR." }
+  ],
+  "preguntas": [
+    { "id_pregunta": 1, "id_ejercicio_fk": 1, "contenido": "¿Qué es exactamente una proposición en matemáticas discretas?", "explicacion": "Una proposición es estrictamente un enunciado del cual se puede determinar su valor de verdad y no puede ser ambos (V y F)." },
+    { "id_pregunta": 2, "id_ejercicio_fk": 1, "contenido": "¿A qué símbolo obedece el operador lógico AND?", "explicacion": "El operador se simboliza matemáticamente con '∧' (conjunción)." },
+    { "id_pregunta": 3, "id_ejercicio_fk": 1, "contenido": "¿Cual es el valor de (V y F)?", "explicacion": "Si cualquiera de las sentencias del AND es falso, todo el AND es Falso." },
+    { "id_pregunta": 4, "id_ejercicio_fk": 2, "contenido": "El operador OR requiere que ambas proposiciones sean verdaderas para que toda la oración sea cierta.", "explicacion": "Falso. En el operador OR (disyunción), basta con que UNA proposición sea verdadera." },
+    { "id_pregunta": 5, "id_ejercicio_fk": 2, "contenido": "La negación de V siempre será F, independientemente de la ecuación mayor.", "explicacion": "¡Efectivamente! La negación de un valor dado invierte estáticamente su lado booleano." },
+    { "id_pregunta": 6, "id_ejercicio_fk": 3, "contenido": "Las leyes de de Morgan dicen que ~(P ∧ Q) es lógicamente equivalente a:", "explicacion": "La negación de una conjunción es la disyunción de las negaciones: ~P ∨ ~Q." }
+  ],
+  "opciones": [
+    { "id_opcion": 1, "id_pregunta_fk": 1, "contenido": "Un enunciado subjetivo", "correcta": 0 },
+    { "id_opcion": 2, "id_pregunta_fk": 1, "contenido": "Un enunciado falso o verdadero (no ambos)", "correcta": 1 },
+    { "id_opcion": 3, "id_pregunta_fk": 1, "contenido": "Una pregunta directa sin respuesta", "correcta": 0 },
+    { "id_opcion": 4, "id_pregunta_fk": 1, "contenido": "Algoritmo de paso a paso", "correcta": 0 },
+    
+    { "id_opcion": 5, "id_pregunta_fk": 2, "contenido": "||", "correcta": 0 },
+    { "id_opcion": 6, "id_pregunta_fk": 2, "contenido": "∨", "correcta": 0 },
+    { "id_opcion": 7, "id_pregunta_fk": 2, "contenido": "∧", "correcta": 1 },
+    { "id_opcion": 8, "id_pregunta_fk": 2, "contenido": "~", "correcta": 0 },
+    
+    { "id_opcion": 9, "id_pregunta_fk": 3, "contenido": "Verdadero", "correcta": 0 },
+    { "id_opcion": 10, "id_pregunta_fk": 3, "contenido": "Falso", "correcta": 1 },
+    
+    { "id_opcion": 11, "id_pregunta_fk": 4, "contenido": "Verdadero", "correcta": 0 },
+    { "id_opcion": 12, "id_pregunta_fk": 4, "contenido": "Falso", "correcta": 1 },
+    
+    { "id_opcion": 13, "id_pregunta_fk": 5, "contenido": "Verdadero", "correcta": 1 },
+    { "id_opcion": 14, "id_pregunta_fk": 5, "contenido": "Falso", "correcta": 0 },
+    
+    { "id_opcion": 15, "id_pregunta_fk": 6, "contenido": "~P ∨ ~Q", "correcta": 1 },
+    { "id_opcion": 16, "id_pregunta_fk": 6, "contenido": "P ∨ Q", "correcta": 0 },
+    { "id_opcion": 17, "id_pregunta_fk": 6, "contenido": "~P ∧ ~Q", "correcta": 0 },
+    { "id_opcion": 18, "id_pregunta_fk": 6, "contenido": "~(P ∨ Q)", "correcta": 0 }
+  ],
   "programas": [
     "Ingeniería de Sistemas",
     "Ingeniería Industrial",
