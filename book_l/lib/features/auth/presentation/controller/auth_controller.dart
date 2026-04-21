@@ -27,6 +27,32 @@ class AuthController extends ChangeNotifier {
   AuthStatus status = AuthStatus.idle;
   Usuario? usuarioActual;
   String? errorMessage;
+  
+  // Recovery data
+  String? recoveryEmail;
+  String? recoveryPhone;
+
+  void setRecoveryData(String email) {
+    recoveryEmail = email;
+    // Mocking a phone for demonstration purposes
+    recoveryPhone = "+57 3041234567";
+    notifyListeners();
+  }
+
+  // Temporary list for testing
+  List<Map<String, dynamic>> recoveryAttempts = [];
+
+  void saveRecoveryAttempt(String type) {
+    if (recoveryEmail != null) {
+      recoveryAttempts.add({
+        'email': recoveryEmail,
+        'type': type,
+        'timestamp': DateTime.now().toString(),
+      });
+      print('Recovery Attempt Saved: $recoveryAttempts');
+    }
+    notifyListeners();
+  }
 
   bool get isLoading => status == AuthStatus.loading;
   bool get isAuthenticated => status == AuthStatus.authenticated;

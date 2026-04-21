@@ -150,7 +150,20 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 2),
 
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              final email = _emailController.text.trim();
+              if (email.isNotEmpty) {
+                _ctrl.setRecoveryData(email);
+                Navigator.pushNamed(context, '/recuperar_correo');
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Ingresa tu correo para recuperarlo'),
+                    backgroundColor: Color(0xFFFF5252),
+                  ),
+                );
+              }
+            },
             child: const Text(
               'Recuperar contraseña',
               style: TextStyle(

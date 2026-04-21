@@ -12,6 +12,7 @@ class CustomTextField extends StatelessWidget {
   final String? helperText;
   final bool isRequired;
   final bool readOnly;
+  final TextAlign textAlign;
 
   const CustomTextField({
     super.key,
@@ -24,6 +25,7 @@ class CustomTextField extends StatelessWidget {
     this.helperText,
     this.isRequired = false,
     this.readOnly = false,
+    this.textAlign = TextAlign.start,
   });
 
   @override
@@ -77,6 +79,7 @@ class CustomTextField extends StatelessWidget {
             readOnly: readOnly,
             keyboardType: keyboardType,
             obscureText: obscureText,
+            textAlign: textAlign,
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,

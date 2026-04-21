@@ -25,6 +25,7 @@ class AppSession {
   static const _kTamanoFuente = 'tamano_fuente';
   static const _kSavedCursos = 'saved_cursos';
   static const _kSavedLecciones = 'saved_lecciones';
+  static const _kOnboardingCompleted = 'onboarding_completed';
 
   // ── Campos en memoria (cargados desde disco en init) ───────────────────────
   String? token;
@@ -35,6 +36,7 @@ class AppSession {
   bool temaOscuro = false;
   String idioma = 'es';
   String tamanoFuente = 'normal';
+  bool onboardingCompleted = false;
 
   late SharedPreferences _prefs;
   bool _initialized = false;
@@ -60,6 +62,7 @@ class AppSession {
     temaOscuro = _prefs.getBool(_kTemaOscuro) ?? false;
     idioma = _prefs.getString(_kIdioma) ?? 'es';
     tamanoFuente = _prefs.getString(_kTamanoFuente) ?? 'normal';
+    onboardingCompleted = _prefs.getBool(_kOnboardingCompleted) ?? false;
 
     temaNotifier.value = temaOscuro;
     fontScaleNotifier.value = tamanoFuente;
@@ -169,5 +172,10 @@ class AppSession {
     await _prefs.remove(_kSavedLecciones);
     savedCursos.value = {};
     savedLecciones.value = {};
+  }
+
+  Future<void> setOnboardingCompleted(bool value) async {
+    onboardingCompleted = value;
+    await _prefs.setBool(_kOnboardingCompleted, value);
   }
 }

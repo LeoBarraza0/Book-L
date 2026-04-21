@@ -31,6 +31,12 @@ import 'features/usuarios/presentation/screens/edit_usuario_screen.dart';
 import 'features/reportes/presentation/screens/reportes_screen.dart';
 import 'features/reportes/presentation/screens/reporte_detail_screen.dart';
 
+import 'features/onboarding/presentation/screens/bienvenida_screen.dart';
+import 'features/auth/presentation/screens/recuperar_correo_screen.dart';
+import 'features/auth/presentation/screens/recuperar_numero_screen.dart';
+import 'features/auth/presentation/screens/ingresar_codigo_screen.dart';
+import 'features/auth/presentation/screens/cambiar_password_screen.dart';
+
 import 'core/storage/local_storage.dart';
 
 class BookLApp extends StatelessWidget {
@@ -89,11 +95,18 @@ class BookLApp extends StatelessWidget {
                   child: child!,
                 );
               },
-              initialRoute: AppSession().estaLogueado 
-                  ? (AppSession().esAdministrador ? '/admin_Home' : '/home') 
-                  : '/login',
+              initialRoute: !AppSession().onboardingCompleted
+                  ? '/bienvenida'
+                  : (AppSession().estaLogueado 
+                      ? (AppSession().esAdministrador ? '/admin_Home' : '/home') 
+                      : '/login'),
               routes: {
+                '/bienvenida': (context) => const BienvenidaScreen(),
                 '/login': (context) => const LoginScreen(),
+                '/recuperar_correo': (context) => const RecuperarCorreoScreen(),
+                '/recuperar_numero': (context) => const RecuperarNumeroScreen(),
+                '/ingresar_codigo': (context) => const IngresarCodigoScreen(),
+                '/cambiar_password': (context) => const CambiarPasswordScreen(),
                 '/register': (context) => const RegisterScreen(),
                 '/home': (context) => const HomeScreen(),
                 '/notificaciones': (context) => const NotificacionScreen(),
