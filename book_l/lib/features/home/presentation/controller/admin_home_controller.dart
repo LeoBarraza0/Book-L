@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/usecase/usecase.dart';
 import '../../../reportes/domain/usecases/get_estadisticas_reportes_usecase.dart';
+import '../../domain/usecases/get_novedades_usecase.dart';
 import 'admin_home_state.dart';
 
 class AdminHomeController extends ChangeNotifier {
   final GetEstadisticasReportesUseCase getEstadisticasReportes;
+  final GetNovedadesUseCase getNovedades;
 
   AdminHomeState _state = AdminHomeInitial();
   AdminHomeState get state => _state;
@@ -14,6 +17,7 @@ class AdminHomeController extends ChangeNotifier {
 
   AdminHomeController({
     required this.getEstadisticasReportes,
+    required this.getNovedades,
   });
 
   void _setState(AdminHomeState newState) {
@@ -25,17 +29,22 @@ class AdminHomeController extends ChangeNotifier {
     if (periodo != null) {
       _periodoActual = periodo;
     }
-    
+
     _setState(AdminHomeLoading());
 
     try {
-      final chartData = await getEstadisticasReportes(
-        GetEstadisticasReportesParams(periodo: _periodoActual),
-      );
+      // Cargar gráfica y novedades en paralelo para no bloquear la UI
+      final results = await Future.wait([
+        getEstadisticasReportes(
+          GetEstadisticasReportesParams(periodo: _periodoActual),
+        ),
+        getNovedades(const NoParams()),
+      ]);
 
       _setState(AdminHomeLoaded(
-        chartData: chartData,
+        chartData: results[0] as dynamic,
         periodoActual: _periodoActual,
+        novedades: results[1] as dynamic,
       ));
     } catch (e) {
       _setState(AdminHomeError(e.toString()));

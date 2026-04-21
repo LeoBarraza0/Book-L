@@ -8,11 +8,15 @@ import '../controller/admin_home_state.dart';
 import '../../../reportes/domain/entities/reporte.dart';
 import '../../../reportes/domain/usecases/get_estadisticas_reportes_usecase.dart';
 import '../../../reportes/data/repositories/reportes_repository_impl.dart';
+import '../../domain/entities/novedad.dart';
+import '../../domain/usecases/get_novedades_usecase.dart';
 
 AdminHomeController _buildController() {
   final repo = ReportesRepositoryImpl();
-  final usecase = GetEstadisticasReportesUseCase(repo);
-  return AdminHomeController(getEstadisticasReportes: usecase);
+  return AdminHomeController(
+    getEstadisticasReportes: GetEstadisticasReportesUseCase(repo),
+    getNovedades: GetNovedadesUseCase(),
+  );
 }
 
 class AdminHomeScreen extends StatefulWidget {
@@ -65,7 +69,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                         builder: (context, _) => _buildActividadSection(),
                       ),
                       const SizedBox(height: 30),
-                      _buildNovedadesSection(),
+                      ListenableBuilder(
+                        listenable: _controller,
+                        builder: (context, _) => _buildNovedadesSection(),
+                      ),
                       const SizedBox(height: 100), // Bottom nav space
                     ],
                   ),
@@ -342,6 +349,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
 
   Widget _buildNovedadesSection() {
+    final state = _controller.state;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -354,29 +363,40 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        _buildNovedadCard(
-          tagLabel: 'Cálculo diferencial',
-          tagColor: const Color(0xFF4EBE59),
-          title: 'Derivadas',
-          subtitle: '1 Hora | 4.9 | 1.200 estudiantes',
-        ),
-        const SizedBox(height: 12),
-        _buildNovedadCard(
-          tagLabel: 'Álgebra lineal',
-          tagColor: const Color(0xFFF6B55C),
-          title: 'Matrices',
-          subtitle: '2 Horas | 4.8 | 800 estudiantes',
-        ),
+        if (state is AdminHomeLoading)
+          const Center(child: CircularProgressIndicator(color: Color(0xFF4DC130)))
+        else if (state is AdminHomeLoaded && state.novedades.isNotEmpty) ...
+          [
+            for (int i = 0; i < state.novedades.length; i++) ...[
+              _buildNovedadCard(state.novedades[i]),
+              if (i < state.novedades.length - 1) const SizedBox(height: 12),
+            ],
+          ]
+        else
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              'Sin novedades recientes.',
+              style: TextStyle(color: Colors.black54),
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildNovedadCard({
-    required String tagLabel,
-    required Color tagColor,
-    required String title,
-    required String subtitle,
-  }) {
+  Widget _buildNovedadCard(Novedad novedad) {
+    final IconData icon;
+    switch (novedad.tipo) {
+      case 'Curso':
+        icon = Icons.school_outlined;
+        break;
+      case 'Lección':
+        icon = Icons.menu_book_outlined;
+        break;
+      default:
+        icon = Icons.article_outlined;
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -393,15 +413,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Thumbnail Placeholder
+          // Thumbnail con icono coloreado según tipo
           Container(
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: const Color(0xFFD9D9D9),
+              color: novedad.colorTema.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.class_outlined, color: Colors.black26),
+            child: Icon(icon, color: novedad.colorTema, size: 30),
           ),
           const SizedBox(width: 12),
           // Info
@@ -409,17 +429,18 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Tag tipo (Curso / Lección / Capítulo)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: tagColor,
+                    color: novedad.colorTema,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    tagLabel,
+                    novedad.tipo,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
@@ -429,46 +450,36 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  title,
+                  novedad.titulo,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  subtitle,
+                  '${novedad.autorNombre} · ${novedad.fechaRelativa}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF676767),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          // Actions / Info
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Icon(
-                Icons.favorite_border,
-                color: Color(0xFFFF606F),
-                size: 20,
-              ),
-              SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
-                  SizedBox(width: 4),
-                  Text(
-                    '4.9',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ],
+          // Indicador de nuevo
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: novedad.colorTema,
+              shape: BoxShape.circle,
+            ),
           ),
         ],
       ),
