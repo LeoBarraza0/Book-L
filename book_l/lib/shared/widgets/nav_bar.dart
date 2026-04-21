@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:book_l/shared/widgets/create_menu_modal.dart' as lib_modal;
+import '../../core/services/bookl_service.dart';
 
 class SharedBottomNavBar extends StatelessWidget {
   final int selectedIndex;
-  final String role;
+  final String? role; // Opcional, si es nulo usa BooklService().currentRole
 
   const SharedBottomNavBar({
     super.key,
     this.selectedIndex = -1,
-    this.role = 'user',
+    this.role,
   });
 
   @override
   Widget build(BuildContext context) {
+    final activeRole = role ?? BooklService().currentRole;
+
     return Container(
       height: 70,
       decoration: BoxDecoration(
@@ -36,7 +39,7 @@ class SharedBottomNavBar extends StatelessWidget {
             isSelected: selectedIndex == 0,
             onTap: () {
               if (selectedIndex != 0) {
-                if (role == 'admin') {
+                if (activeRole == 'admin') {
                   Navigator.pushReplacementNamed(context, '/admin_Home');
                 } else {
                   Navigator.pushReplacementNamed(context, '/home');
@@ -50,11 +53,7 @@ class SharedBottomNavBar extends StatelessWidget {
             isSelected: selectedIndex == 1,
             onTap: () {
               if (selectedIndex != 1) {
-                if (role == 'admin') {
-                  Navigator.pushReplacementNamed(context, '/admin_leccion');
-                } else {
-                  Navigator.pushReplacementNamed(context, '/busqueda');
-                }
+                Navigator.pushReplacementNamed(context, '/busqueda');
               }
             },
           ),
@@ -62,17 +61,12 @@ class SharedBottomNavBar extends StatelessWidget {
           // Botón Circular Central (+)
           GestureDetector(
             onTap: () {
-              if (role == 'admin') {
-                 // Acciones de creación para admin si las hay
-                 debugPrint('Crear admin clickeado');
-              } else {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return const lib_modal.CreateMenuModal();
-                  },
-                );
-              }
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return const lib_modal.CreateMenuModal();
+                },
+              );
             },
             child: Container(
               width: 50,
@@ -91,25 +85,17 @@ class SharedBottomNavBar extends StatelessWidget {
             isSelected: selectedIndex == 2,
             onTap: () {
               if (selectedIndex != 2) {
-                if (role == 'admin') {
-                  Navigator.pushReplacementNamed(context, '/users_admin');
-                } else {
-                  Navigator.pushReplacementNamed(context, '/perfil');
-                }
+                Navigator.pushReplacementNamed(context, '/perfil');
               }
             },
           ),
           _buildNavItem(
             icon: Icons.bookmark_outline,
-            label: 'Booki', // O tal vez Notificaciones/Guardados para admin
+            label: 'Booki',
             isSelected: selectedIndex == 3,
             onTap: () {
               if (selectedIndex != 3) {
-                if (role == 'admin') {
-                  Navigator.pushReplacementNamed(context, '/reportes');
-                } else {
-                  Navigator.pushReplacementNamed(context, '/chatbot');
-                }
+                Navigator.pushReplacementNamed(context, '/chatbot');
               }
             },
           ),

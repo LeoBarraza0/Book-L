@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../../core/services/bookl_service.dart';
 
 class ResultadoScreen extends StatefulWidget {
   const ResultadoScreen({super.key});
@@ -200,7 +201,11 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                       if (Navigator.canPop(context)) {
                         Navigator.pop(context);
                       } else {
-                        Navigator.pushReplacementNamed(context, '/home');
+                        final role = BooklService().currentRole;
+                        Navigator.pushReplacementNamed(
+                          context,
+                          role == 'admin' ? '/admin_Home' : '/home',
+                        );
                       }
                     },
                   ),

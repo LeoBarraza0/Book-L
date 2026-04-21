@@ -109,6 +109,7 @@ class AdminHomeScreen extends StatelessWidget {
           title: 'Reportes',
           color: const Color(0xFFFD5C63),
           icon: Icons.error_outline,
+          onTap: () => Navigator.pushNamed(context, '/reportes'),
         ),
         _buildActionCard(
           context,
