@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
+import '../../../../core/storage/local_storage.dart';
 
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
@@ -145,6 +146,78 @@ class _CapituloScreenState extends State<CapituloScreen> {
                           _buildPruebaButton('2'),
                         ],
                       ),
+                      const SizedBox(height: 48),
+
+                      // Botón de completar capítulo
+                      ListenableBuilder(
+                        listenable: AppSession().completedCapitulos,
+                        builder: (context, _) {
+                          final isCompleted = AppSession()
+                              .completedCapitulos
+                              .value
+                              .contains(widget.idCapitulo);
+                          return Center(
+                            child: GestureDetector(
+                              onTap: () {
+                                if (widget.idCapitulo != null) {
+                                  AppSession().marcarCapituloCompletado(
+                                      widget.idCapitulo!, !isCompleted);
+                                }
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 32, vertical: 16),
+                                decoration: BoxDecoration(
+                                  color: isCompleted
+                                      ? const Color(0xFF4DC130)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(30),
+                                  border: Border.all(
+                                      color: const Color(0xFF4DC130), width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: isCompleted
+                                          ? const Color(0xFF4DC130)
+                                              .withOpacity(0.3)
+                                          : Colors.black.withOpacity(0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    )
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isCompleted
+                                          ? Icons.check_circle
+                                          : Icons.circle_outlined,
+                                      color: isCompleted
+                                          ? Colors.white
+                                          : const Color(0xFF4DC130),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      isCompleted
+                                          ? 'Capítulo Completado'
+                                          : 'Marcar como Completado',
+                                      style: TextStyle(
+                                        color: isCompleted
+                                            ? Colors.white
+                                            : const Color(0xFF4DC130),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
                       const SizedBox(height: 120),
                     ],
                   ),

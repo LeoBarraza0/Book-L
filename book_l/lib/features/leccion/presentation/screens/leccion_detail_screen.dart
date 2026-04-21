@@ -6,8 +6,9 @@ import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
-import '../../../../core/storage/local_storage.dart';
+import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
+import '../../../../core/storage/local_storage.dart';
 import '../../../../core/services/bookl_service.dart';
 import '../../../curso/domain/entities/curso.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
@@ -340,29 +341,39 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
         ),
 
         // Círculo de Progreso
-        const SizedBox(
-          width: 65,
-          height: 65,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 65,
-                height: 65,
-                child: CircularProgressIndicator(
-                  value: 0.2, // 20%
-                  strokeWidth: 6,
-                  backgroundColor: Color(0xFFD9D9D9),
-                  color: Color(0xFF4DC130),
-                  strokeAlign: CircularProgressIndicator.strokeAlignCenter,
-                ),
+        ListenableBuilder(
+          listenable: AppSession().completedCapitulos,
+          builder: (context, _) {
+            final progress = leccion != null 
+                ? _ctrl.calcularProgresoLeccion(leccion.idLeccion)
+                : 0.0;
+            final percent = (progress * 100).toInt();
+
+            return SizedBox(
+              width: 65,
+              height: 65,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 65,
+                    height: 65,
+                    child: CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 6,
+                      backgroundColor: const Color(0xFFD9D9D9),
+                      color: const Color(0xFF4DC130),
+                      strokeAlign: CircularProgressIndicator.strokeAlignCenter,
+                    ),
+                  ),
+                  Text(
+                    '$percent%',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                ],
               ),
-              Text(
-                '20%',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ],
     );
@@ -596,22 +607,21 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 14),
         ListenableBuilder(
-          listenable: _ctrl,
+          listenable: Listenable.merge([_ctrl, AppSession().completedCapitulos]),
           builder: (context, _) {
             final caps = _ctrl.capitulosDeLeccion;
+            final completados = AppSession().completedCapitulos.value;
+
             if (caps.isEmpty) {
-              // Placeholder visual mientras no hay lección seleccionada
               return _buildCapitulosPlaceholder();
             }
             return Column(
               children: [
                 for (int i = 0; i < caps.length; i++) ...[
                   _buildCapituloItem(
-                    status: i == 0
+                    status: completados.contains(caps[i].idCapitulo)
                         ? CapituloStatus.completed
-                        : i == 1
-                            ? CapituloStatus.inProgress
-                            : CapituloStatus.locked,
+                        : CapituloStatus.inProgress, // Podríamos añadir lógica de 'locked' si se desea secuencialidad
                     title: caps[i].nombre,
                     duration: _formatDuracion(caps[i].tiempoTotal),
                     number: i + 1,
