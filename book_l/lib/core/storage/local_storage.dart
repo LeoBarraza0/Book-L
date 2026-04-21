@@ -25,6 +25,7 @@ class AppSession {
   static const _kTamanoFuente = 'tamano_fuente';
   static const _kSavedCursos = 'saved_cursos';
   static const _kSavedLecciones = 'saved_lecciones';
+  static const _kCompletedCapitulos = 'completed_capitulos';
 
   // ── Campos en memoria (cargados desde disco en init) ───────────────────────
   String? token;
@@ -42,6 +43,7 @@ class AppSession {
   // Reactividad para los Favoritos
   final ValueNotifier<Set<int>> savedCursos = ValueNotifier<Set<int>>({});
   final ValueNotifier<Set<int>> savedLecciones = ValueNotifier<Set<int>>({});
+  final ValueNotifier<Set<int>> completedCapitulos = ValueNotifier<Set<int>>({});
   
   // Notifiers globales para la UI
   final ValueNotifier<bool> temaNotifier = ValueNotifier<bool>(false);
@@ -76,13 +78,19 @@ class AppSession {
         .where((id) => id != -1)
         .toSet();
 
+    final loadedCompletados = _prefs.getStringList(_kCompletedCapitulos) ?? [];
+    completedCapitulos.value = loadedCompletados
+        .map((e) => int.tryParse(e) ?? -1)
+        .where((id) => id != -1)
+        .toSet();
+
     _initialized = true;
   }
 
   // ── Consultas ──────────────────────────────────────────────────────────────
   bool get estaLogueado => token != null && token!.isNotEmpty;
-  bool get esProfesor => rol == 'Profesor' || rol == 'Administrador';
-  bool get esAdministrador => rol == 'Administrador' || rol == 'Admin';
+  bool get esProfesor => rol?.toLowerCase().contains('profesor') ?? false || esAdministrador;
+  bool get esAdministrador => rol?.toLowerCase().contains('admin') ?? false;
 
   // ── Persistencia de sesión (llamado por auth_repository_impl al login) ─────
   Future<void> guardarSesion({
@@ -153,6 +161,18 @@ class AppSession {
         _kSavedLecciones, current.map((e) => e.toString()).toList());
   }
 
+  void marcarCapituloCompletado(int idCapitulo, bool completado) {
+    final current = Set<int>.from(completedCapitulos.value);
+    if (completado) {
+      current.add(idCapitulo);
+    } else {
+      current.remove(idCapitulo);
+    }
+    completedCapitulos.value = current;
+    _prefs.setStringList(
+        _kCompletedCapitulos, current.map((e) => e.toString()).toList());
+  }
+
   // ── Cerrar sesión ──────────────────────────────────────────────────────────
   Future<void> cerrarSesion() async {
     token = null;
@@ -167,7 +187,9 @@ class AppSession {
     await _prefs.remove(_kPrograma);
     await _prefs.remove(_kSavedCursos);
     await _prefs.remove(_kSavedLecciones);
+    await _prefs.remove(_kCompletedCapitulos);
     savedCursos.value = {};
     savedLecciones.value = {};
+    completedCapitulos.value = {};
   }
 }

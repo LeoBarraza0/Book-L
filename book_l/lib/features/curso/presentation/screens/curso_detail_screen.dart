@@ -6,8 +6,10 @@ import '../../../leccion/presentation/screens/leccion_detail_screen.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
 import '../controller/curso_controller.dart';
 import 'curso_editar_screen.dart';
-import '../../../../core/storage/local_storage.dart';
+import '../../../leccion/presentation/controller/leccion_controller.dart';
+import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
+import '../../../../core/storage/local_storage.dart';
 import '../../../../core/services/bookl_service.dart';
 
 class CursoDetailScreen extends StatefulWidget {
@@ -329,29 +331,39 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 ],
               ),
             ),
-            const SizedBox(
-              width: 65,
-              height: 65,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 65,
-                    height: 65,
-                    child: CircularProgressIndicator(
-                      value: 0.2,
-                      strokeWidth: 6,
-                      backgroundColor: Color(0xFFD9D9D9),
-                      color: Color(0xFF4DC130),
-                      strokeAlign: CircularProgressIndicator.strokeAlignCenter,
-                    ),
+            ListenableBuilder(
+              listenable: AppSession().completedCapitulos,
+              builder: (context, _) {
+                final progress = curso != null 
+                    ? _ctrl.calcularProgresoCurso(curso.idCurso) 
+                    : 0.0;
+                final percent = (progress * 100).toInt();
+
+                return SizedBox(
+                  width: 65,
+                  height: 65,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 65,
+                        height: 65,
+                        child: CircularProgressIndicator(
+                          value: progress,
+                          strokeWidth: 6,
+                          backgroundColor: const Color(0xFFD9D9D9),
+                          color: const Color(0xFF4DC130),
+                          strokeAlign: CircularProgressIndicator.strokeAlignCenter,
+                        ),
+                      ),
+                      Text(
+                        '$percent%',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '20%',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ],
         );
@@ -502,24 +514,21 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // "Introducción" section
-        const Text(
-          'Introducción',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
         ListenableBuilder(
           listenable: _ctrl,
           builder: (context, _) {
             final contenido = _ctrl.state.selected?.contenido;
             if (contenido == null || contenido.isEmpty) {
-              return const Text(
-                'Aún no hay introducción disponible para este curso.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF787878),
-                  fontWeight: FontWeight.w600,
-                  height: 1.4,
+              return const Padding(
+                padding: EdgeInsets.only(bottom: 24),
+                child: Text(
+                  'Aún no hay introducción disponible para este curso.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF787878),
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                  ),
                 ),
               );
             }
@@ -534,7 +543,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (titulo.isNotEmpty && titulo != 'Resumen') ...[
+                      if (titulo.isNotEmpty) ...[
                         Text(
                           titulo,
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -564,15 +573,16 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           builder: (context, _) {
             final lecciones = _ctrl.leccionesDeCurso;
             if (lecciones.isEmpty) {
-              // Placeholder mientras carga o sin datos
-              return _buildLeccionCard(
-                category: 'Sin lecciones',
-                title: 'Aún no hay lecciones',
-                duration: '--',
-                rating: '--',
-                students: '--',
-                progress: 0,
-                imageUrl: '',
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'Aún no hay lecciones en este curso.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF787878),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               );
             }
             return Column(
@@ -582,10 +592,10 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                     category: 'Lección',
                     title: l.nombre,
                     duration: '--',
-                    rating: '--',
-                    students: '--',
-                    progress: 0,
-                    imageUrl: '',
+                    rating: l.rating > 0 ? l.rating.toStringAsFixed(1) : '--',
+                    students: l.estudiantes > 0 ? '${l.estudiantes} est.' : '--',
+                    progress: l.progreso,
+                    imageUrl: l.imagenUrl ?? '',
                     idLeccion: l.idLeccion,
                   ),
                   const SizedBox(height: 12),
@@ -627,17 +637,30 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
         ),
         child: Row(
           children: [
-            // Imagen del curso / lección
+            // Imagen de portada con fallback
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                imageUrl,
-                width: 74,
-                height: 74,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    Container(width: 74, height: 74, color: Colors.grey),
-              ),
+              child: imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      width: 74,
+                      height: 74,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 74,
+                        height: 74,
+                        color: const Color(0xFF4DC130).withOpacity(0.3),
+                        child: const Icon(Icons.menu_book_rounded,
+                            color: Color(0xFF4DC130), size: 32),
+                      ),
+                    )
+                  : Container(
+                      width: 74,
+                      height: 74,
+                      color: const Color(0xFF4DC130).withOpacity(0.25),
+                      child: const Icon(Icons.menu_book_rounded,
+                          color: Color(0xFF4DC130), size: 32),
+                    ),
             ),
             const SizedBox(width: 14),
             // Contenido en texto
@@ -763,28 +786,37 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                     },
                   ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        value: progress,
-                        backgroundColor: Colors.transparent,
-                        color: const Color(0xFF4DC130),
-                        strokeWidth: 4,
-                        strokeCap: StrokeCap.round,
+                ListenableBuilder(
+                  listenable: AppSession().completedCapitulos,
+                  builder: (context, _) {
+                    final dynProgress = idLeccion != null 
+                        ? LeccionController().calcularProgresoLeccion(idLeccion)
+                        : 0.0;
+                    
+                    return SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            value: dynProgress,
+                            backgroundColor: Colors.transparent,
+                            color: const Color(0xFF4DC130),
+                            strokeWidth: 4,
+                            strokeCap: StrokeCap.round,
+                          ),
+                          Text(
+                            '${(dynProgress * 100).toInt()}%',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '${(progress * 100).toInt()}%',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ],
             ),

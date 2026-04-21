@@ -110,7 +110,9 @@ class BookLApp extends StatelessWidget {
                 '/editar_capitulo': (context) => CapituloEditarScreen(
                       idCapitulo: ModalRoute.of(context)?.settings.arguments as int?,
                     ),
-                '/capitulo_detail': (context) => const CapituloScreen(),
+                '/capitulo_detail': (context) => CapituloScreen(
+                      idCapitulo: ModalRoute.of(context)?.settings.arguments as int?,
+                    ),
                 '/busqueda': (context) => const BusquedaScreen(),
                 '/resultado': (context) => const ResultadoScreen(),
                 '/teorico': (context) => const TeoricoScreen(),

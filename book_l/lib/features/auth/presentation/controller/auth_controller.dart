@@ -41,6 +41,7 @@ class AuthController extends ChangeNotifier {
         return false;
       }
       usuarioActual = usuario;
+      BooklService().setRole(usuario.rol);
       status = AuthStatus.authenticated;
       notifyListeners();
       return true;
@@ -68,6 +69,7 @@ class AuthController extends ChangeNotifier {
         programa: programa,
       );
       usuarioActual = usuario;
+      BooklService().setRole(usuario.rol);
       status = AuthStatus.authenticated;
       notifyListeners();
       return true;

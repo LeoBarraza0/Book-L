@@ -115,8 +115,12 @@ class _PerfilScreenState extends State<PerfilScreen>
                                     if (Navigator.canPop(context)) {
                                       Navigator.pop(context);
                                     } else {
+                                      final role = BooklService().currentRole;
                                       Navigator.pushReplacementNamed(
-                                          context, '/home');
+                                          context,
+                                          role == 'admin'
+                                              ? '/admin_Home'
+                                              : '/home');
                                     }
                                   },
                                 ),

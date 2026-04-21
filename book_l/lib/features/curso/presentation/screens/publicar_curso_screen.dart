@@ -1,12 +1,11 @@
-import 'package:book_l/core/services/bookl_service.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/storage/local_storage.dart';
-import 'package:book_l/shared/widgets/custom_button.dart';
-import 'package:book_l/shared/widgets/custom_text_field.dart';
-import 'package:book_l/shared/data/course_repository.dart';
-import 'package:book_l/shared/domain/models/curso_model.dart';
-import 'package:book_l/shared/domain/models/leccion_model.dart';
+import '../../../leccion/presentation/widgets/seccion_editor_widget.dart';
+import '../../../leccion/presentation/widgets/agregar_seccion_button.dart';
+import '../controller/curso_controller.dart';
 
 class PublicarCursoScreen extends StatefulWidget {
   const PublicarCursoScreen({super.key});
@@ -18,11 +17,12 @@ class PublicarCursoScreen extends StatefulWidget {
 class _PublicarCursoScreenState extends State<PublicarCursoScreen>
     with TickerProviderStateMixin {
   final _nombreCtrl = TextEditingController();
-  final _descCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
+  final List<SeccionData> _secciones = [];
+  final CursoController _cursoCtrl = CursoController();
   bool _guardando = false;
+  String? _imagenPath;
 
-  // Animaciones
   late AnimationController _headerAnimCtrl;
   late Animation<double> _headerFadeAnim;
   late Animation<Offset> _headerSlideAnim;
@@ -32,6 +32,8 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
   @override
   void initState() {
     super.initState();
+
+    _secciones.add(SeccionData(titulo: 'Introducción'));
 
     _headerAnimCtrl = AnimationController(
       vsync: this,
@@ -64,11 +66,41 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
   @override
   void dispose() {
     _nombreCtrl.dispose();
-    _descCtrl.dispose();
     _scrollCtrl.dispose();
     _headerAnimCtrl.dispose();
     _guardarAnimCtrl.dispose();
+    for (final s in _secciones) {
+      s.dispose();
+    }
     super.dispose();
+  }
+
+  void _agregarSeccion() {
+    setState(() => _secciones.add(SeccionData()));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
+  void _eliminarSeccion(int index) {
+    setState(() {
+      _secciones[index].dispose();
+      _secciones.removeAt(index);
+    });
+  }
+
+  Future<void> _seleccionarImagen() async {
+    final picker = ImagePicker();
+    final img = await picker.pickImage(source: ImageSource.gallery);
+    if (img != null && mounted) {
+      setState(() => _imagenPath = img.path);
+    }
   }
 
   @override
@@ -80,7 +112,6 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
           CustomScrollView(
             controller: _scrollCtrl,
             slivers: [
-              // Header verde
               SliverToBoxAdapter(
                 child: FadeTransition(
                   opacity: _headerFadeAnim,
@@ -90,52 +121,32 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
                   ),
                 ),
               ),
-
-              // Cuerpo
               SliverToBoxAdapter(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Instrucción
-                      Text(
-                        'Llenar los siguientes datos para publicar el curso:',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Nombre del curso
-                      CustomTextField(
-                        controller: _nombreCtrl,
-                        label: 'Nombre del curso',
-                        hint: 'Ej. Introducción a Flutter',
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Descripción
-                      const Text(
-                        'Descripción',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF858484),
-                        ),
-                      ),
+                      _buildNombreEditable(),
+                      const SizedBox(height: 28),
+                      // Sección 0 (Introducción) con título fijo
+                      ...List.generate(_secciones.length, (i) {
+                        return SeccionEditorWidget(
+                          key: ValueKey(_secciones[i].hashCode),
+                          data: _secciones[i],
+                          index: i,
+                          onEliminar: () => _eliminarSeccion(i),
+                          tituloFijo: i == 0,
+                        );
+                      }),
                       const SizedBox(height: 8),
-                      _buildDescriptionBox(),
-
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: AgregarSeccionButton(onTap: _agregarSeccion),
+                      ),
                       const SizedBox(height: 36),
-
-                      // Botón Publicar centrado
                       _buildPublicarButton(),
-
                       const SizedBox(height: 120),
                     ],
                   ),
@@ -147,8 +158,6 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
       ),
     );
   }
-
-  // ─── Componentes UI ─────────────────────────────────────────────────────────
 
   Widget _buildHeader(BuildContext context) {
     return SizedBox(
@@ -162,12 +171,29 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
                 bottomLeft: Radius.circular(25),
                 bottomRight: Radius.circular(25),
               ),
-              child: Image.asset(
-                'assets/images/green_bg.png',
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    Container(color: const Color(0xFF4DC130)),
-              ),
+              child: _imagenPath != null
+                  ? (kIsWeb
+                      ? Image.network(
+                          _imagenPath!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Container(color: const Color(0xFF4DC130)),
+                        )
+                      : Image.file(
+                          File(_imagenPath!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Container(color: const Color(0xFF4DC130)),
+                        ))
+                  : Transform.scale(
+                      scale: 1.15,
+                      child: Image.asset(
+                        'assets/images/green_bg.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            Container(color: const Color(0xFF4DC130)),
+                      ),
+                    ),
             ),
           ),
           Positioned.fill(
@@ -192,23 +218,7 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
             ),
           ),
 
-          // Logo centrado
-          Positioned(
-            top: 60,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: SvgPicture.asset(
-                'assets/images/logo_white.svg',
-                width: 80,
-                height: 35,
-                colorFilter:
-                    const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-              ),
-            ),
-          ),
-
-          // Badge "Nuevo Curso"
+          // Badge «Nuevo Curso»
           Positioned(
             bottom: 20,
             left: 0,
@@ -246,22 +256,25 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
             ),
           ),
 
-          // Botón back
+          // Botones back + imagen
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 45,
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6BCA54).withOpacity(0.9),
-                    shape: BoxShape.circle,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildCircularIconButton(
+                    Icons.arrow_back_rounded,
+                    () => Navigator.pop(context),
                   ),
-                  child: const Icon(Icons.arrow_back_rounded,
-                      color: Colors.white, size: 24),
-                ),
+                  _buildCircularIconButton(
+                    _imagenPath != null
+                        ? Icons.image_rounded
+                        : Icons.add_photo_alternate_outlined,
+                    _seleccionarImagen,
+                  ),
+                ],
               ),
             ),
           ),
@@ -270,34 +283,80 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
     );
   }
 
-  Widget _buildDescriptionBox() {
+  Widget _buildCircularIconButton(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 45,
+        height: 45,
+        decoration: BoxDecoration(
+          color: const Color(0xFF6BCA54).withOpacity(0.9),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(icon, color: Colors.white, size: 24),
+      ),
+    );
+  }
+
+  Widget _buildNombreEditable() {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 8,
-            offset: Offset(0, 3),
+            color: Color(0x18000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
           ),
         ],
       ),
-      child: TextField(
-        controller: _descCtrl,
-        maxLines: 5,
-        style: const TextStyle(fontFamily: 'Inter', fontSize: 15),
-        decoration: InputDecoration(
-          hintText: 'Añade una descripción detallada...',
-          hintStyle: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 15),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _nombreCtrl,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF363333),
+              ),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+                hintText: 'Nombre del curso...',
+                hintStyle: TextStyle(
+                  color: Color(0xFFB0B0B0),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 17,
+                ),
+              ),
+            ),
           ),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.all(16),
-        ),
+          const Icon(Icons.edit, size: 16, color: Color(0xFFAAAAAA)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSeccionLabel(String texto) {
+    return Text(
+      texto,
+      style: const TextStyle(
+        fontFamily: 'Inter',
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+        color: Color(0xFF363333),
       ),
     );
   }
@@ -308,7 +367,7 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
       child: Center(
         child: SizedBox(
           width: 220,
-          child: _PulseButton(
+          child: _PublicarButton(
             label: _guardando ? 'Publicando...' : 'Publicar curso',
             onTap: _guardando ? null : _guardarCurso,
           ),
@@ -316,8 +375,6 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
       ),
     );
   }
-
-  // ─── Lógica ─────────────────────────────────────────────────────────────────
 
   Future<void> _guardarCurso() async {
     final nombre = _nombreCtrl.text.trim();
@@ -328,15 +385,15 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
 
     setState(() => _guardando = true);
     try {
-      final nuevoCurso = CursoModel(
-        id: BooklService().generateId(),
-        idUsuarioFk: AppSession().usuarioId ?? 1,
-        nombre: nombre,
-        descripcion: _descCtrl.text.trim(),
-        lecciones: [], // El usuario agregará lecciones después o al curso
-      );
+      final idUsuario = AppSession().usuarioId ?? 1;
+      final contenido = _secciones.map((s) => s.toJson()).toList();
 
-      CourseRepository.instance.addCourse(nuevoCurso);
+      await _cursoCtrl.agregarCurso(
+        idUsuario: idUsuario,
+        nombre: nombre,
+        contenido: contenido,
+        imagenUrl: _imagenPath,
+      );
 
       if (mounted) {
         _showSnackbar('Curso publicado exitosamente');
@@ -363,17 +420,17 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
   }
 }
 
-// Reutilizamos el estilo de botón con pulso/animación
-class _PulseButton extends StatefulWidget {
+// ─── Botón animado ────────────────────────────────────────────────────────────
+class _PublicarButton extends StatefulWidget {
   final String label;
   final VoidCallback? onTap;
-  const _PulseButton({required this.label, this.onTap});
+  const _PublicarButton({required this.label, this.onTap});
 
   @override
-  State<_PulseButton> createState() => _PulseButtonState();
+  State<_PublicarButton> createState() => _PublicarButtonState();
 }
 
-class _PulseButtonState extends State<_PulseButton>
+class _PublicarButtonState extends State<_PublicarButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _scale;
@@ -426,10 +483,19 @@ class _PulseButtonState extends State<_PulseButton>
             ],
           ),
           alignment: Alignment.center,
-          child: Text(
-            widget.label,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.save_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                widget.label,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16),
+              ),
+            ],
           ),
         ),
       ),

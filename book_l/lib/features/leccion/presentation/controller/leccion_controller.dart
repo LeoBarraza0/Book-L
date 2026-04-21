@@ -7,6 +7,7 @@ import '../../data/repositories/capitulo_repository_impl.dart';
 import '../../domain/entities/leccion.dart';
 import '../../domain/entities/capitulo.dart';
 import '../../domain/usecases/leccion_usecases.dart';
+import '../../../../core/storage/local_storage.dart';
 
 // Adaptador primario — maneja Lección y Capítulo juntos porque en la UI
 // siempre se navegan en conjunto (lección → lista de capítulos).
@@ -84,20 +85,23 @@ class LeccionController extends ChangeNotifier {
 
   // ── CREATE — Lección ───────────────────────────────────────────────────────
 
-  Future<void> agregarLeccion({
+  Future<int> agregarLeccion({
     required int idUsuario,
     required String nombre,
     List<dynamic>? contenido,
+    String? imagenUrl,
   }) async {
     final nueva = Leccion(
       idLeccion: 0, // el impl asigna el ID real
       idUsuarioFk: idUsuario,
       nombre: nombre,
       contenido: contenido,
+      imagenUrl: imagenUrl,
       estado: 'activa',
     );
-    await _addLeccion(nueva);
+    final newId = await _addLeccion(nueva);
     await cargarLecciones();
+    return newId;
   }
 
   // ── UPDATE — Lección ───────────────────────────────────────────────────────
@@ -142,9 +146,22 @@ class LeccionController extends ChangeNotifier {
   List<Capitulo> capitulosDe(int idLeccion) =>
       BooklService().capitulos.where((c) => c.idLeccion == idLeccion).toList();
 
+  /// Calcula el progreso de una lección basado en capítulos completados.
+  double calcularProgresoLeccion(int idLeccion) {
+    final caps = capitulosDe(idLeccion);
+    if (caps.isEmpty) return 0.0;
+    
+    final completados = AppSession().completedCapitulos.value;
+    int count = 0;
+    for (var c in caps) {
+      if (completados.contains(c.idCapitulo)) count++;
+    }
+    return count / caps.length;
+  }
+
   // ── CREATE — Capítulo ──────────────────────────────────────────────────────
 
-  Future<void> agregarCapitulo({
+  Future<int> agregarCapitulo({
     required int idLeccion,
     required String nombre,
     List<dynamic>? contenido,
@@ -157,12 +174,13 @@ class LeccionController extends ChangeNotifier {
       contenido: contenido,
       tiempoTotal: tiempoTotal,
     );
-    await _addCapitulo(nuevo);
+    final newId = await _addCapitulo(nuevo);
     // Refresca la lista de capítulos si la lección seleccionada coincide
     if (state.selected?.idLeccion == idLeccion) {
       capitulosDeLeccion = await _getCapitulos(idLeccion);
       notifyListeners();
     }
+    return newId;
   }
 
   // ── UPDATE — Capítulo ──────────────────────────────────────────────────────

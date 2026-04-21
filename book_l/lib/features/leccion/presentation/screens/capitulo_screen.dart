@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
+import '../../../../core/storage/local_storage.dart';
 
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
@@ -54,49 +55,59 @@ class _CapituloScreenState extends State<CapituloScreen> {
                           if (cap != null && cap.contenido != null && cap.contenido!.isNotEmpty) {
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: cap.contenido!.map((s) {
-                                final titulo = s['titulo'] as String? ?? '';
-                                final deltaData = s['cuerpo_delta'] as List<dynamic>?;
+                              children: [
+                                Text(
+                                  cap.nombre,
+                                  style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87),
+                                ),
+                                const SizedBox(height: 16),
+                                ...cap.contenido!.map((s) {
+                                  final titulo = s['titulo'] as String? ?? '';
+                                  final deltaData = s['cuerpo_delta'] as List<dynamic>?;
 
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 24),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      if (titulo.isNotEmpty) ...[
-                                        Text(
-                                          titulo,
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 24),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        if (titulo.isNotEmpty) ...[
+                                          Text(
+                                            titulo,
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                          ),
+                                          const SizedBox(height: 8),
+                                        ],
+                                        QuillReadOnlyView(
+                                          delta: deltaData,
+                                          fontSize: 16,
+                                          color: const Color(0xFF787878),
                                         ),
-                                        const SizedBox(height: 8),
+                                        if (s['tiene_imagen'] == true) ...[
+                                          const SizedBox(height: 12),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: (s['imagen_path'] != null && s['imagen_path'].toString().isNotEmpty)
+                                                ? (s['imagen_path'].toString().startsWith('http') || s['imagen_path'].toString().startsWith('assets/'))
+                                                    ? Image.network(s['imagen_path'], width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
+                                                    : Image.file(File(s['imagen_path']), width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
+                                                : _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)),
+                                          ),
+                                        ],
+                                        if (s['tiene_video'] == true) ...[
+                                          const SizedBox(height: 12),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: _buildMediaItem(Icons.play_circle_filled, 'Video adjunto', const Color(0xFFFF606F)),
+                                          ),
+                                        ],
                                       ],
-                                      QuillReadOnlyView(
-                                        delta: deltaData,
-                                        fontSize: 16,
-                                        color: const Color(0xFF787878),
-                                      ),
-                                      if (s['tiene_imagen'] == true) ...[
-                                        const SizedBox(height: 12),
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(12),
-                                          child: (s['imagen_path'] != null && s['imagen_path'].toString().isNotEmpty)
-                                              ? (s['imagen_path'].toString().startsWith('http') || s['imagen_path'].toString().startsWith('assets/'))
-                                                  ? Image.network(s['imagen_path'], width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
-                                                  : Image.file(File(s['imagen_path']), width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
-                                              : _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)),
-                                        ),
-                                      ],
-                                      if (s['tiene_video'] == true) ...[
-                                        const SizedBox(height: 12),
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(12),
-                                          child: _buildMediaItem(Icons.play_circle_filled, 'Video adjunto', const Color(0xFFFF606F)),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
+                                    ),
+                                  );
+                                }).toList()
+                              ],
                             );
                           } else {
                             return Column(
@@ -135,6 +146,78 @@ class _CapituloScreenState extends State<CapituloScreen> {
                           _buildPruebaButton('2'),
                         ],
                       ),
+                      const SizedBox(height: 48),
+
+                      // Botón de completar capítulo
+                      ListenableBuilder(
+                        listenable: AppSession().completedCapitulos,
+                        builder: (context, _) {
+                          final isCompleted = AppSession()
+                              .completedCapitulos
+                              .value
+                              .contains(widget.idCapitulo);
+                          return Center(
+                            child: GestureDetector(
+                              onTap: () {
+                                if (widget.idCapitulo != null) {
+                                  AppSession().marcarCapituloCompletado(
+                                      widget.idCapitulo!, !isCompleted);
+                                }
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 32, vertical: 16),
+                                decoration: BoxDecoration(
+                                  color: isCompleted
+                                      ? const Color(0xFF4DC130)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(30),
+                                  border: Border.all(
+                                      color: const Color(0xFF4DC130), width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: isCompleted
+                                          ? const Color(0xFF4DC130)
+                                              .withOpacity(0.3)
+                                          : Colors.black.withOpacity(0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    )
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isCompleted
+                                          ? Icons.check_circle
+                                          : Icons.circle_outlined,
+                                      color: isCompleted
+                                          ? Colors.white
+                                          : const Color(0xFF4DC130),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      isCompleted
+                                          ? 'Capítulo Completado'
+                                          : 'Marcar como Completado',
+                                      style: TextStyle(
+                                        color: isCompleted
+                                            ? Colors.white
+                                            : const Color(0xFF4DC130),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
                       const SizedBox(height: 120),
                     ],
                   ),

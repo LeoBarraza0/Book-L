@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../core/services/bookl_service.dart';
 import '../../core/storage/local_storage.dart';
 import '../../features/curso/domain/entities/curso.dart';
+import '../../features/curso/presentation/controller/curso_controller.dart';
 import '../../features/leccion/domain/entities/leccion.dart';
+import '../../features/leccion/presentation/controller/leccion_controller.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Card Base que estandariza diseño, tamaño de cajitas y estructura visual.
@@ -79,7 +81,7 @@ class _BaseContentCard extends StatelessWidget {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(
-                        right: 12.0, top: 12.0, bottom: 12.0),
+                        right: 12.0, top: 10.0, bottom: 10.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -189,26 +191,33 @@ class SharedLeccionCard extends StatelessWidget {
         ],
       ),
       favoriteButton: _buildFavoriteButton(leccion.idLeccion, true),
-      progressOverlay: SizedBox(
-        width: 32,
-        height: 32,
-        child: Stack(
-          fit: StackFit.expand,
-          children: const [
-            CircularProgressIndicator(
-              value: 0.0,
-              backgroundColor: Color(0x334DC130),
-              color: Color(0xFF4DC130),
-              strokeWidth: 4,
+      progressOverlay: ListenableBuilder(
+        listenable: AppSession().completedCapitulos,
+        builder: (context, _) {
+          final progress = LeccionController().calcularProgresoLeccion(leccion.idLeccion);
+          final percent = (progress * 100).toInt();
+          return SizedBox(
+            width: 32,
+            height: 32,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CircularProgressIndicator(
+                  value: progress,
+                  backgroundColor: const Color(0x334DC130),
+                  color: const Color(0xFF4DC130),
+                  strokeWidth: 4,
+                ),
+                Center(
+                  child: Text(
+                    '$percent%',
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
             ),
-            Center(
-              child: Text(
-                '0%',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -295,6 +304,36 @@ class SharedCursoCard extends StatelessWidget {
               isSaved ? Icons.favorite : Icons.favorite_border,
               color: Colors.redAccent,
               size: 24,
+            ),
+          );
+        },
+      ),
+      progressOverlay: ListenableBuilder(
+        listenable: AppSession().completedCapitulos,
+        builder: (context, _) {
+          final progress =
+              CursoController().calcularProgresoCurso(curso.idCurso);
+          final percent = (progress * 100).toInt();
+          return SizedBox(
+            width: 32,
+            height: 32,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CircularProgressIndicator(
+                  value: progress,
+                  backgroundColor: const Color(0x33FF606F),
+                  color: const Color(0xFFFF606F),
+                  strokeWidth: 4,
+                ),
+                Center(
+                  child: Text(
+                    '$percent%',
+                    style: const TextStyle(
+                        fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
             ),
           );
         },

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/services/bookl_service.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../controller/auth_controller.dart';
@@ -86,7 +87,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
 
     if (ok) {
-      Navigator.pushReplacementNamed(context, '/home');
+      final role = BooklService().currentRole;
+      Navigator.pushReplacementNamed(context, role == 'admin' ? '/admin_Home' : '/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

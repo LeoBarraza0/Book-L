@@ -23,7 +23,7 @@ class AddLeccionUseCase {
   final LeccionRepository repository;
   AddLeccionUseCase(this.repository);
 
-  Future<void> call(Leccion leccion) => repository.addLeccion(leccion);
+  Future<int> call(Leccion leccion) => repository.addLeccion(leccion);
 }
 
 class UpdateLeccionUseCase {
@@ -61,7 +61,7 @@ class AddCapituloUseCase {
   final CapituloRepository repository;
   AddCapituloUseCase(this.repository);
 
-  Future<void> call(Capitulo capitulo) => repository.addCapitulo(capitulo);
+  Future<int> call(Capitulo capitulo) => repository.addCapitulo(capitulo);
 }
 
 class UpdateCapituloUseCase {

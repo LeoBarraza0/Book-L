@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../../core/storage/local_storage.dart';
+import '../../../../core/services/bookl_service.dart';
 import '../widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/leccion.dart';
+import '../../domain/entities/capitulo.dart';
 
 class LeccionEditarScreen extends StatefulWidget {
   final int? idLeccion;
@@ -20,6 +23,9 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
   final _tituloCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   final List<SeccionData> _secciones = [];
+  final List<Capitulo> _capitulosEnMemoria = [];
+  final List<int> _capitulosAEliminar = [];
+  
   final _leccionCtrl = LeccionController();
   Leccion? _leccionActual;
   bool _guardando = false;
@@ -54,6 +60,9 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
             } else {
               _secciones.add(SeccionData(titulo: 'Introducción'));
             }
+            
+            _capitulosEnMemoria.clear();
+            _capitulosEnMemoria.addAll(_leccionCtrl.capitulosDeLeccion);
           });
         }
       });
@@ -133,9 +142,6 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
     });
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // BUILD
-  // ─────────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -216,12 +222,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Componentes
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /// Header con imagen verde reutilizando el mismo patrón visual de
-  /// leccion_detail_screen.dart + botón back + botón compartir.
+  // ─── Header ────────────────────────────────────────────────────────────────
   Widget _buildHeaderImage(BuildContext context) {
     return SizedBox(
       height: 300,
@@ -289,9 +290,9 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
                     ),
                   ],
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Icon(Icons.edit_note_rounded,
                         size: 16, color: Color(0xFF4DC130)),
                     SizedBox(width: 6),
@@ -397,57 +398,73 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
         ),
         const SizedBox(height: 16),
 
-        // Metadata: avatar + nombre + badge + rating
-        Row(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: const BoxDecoration(
-                color: Color(0xFF60A144),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.person, color: Colors.white, size: 18),
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'Emanuel Barranco',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: const Color(0xFF79AC63),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text(
-                'Estudiante',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
+        // Metadata: avatar + nombre + badge + rating dinámicos
+        Builder(
+          builder: (context) {
+            final idUsuario = _leccionActual?.idUsuarioFk ?? AppSession().usuarioId;
+            final usuario = idUsuario != null
+                ? BooklService().usuarios.cast<dynamic>().firstWhere(
+                    (u) => u.idUsuario == idUsuario,
+                    orElse: () => null,
+                  )
+                : null;
+            final nombreAutor = usuario?.nombreCompleto ?? AppSession().nombreCompleto ?? '---';
+            final rolAutor = usuario?.rol ?? 'Estudiante';
+            final ratingText = _leccionActual != null && _leccionActual!.rating > 0
+                ? _leccionActual!.rating.toStringAsFixed(1)
+                : '---';
+            return Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF60A144),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.person, color: Colors.white, size: 18),
                 ),
-              ),
-            ),
-            const Spacer(),
-            const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
-            const SizedBox(width: 3),
-            const Text(
-              '4.5',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+                const SizedBox(width: 8),
+                Text(
+                  nombreAutor,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF79AC63),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    rolAutor,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
+                const SizedBox(width: 3),
+                Text(
+                  ratingText,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -527,7 +544,46 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
         // ── Botón agregar sección ────────────────────────────────────
         AgregarSeccionButton(onTap: _agregarSeccion),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
+
+        // ─── Capítulos ──────────────────────────────────────────────────────────
+        const Text(
+          'Capítulos',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF363333),
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...List.generate(_capitulosEnMemoria.length, (i) {
+          return _buildCapituloItemEditable(i, _capitulosEnMemoria[i]);
+        }),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _irACrearCapitulo,
+            icon: const Icon(Icons.add_circle_outline_rounded,
+                color: Color(0xFF4DC130), size: 20),
+            label: const Text(
+              'Añadir Capítulo',
+              style: TextStyle(
+                color: Color(0xFF4DC130),
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Inter',
+              ),
+            ),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              backgroundColor: const Color(0xFF4DC130).withOpacity(0.1),
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
 
         // ── Botón Guardar ─────────────────────────────────────────────
         _buildGuardarButton(),
@@ -583,12 +639,33 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
     setState(() => _guardando = true);
     try {
       if (_leccionActual != null) {
+        // 1. Guardar cambios básicos de la lección
         await _leccionCtrl.editarLeccion(
           _leccionActual!.copyWith(
             nombre: nombre,
             contenido: _secciones.map((s) => s.toJson()).toList(),
           ),
         );
+        
+        // 2. Sincronizar Capítulos eliminados
+        for (final idCap in _capitulosAEliminar) {
+          await _leccionCtrl.eliminarCapitulo(idCap, _leccionActual!.idLeccion);
+        }
+        
+        // 3. Sincronizar Capítulos (Agregar nuevos o Editar existentes)
+        for (final cap in _capitulosEnMemoria) {
+          final existe = _leccionCtrl.capitulosDeLeccion.any((c) => c.idCapitulo == cap.idCapitulo);
+          if (!existe) {
+             await _leccionCtrl.agregarCapitulo(
+               idLeccion: _leccionActual!.idLeccion,
+               nombre: cap.nombre,
+               contenido: cap.contenido,
+               tiempoTotal: cap.tiempoTotal,
+             );
+          } else {
+             await _leccionCtrl.editarCapitulo(cap);
+          }
+        }
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -612,6 +689,123 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
       }
     } finally {
       if (mounted) setState(() => _guardando = false);
+    }
+  }
+
+  // ─── Capítulos Componentes Estandarizados ─────────────────────────────────
+  Widget _buildCapituloItemEditable(int index, Capitulo capitulo) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFD9D9D9),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: const BoxDecoration(
+              color: Color(0xFFBDBDBD),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '${index + 1}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  capitulo.nombre.isEmpty ? 'Capítulo ${index + 1}' : capitulo.nombre,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    const Icon(Icons.timer_outlined, size: 12, color: Color(0xFF676767)),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatDuracion(capitulo.tiempoTotal),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF676767),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Actions
+          GestureDetector(
+            onTap: () {
+               Navigator.pushNamed(context, '/capitulo_editar_screen', arguments: capitulo.idCapitulo);
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.only(right: 8),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.edit_outlined,
+                  size: 20, color: Color(0xFF676767)),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+               setState(() {
+                 final removed = _capitulosEnMemoria.removeAt(index);
+                 if (_leccionCtrl.capitulosDeLeccion.any((c) => c.idCapitulo == removed.idCapitulo)) {
+                    _capitulosAEliminar.add(removed.idCapitulo);
+                 }
+               });
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFEBEB),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.delete_outline,
+                  size: 20, color: Color(0xFFD63030)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDuracion(int segundos) {
+    if (segundos < 60) return '$segundos seg';
+    final mins = segundos ~/ 60;
+    if (mins < 60) return '$mins min';
+    final horas = mins ~/ 60;
+    final resto = mins % 60;
+    return resto == 0 ? '${horas}h' : '${horas}h ${resto}min';
+  }
+
+  Future<void> _irACrearCapitulo() async {
+    final resultado = await Navigator.pushNamed(context, '/crear_capitulo');
+    if (resultado != null && resultado is Capitulo) {
+      if (mounted) {
+        setState(() => _capitulosEnMemoria.add(resultado));
+      }
     }
   }
 }
@@ -647,6 +841,7 @@ class _GuardarButtonState extends State<_GuardarButton>
 
   @override
   void dispose() {
+    _ctrl.dispose();
     super.dispose();
   }
 
