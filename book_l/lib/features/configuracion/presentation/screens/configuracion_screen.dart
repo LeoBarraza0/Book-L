@@ -74,7 +74,8 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                                   icon: Icons.brightness_6_outlined,
                                   iconColor: const Color(0xFF96D786),
                                   title: 'Tema oscuro',
-                                  value: _controller.config?.temaOscuro ?? false,
+                                  value:
+                                      _controller.config?.temaOscuro ?? false,
                                   onChanged: (val) {
                                     _controller.updateTemaOscuro(val);
                                   },
@@ -84,7 +85,8 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                                   iconColor: const Color(0xFFF6B55C),
                                   title: 'Tamaño de letra',
                                   currentValue:
-                                      _controller.config?.tamanoFuente ?? 'normal',
+                                      _controller.config?.tamanoFuente ??
+                                          'normal',
                                   options: ['pequeno', 'normal', 'grande'],
                                   onChanged: (val) {
                                     if (val != null) {
@@ -95,9 +97,10 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                                 _buildSwitchTile(
                                   icon: Icons.swap_vert,
                                   iconColor: const Color(0xFF555555),
-                                  title: 'Reproducción automática (Auto Scroll)',
-                                  value:
-                                      _controller.config?.reproduccionAuto ?? true,
+                                  title:
+                                      'Reproducción automática (Auto Scroll)',
+                                  value: _controller.config?.reproduccionAuto ??
+                                      true,
                                   onChanged: (val) {
                                     _controller.updateReproduccionAuto(val);
                                   },
@@ -185,11 +188,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                     size: 28,
                   ),
                   onPressed: () {
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      '/home',
-                      (route) => false,
-                    );
+                    Navigator.pop(context);
                   },
                 ),
               ),
@@ -287,19 +286,23 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Theme.of(context).cardColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Contáctanos', style: TextStyle(fontWeight: FontWeight.bold)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Contáctanos',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: const Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Si necesitas ayuda, puedes comunicarte con nuestro equipo de soporte a través de:'),
+              Text(
+                  'Si necesitas ayuda, puedes comunicarte con nuestro equipo de soporte a través de:'),
               SizedBox(height: 15),
               Row(
                 children: [
                   Icon(Icons.email, color: Color(0xFF4DC130)),
                   SizedBox(width: 10),
-                  Text('soporte@bookl.com', style: TextStyle(fontWeight: FontWeight.w500)),
+                  Text('soporte@bookl.com',
+                      style: TextStyle(fontWeight: FontWeight.w500)),
                 ],
               ),
               SizedBox(height: 10),
@@ -307,7 +310,8 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                 children: [
                   Icon(Icons.phone, color: Color(0xFF4DC130)),
                   SizedBox(width: 10),
-                  Text('+57 300 123 4567', style: TextStyle(fontWeight: FontWeight.w500)),
+                  Text('+57 300 123 4567',
+                      style: TextStyle(fontWeight: FontWeight.w500)),
                 ],
               ),
             ],
@@ -315,7 +319,8 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cerrar', style: TextStyle(color: Color(0xFF4DC130))),
+              child: const Text('Cerrar',
+                  style: TextStyle(color: Color(0xFF4DC130))),
             ),
           ],
         );
@@ -329,25 +334,30 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Theme.of(context).cardColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Cerrar sesión', style: TextStyle(fontWeight: FontWeight.bold)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Cerrar sesión',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: const Text('¿Estás seguro que deseas salir de tu cuenta?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+              child:
+                  const Text('Cancelar', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
               onPressed: () async {
                 Navigator.pop(context); // Close dialog
                 await _controller.cerrarSesion();
                 if (context.mounted) {
-                  Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/login', (route) => false);
                 }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF606F),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
               child: const Text('Salir', style: TextStyle(color: Colors.white)),
             ),
