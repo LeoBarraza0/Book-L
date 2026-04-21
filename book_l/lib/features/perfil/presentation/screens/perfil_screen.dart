@@ -283,6 +283,8 @@ class _PerfilScreenState extends State<PerfilScreen>
                                     .where((c) =>
                                         c.idUsuarioFk == _user?.idUsuario)
                                     .length;
+                                final followersCount = BooklService().getFollowersCount(_user?.idUsuario ?? 0);
+                                final followingCount = BooklService().getFollowingCount(_user?.idUsuario ?? 0);
                                 return Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
@@ -294,12 +296,22 @@ class _PerfilScreenState extends State<PerfilScreen>
                                         width: 1,
                                         height: 35,
                                         color: Colors.black12),
-                                    _buildStatItem('Seguidores', '77'),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const SeguidoresScreen(),
+                                          ),
+                                        );
+                                      },
+                                      child: _buildStatItem('Seguidores', followersCount.toString()),
+                                    ),
                                     Container(
                                         width: 1,
                                         height: 35,
                                         color: Colors.black12),
-                                    _buildStatItem('Seguidos', '777'),
+                                    _buildStatItem('Seguidos', followingCount.toString()),
                                   ],
                                 );
                               },
@@ -338,25 +350,38 @@ class _PerfilScreenState extends State<PerfilScreen>
                             ),
                           )
                         else
-                          ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4DC130),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 12,
-                              ),
-                            ),
-                            child: const Text(
-                              'Seguir',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 14),
-                            ),
+                          ListenableBuilder(
+                            listenable: BooklService(),
+                            builder: (context, _) {
+                              final isFollowing = BooklService().isFollowing(
+                                AppSession().usuarioId ?? 0, 
+                                _user?.idUsuario ?? 0
+                              );
+                              return ElevatedButton(
+                                onPressed: () {
+                                  if (AppSession().usuarioId != null && _user?.idUsuario != null) {
+                                    BooklService().toggleSeguir(AppSession().usuarioId!, _user!.idUsuario);
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isFollowing ? Colors.grey[300] : const Color(0xFF4DC130),
+                                  foregroundColor: isFollowing ? Colors.black87 : Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 32,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                child: Text(
+                                  isFollowing ? 'Siguiendo' : 'Seguir',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                              );
+                            }
                           ),
                         const SizedBox(height: 25),
                       ],

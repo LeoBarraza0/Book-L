@@ -514,6 +514,11 @@
     }
   ],
   "sugerencias": [],
+  "seguidores": [
+    { "id_seguidor": 2, "id_seguido": 1, "estado": "activo", "created_at": "2026-01-01T10:00:00"},
+    { "id_seguidor": 3, "id_seguido": 1, "estado": "activo", "created_at": "2026-01-01T10:00:00"},
+    { "id_seguidor": 1, "id_seguido": 2, "estado": "activo", "created_at": "2026-01-01T10:00:00"}
+  ],
   "reportes": [
     {
       "id_reporte": 1,
