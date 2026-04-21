@@ -301,7 +301,10 @@ class _PerfilScreenState extends State<PerfilScreen>
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => const SeguidoresScreen(),
+                                            builder: (context) => SeguidoresScreen(
+                                              idUsuarioFocus: _user?.idUsuario ?? 0,
+                                              isSeguidores: true,
+                                            ),
                                           ),
                                         );
                                       },
@@ -311,7 +314,20 @@ class _PerfilScreenState extends State<PerfilScreen>
                                         width: 1,
                                         height: 35,
                                         color: Colors.black12),
-                                    _buildStatItem('Seguidos', followingCount.toString()),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => SeguidoresScreen(
+                                              idUsuarioFocus: _user?.idUsuario ?? 0,
+                                              isSeguidores: false,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: _buildStatItem('Seguidos', followingCount.toString()),
+                                    ),
                                   ],
                                 );
                               },
