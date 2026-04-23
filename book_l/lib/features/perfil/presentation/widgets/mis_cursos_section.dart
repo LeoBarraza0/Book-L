@@ -3,7 +3,6 @@ import 'package:book_l/shared/data/course_repository.dart';
 import 'package:book_l/shared/domain/models/curso_model.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:book_l/shared/widgets/create_menu_modal.dart' as lib_modal;
-import 'mis_cursos_access_card.dart';
 import 'course_list_tile.dart';
 import 'course_grid_card.dart';
 
@@ -32,9 +31,9 @@ class _MisCursosSectionState extends State<MisCursosSection> {
         }
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
-          child: _isGridView 
-            ? _buildGridView(context, courses) 
-            : _buildOverview(context, courses),
+          child: _isGridView
+              ? _buildGridView(context, courses)
+              : _buildOverview(context, courses),
         );
       },
     );
@@ -110,11 +109,11 @@ class _MisCursosSectionState extends State<MisCursosSection> {
           _buildSearchBar(context),
           const SizedBox(height: 8),
           ...courses.map((course) => CourseListTile(
-            course: course,
-            onTap: () {
-              // Optionally handle tap
-            },
-          )),
+                course: course,
+                onTap: () {
+                  // Optionally handle tap
+                },
+              )),
           const SizedBox(height: 120),
         ],
       ),
@@ -134,7 +133,7 @@ class _MisCursosSectionState extends State<MisCursosSection> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: _buildSearchBarBase(context, hasBack: true),
           ),
-          
+
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -186,7 +185,7 @@ class _MisCursosSectionState extends State<MisCursosSection> {
                 ),
               ),
             ),
-            
+
             // Text "Mis cursos"
             const Positioned(
               bottom: 24,
@@ -201,7 +200,7 @@ class _MisCursosSectionState extends State<MisCursosSection> {
                 ),
               ),
             ),
-            
+
             // Red accent in top-right (Image 1)
             Positioned(
               top: 0,
@@ -243,10 +242,12 @@ class _MisCursosSectionState extends State<MisCursosSection> {
                 color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.05), blurRadius: 10),
                 ],
               ),
-              child: const Icon(Icons.arrow_back, color: Color(0xFF67B237), size: 24),
+              child: const Icon(Icons.arrow_back,
+                  color: Color(0xFF67B237), size: 24),
             ),
           ),
           const SizedBox(width: 12),

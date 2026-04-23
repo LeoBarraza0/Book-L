@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/capitulo.dart';
 import 'package:book_l/shared/domain/models/ejercicio_model.dart';
 import 'package:book_l/core/services/bookl_service.dart';
-import '../widgets/seccion_editor_widget.dart';
+import '../../../../shared/widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
 
 class CrearCapituloScreen extends StatefulWidget {

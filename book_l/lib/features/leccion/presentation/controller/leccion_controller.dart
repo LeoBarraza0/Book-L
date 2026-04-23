@@ -6,6 +6,7 @@ import '../../data/repositories/leccion_repository_impl.dart';
 import '../../data/repositories/capitulo_repository_impl.dart';
 import '../../domain/entities/leccion.dart';
 import '../../domain/entities/capitulo.dart';
+import '../../domain/entities/material_educativo.dart';
 import '../../domain/usecases/leccion_usecases.dart';
 import '../../../../core/storage/local_storage.dart';
 
@@ -204,6 +205,44 @@ class LeccionController extends ChangeNotifier {
       capitulosDeLeccion = await _getCapitulos(idLeccion);
       notifyListeners();
     }
+  }
+
+  // ── CRUD — Material Educativo ─────────────────────────────────────────────
+
+  List<MaterialEducativo> materialesDeLeccion(int idLeccion) =>
+      BooklService().materialesDeLeccion(idLeccion);
+
+  int agregarMaterial({
+    required int idLeccion,
+    required String nombre,
+    required String tipo,
+    String? url,
+    String? descripcion,
+    int tamanoBytes = 0,
+  }) {
+    final id = BooklService().nextMaterialId();
+    final m = MaterialEducativo(
+      idMaterial: id,
+      idLeccionFk: idLeccion,
+      nombre: nombre,
+      tipo: tipo,
+      url: url,
+      descripcion: descripcion,
+      tamanoBytes: tamanoBytes,
+    );
+    BooklService().addMaterial(m);
+    notifyListeners();
+    return id;
+  }
+
+  void editarMaterial(MaterialEducativo material) {
+    BooklService().updateMaterial(material);
+    notifyListeners();
+  }
+
+  void eliminarMaterial(int idMaterial) {
+    BooklService().removeMaterial(idMaterial);
+    notifyListeners();
   }
 
   @override

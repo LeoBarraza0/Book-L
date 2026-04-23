@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/seccion_editor_widget.dart';
+import '../../../../shared/widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
@@ -157,6 +157,8 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _buildNombreCapitulo(),
+                      const SizedBox(height: 24),
                       _buildContenidoEditor(),
                       const SizedBox(height: 120),
                     ],
@@ -290,6 +292,53 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
           ],
         ),
         child: Icon(icon, color: Colors.white, size: 24),
+      ),
+    );
+  }
+
+  Widget _buildNombreCapitulo() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Nombre del Capítulo',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: Color(0xFF676767),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _nombreCtrl,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: Color(0xFF363333),
+            ),
+            decoration: InputDecoration(
+              hintText: 'Ej: Introducción a la algoritmia',
+              hintStyle: TextStyle(color: Colors.black.withOpacity(0.15)),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -499,20 +548,21 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
     try {
       if (_capituloActual != null) {
         // Edición
-        await _ctrl.editarCapitulo(
-          _capituloActual!.copyWith(
-            nombre: nombre,
-            contenido: _secciones.map((s) => s.toJson()).toList(),
-          ),
+        final capituloEditado = _capituloActual!.copyWith(
+          nombre: nombre,
+          contenido: _secciones.map((s) => s.toJson()).toList(),
         );
+        await _ctrl.editarCapitulo(capituloEditado);
+        _capituloActual = capituloEditado;
       } else {
         // Creación nueva
         final idLeccion = widget.idLeccion ?? 1;
-        await _ctrl.agregarCapitulo(
+        final idNuevo = await _ctrl.agregarCapitulo(
           idLeccion: idLeccion,
           nombre: nombre,
           contenido: _secciones.map((s) => s.toJson()).toList(),
         );
+        _capituloActual = (await _ctrl.obtenerCapitulo(idNuevo))!;
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -536,7 +586,7 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
             duration: const Duration(seconds: 2),
           ),
         );
-        Navigator.pop(context);
+        Navigator.pop(context, _capituloActual);
       }
     } finally {
       if (mounted) setState(() => _guardando = false);

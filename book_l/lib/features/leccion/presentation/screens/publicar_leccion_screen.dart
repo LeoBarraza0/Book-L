@@ -2,11 +2,14 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../controller/leccion_controller.dart';
 import '../widgets/agregar_seccion_button.dart';
-import '../widgets/seccion_editor_widget.dart';
+import '../../../../shared/widgets/seccion_editor_widget.dart';
+import '../widgets/material_editor_tile.dart';
 import '../../domain/entities/capitulo.dart';
+import '../../domain/entities/material_educativo.dart';
 
 class PublicarLeccionScreen extends StatefulWidget {
   const PublicarLeccionScreen({super.key});
@@ -21,6 +24,7 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
   final _scrollCtrl = ScrollController();
   final List<SeccionData> _secciones = [];
   final List<Capitulo> _capitulosEnMemoria = [];
+  final List<MaterialEducativo> _materialesEnMemoria = [];
   final _leccionCtrl = LeccionController();
   bool _guardando = false;
   String? _imagenPath; // imagen de portada seleccionada
@@ -165,6 +169,23 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
                         child: AgregarSeccionButton(
                           titulo: 'Añadir Capítulo',
                           onTap: _irACrearCapitulo,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      _buildSeccionLabel('Material Relacionado'),
+                      const SizedBox(height: 12),
+                      ..._materialesEnMemoria.asMap().entries.map(
+                            (e) => MaterialEditorTile(
+                              material: e.value,
+                              onEditar: () => _editarMaterial(e.key),
+                              onEliminar: () => setState(() => _materialesEnMemoria.removeAt(e.key)),
+                            ),
+                          ),
+                      const SizedBox(height: 8),
+                      Center(
+                        child: AgregarSeccionButton(
+                          titulo: 'Añadir Material',
+                          onTap: _mostrarModalAgregarMaterial,
                         ),
                       ),
                       const SizedBox(height: 36),
@@ -475,6 +496,272 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
     }
   }
 
+  // ─── Material Relacionado ─────────────────────────────────────────────────
+
+  void _mostrarModalAgregarMaterial() {
+    _showMaterialDialog(null, null);
+  }
+
+  void _editarMaterial(int index) {
+    _showMaterialDialog(_materialesEnMemoria[index], index);
+  }
+
+  void _showMaterialDialog(MaterialEducativo? existing, int? index) {
+    final nombreCtrl = TextEditingController(text: existing?.nombre ?? '');
+    final descCtrl = TextEditingController(text: existing?.descripcion ?? '');
+    final urlCtrl = TextEditingController(text: existing?.url ?? '');
+    String tipoSeleccionado = existing?.tipo ?? 'pdf';
+    String? filePath = existing?.url;
+    int tamano = existing?.tamanoBytes ?? 0;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return Container(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle
+                    Center(
+                      child: Container(
+                        width: 40, height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      existing != null ? 'Editar Material' : 'Nuevo Material',
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF363333),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Tipo selector
+                    Row(
+                      children: [
+                        _buildTipoChip('PDF', 'pdf', tipoSeleccionado, const Color(0xFF4DC130), (t) => setModalState(() => tipoSeleccionado = t)),
+                        const SizedBox(width: 8),
+                        _buildTipoChip('Video', 'video', tipoSeleccionado, const Color(0xFFFF606F), (t) => setModalState(() => tipoSeleccionado = t)),
+                        const SizedBox(width: 8),
+                        _buildTipoChip('Enlace', 'enlace', tipoSeleccionado, const Color(0xFF4A90D9), (t) => setModalState(() => tipoSeleccionado = t)),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Nombre
+                    TextField(
+                      controller: nombreCtrl,
+                      decoration: InputDecoration(
+                        labelText: 'Nombre del material',
+                        labelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        filled: true,
+                        fillColor: const Color(0xFFF5F5F5),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Descripción
+                    TextField(
+                      controller: descCtrl,
+                      decoration: InputDecoration(
+                        labelText: 'Descripción (opcional)',
+                        labelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        filled: true,
+                        fillColor: const Color(0xFFF5F5F5),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    if (tipoSeleccionado == 'enlace' || tipoSeleccionado == 'video') ...[
+                      TextField(
+                        controller: urlCtrl,
+                        decoration: InputDecoration(
+                          labelText: tipoSeleccionado == 'video' ? 'URL del video (ej. YouTube, o ignora para subir archivo)' : 'URL del enlace',
+                          labelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          filled: true,
+                          fillColor: const Color(0xFFF5F5F5),
+                          prefixIcon: const Icon(Icons.link),
+                        ),
+                        onChanged: (val) {
+                          if (val.trim().isNotEmpty && filePath != null) {
+                            setModalState(() => filePath = null);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (tipoSeleccionado != 'enlace') ...[
+                      if (tipoSeleccionado == 'video') ...[
+                        const Text('O selecciona un archivo local:', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: Colors.black54)),
+                        const SizedBox(height: 8),
+                      ],
+                      GestureDetector(
+                        onTap: () async {
+                          if (tipoSeleccionado == 'pdf') {
+                            try {
+                              final result = await FilePicker.platform.pickFiles(
+                                type: FileType.custom,
+                                allowedExtensions: ['pdf'],
+                              );
+                              if (result != null && result.files.single.path != null) {
+                                setModalState(() {
+                                  filePath = result.files.single.path;
+                                  tamano = result.files.single.size;
+                                  if (nombreCtrl.text.isEmpty) {
+                                    nombreCtrl.text = result.files.single.name;
+                                  }
+                                });
+                              }
+                            } catch (_) {}
+                          } else {
+                            final picker = ImagePicker();
+                            final vid = await picker.pickVideo(source: ImageSource.gallery);
+                            if (vid != null) {
+                              final file = File(vid.path);
+                              setModalState(() {
+                                filePath = vid.path;
+                                tamano = file.lengthSync();
+                                if (nombreCtrl.text.isEmpty) {
+                                  nombreCtrl.text = vid.name;
+                                }
+                              });
+                            }
+                          }
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF5F5F5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFDDDDDD)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                filePath != null ? Icons.check_circle : Icons.upload_file,
+                                color: filePath != null ? const Color(0xFF4DC130) : Colors.grey,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  filePath != null
+                                      ? filePath!.split('/').last
+                                      : 'Seleccionar archivo ${tipoSeleccionado.toUpperCase()}...',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: filePath != null ? Colors.black87 : Colors.grey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+
+                    // Botón guardar
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (nombreCtrl.text.trim().isEmpty) return;
+                          final mat = MaterialEducativo(
+                            idMaterial: existing?.idMaterial ?? 0,
+                            idLeccionFk: 0,
+                            nombre: nombreCtrl.text.trim(),
+                            tipo: tipoSeleccionado,
+                            url: (tipoSeleccionado == 'enlace' || urlCtrl.text.trim().isNotEmpty) ? urlCtrl.text.trim() : filePath,
+                            descripcion: descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim(),
+                            tamanoBytes: tamano,
+                          );
+                          setState(() {
+                            if (index != null) {
+                              _materialesEnMemoria[index] = mat;
+                            } else {
+                              _materialesEnMemoria.add(mat);
+                            }
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4DC130),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(
+                          existing != null ? 'Guardar cambios' : 'Agregar material',
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildTipoChip(String label, String tipo, String selected, Color color, ValueChanged<String> onTap) {
+    final isSelected = tipo == selected;
+    return GestureDetector(
+      onTap: () => onTap(tipo),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? color : color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withOpacity(isSelected ? 1.0 : 0.3)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : color,
+          ),
+        ),
+      ),
+    );
+  }
+
   // ─── Botón Guardar ─────────────────────────────────────────────────────────
   Widget _buildGuardarButton() {
     return ScaleTransition(
@@ -522,6 +809,18 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
           nombre: cap.nombre,
           contenido: cap.contenido,
           tiempoTotal: cap.tiempoTotal,
+        );
+      }
+
+      // Agregar materiales relacionados
+      for (final mat in _materialesEnMemoria) {
+        _leccionCtrl.agregarMaterial(
+          idLeccion: newIdLeccion,
+          nombre: mat.nombre,
+          tipo: mat.tipo,
+          url: mat.url,
+          descripcion: mat.descripcion,
+          tamanoBytes: mat.tamanoBytes,
         );
       }
 
