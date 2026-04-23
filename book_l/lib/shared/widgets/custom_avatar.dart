@@ -22,13 +22,14 @@ class CustomAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveBackgroundColor = backgroundColor ?? const Color(0xFFF0F0F0);
     
-    // Generar iniciales
-    final nombres = nombre.trim().split(' ');
-    final iniciales = nombres.length >= 2
-        ? '${nombres[0][0]}${nombres[1][0]}'.toUpperCase()
-        : nombres.isNotEmpty && nombres[0].isNotEmpty
-            ? nombres[0][0].toUpperCase()
-            : '?';
+    // Generar iniciales de forma robusta
+    final tokens = nombre.trim().split(' ').where((s) => s.isNotEmpty).toList();
+    String iniciales = '?';
+    if (tokens.length >= 2) {
+      iniciales = '${tokens[0][0]}${tokens[1][0]}'.toUpperCase();
+    } else if (tokens.isNotEmpty) {
+      iniciales = tokens[0][0].toUpperCase();
+    }
 
     Widget avatarChild;
 
