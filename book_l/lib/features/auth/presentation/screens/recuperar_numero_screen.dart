@@ -9,7 +9,8 @@ class RecuperarNumeroScreen extends StatelessWidget {
   const RecuperarNumeroScreen({super.key});
 
   String _maskPhone(String? phone) {
-    if (phone == null || phone.length < 7) return '+57 300******0';
+    if (phone == null || phone.isEmpty) return 'No registrado';
+    if (phone.length < 7) return phone;
     final visible = phone.substring(phone.length - 2);
     final prefix = phone.substring(0, 7);
     return '$prefix******$visible';
@@ -112,9 +113,20 @@ class RecuperarNumeroScreen extends StatelessWidget {
                       width: 200,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           authCtrl.saveRecoveryAttempt('Numero');
-                          MensajeRecuperacionDialog.show(context);
+                          try {
+                            await authCtrl.generateRecoveryCode('Numero');
+                            if (!context.mounted) return;
+                            MensajeRecuperacionDialog.show(context);
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(e.toString().replaceAll('Exception: ', '')),
+                                backgroundColor: const Color(0xFFFF5252),
+                              ),
+                            );
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4DC130),

@@ -9,7 +9,7 @@ class RecuperarCorreoScreen extends StatelessWidget {
   const RecuperarCorreoScreen({super.key});
 
   String _maskEmail(String? email) {
-    if (email == null || !email.contains('@')) return 'correo@ejemplo.com';
+    if (email == null || !email.contains('@')) return 'No registrado';
     final parts = email.split('@');
     final name = parts[0];
     final domain = parts[1];
@@ -114,9 +114,20 @@ class RecuperarCorreoScreen extends StatelessWidget {
                       width: 200,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           authCtrl.saveRecoveryAttempt('Correo');
-                          MensajeRecuperacionDialog.show(context);
+                          try {
+                            await authCtrl.generateRecoveryCode('Correo');
+                            if (!context.mounted) return;
+                            MensajeRecuperacionDialog.show(context);
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(e.toString().replaceAll('Exception: ', '')),
+                                backgroundColor: const Color(0xFFFF5252),
+                              ),
+                            );
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4DC130),

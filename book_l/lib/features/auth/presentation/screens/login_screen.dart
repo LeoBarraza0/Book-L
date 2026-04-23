@@ -156,16 +156,20 @@ class _LoginScreenState extends State<LoginScreen> {
               final email = _emailController.text.trim();
               if (email.isNotEmpty) {
                 try {
-                  final String jsonString = await rootBundle.loadString('assets/data/bookl_data.json');
+                  final String jsonString = await rootBundle
+                      .loadString('assets/data/bookl_data.json');
                   final Map<String, dynamic> jsonData = json.decode(jsonString);
                   final List<dynamic> users = jsonData['usuarios'];
-                  
-                  final bool userExists = users.any((u) => u['correo'] == email);
-                  
+
+                  final dynamic user = users.firstWhere(
+                      (u) => u['correo'] == email,
+                      orElse: () => null);
+
                   if (!mounted) return;
-                  
-                  if (userExists) {
-                    _ctrl.setRecoveryData(email);
+
+                  if (user != null) {
+                    final String? phone = user['celular']?.toString();
+                    _ctrl.setRecoveryData(email, phone!);
                     Navigator.pushNamed(context, '/recuperar_correo');
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -177,8 +181,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   }
                 } catch (e) {
                   if (!mounted) return;
-                  _ctrl.setRecoveryData(email);
-                  Navigator.pushNamed(context, '/recuperar_correo');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error al procesar la solicitud: $e'),
+                      backgroundColor: const Color(0xFFFF5252),
+                    ),
+                  );
                 }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
