@@ -1,39 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:book_l/shared/widgets/custom_button.dart';
 import 'package:book_l/shared/widgets/custom_text_field.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:book_l/core/services/bookl_service.dart';
-import '../../../../shared/domain/models/ejercicio_model.dart';
 
 class CrearEjercicioPracticoScreen extends StatefulWidget {
   const CrearEjercicioPracticoScreen({super.key});
 
   @override
-  State<CrearEjercicioPracticoScreen> createState() => _CrearEjercicioPracticoScreenState();
+  State<CrearEjercicioPracticoScreen> createState() =>
+      _CrearEjercicioPracticoScreenState();
 }
 
-class QuestionData {
-  final TextEditingController descController = TextEditingController();
-  final TextEditingController responseController = TextEditingController();
-  final TextEditingController correctOptionController = TextEditingController();
-
-  void dispose() {
-    descController.dispose();
-    responseController.dispose();
-    correctOptionController.dispose();
-  }
-}
-
-class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScreen> {
+class _CrearEjercicioPracticoScreenState
+    extends State<CrearEjercicioPracticoScreen> {
   final TextEditingController reqController = TextEditingController();
-  List<QuestionData> questions = [QuestionData()];
+
+  // Dynamic question counts
+  int questionCount = 1;
 
   @override
   void dispose() {
     reqController.dispose();
-    for (var q in questions) {
-      q.dispose();
-    }
     super.dispose();
   }
 
@@ -51,7 +37,8 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
+                  borderRadius:
+                      BorderRadius.vertical(bottom: Radius.circular(40)),
                 ),
                 child: Column(
                   children: [
@@ -67,7 +54,8 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                               color: Color(0xFF4CAF50),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.arrow_back, color: Colors.white),
+                            child: const Icon(Icons.arrow_back,
+                                color: Colors.white),
                           ),
                         ),
                         SvgPicture.asset(
@@ -93,7 +81,8 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
               ),
 
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0, vertical: 20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -106,13 +95,14 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                     const SizedBox(height: 30),
 
                     // Dynamic Question Blocks
-                    ...List.generate(questions.length, (index) => _buildQuestionBlock(index)),
+                    ...List.generate(questionCount,
+                        (index) => _buildQuestionBlock(index + 1)),
 
                     // Añadir Pregunta Dashed Box
                     GestureDetector(
                       onTap: () {
                         setState(() {
-                          questions.add(QuestionData());
+                          questionCount++;
                         });
                       },
                       child: Container(
@@ -123,11 +113,13 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: CustomPaint(
-                          painter: _DottedBorderPainter(color: const Color(0xFFB0B0B0)),
+                          painter: _DottedBorderPainter(
+                              color: const Color(0xFFB0B0B0)),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.add_circle_outline, color: Color(0xFFB0B0B0), size: 24),
+                              Icon(Icons.add_circle_outline,
+                                  color: Color(0xFFB0B0B0), size: 24),
                               SizedBox(width: 8),
                               Text(
                                 'Añadir Pregunta',
@@ -150,19 +142,7 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                         height: 45,
                         child: ElevatedButton(
                           onPressed: () {
-                            final List<EjercicioModel> results = [];
-                            for (var q in questions) {
-                              if (q.descController.text.isEmpty) continue;
-                              
-                              results.add(EjercicioModel(
-                                id: BooklService().generateId(),
-                                pregunta: q.descController.text,
-                                tipo: 'practica',
-                                respuestaCorrecta: q.correctOptionController.text,
-                                instrucciones: reqController.text, // Instrucciones generales
-                              ));
-                            }
-                            Navigator.pop(context, results);
+                            Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF4CAF50),
@@ -192,14 +172,14 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
     );
   }
 
-  Widget _buildQuestionBlock(int index) {
+  Widget _buildQuestionBlock(int number) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 30.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Pregunta ${index + 1}',
+            'Pregunta $number',
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -207,7 +187,7 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Descripción Box
           Container(
             height: 100,
@@ -222,12 +202,12 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                 ),
               ],
             ),
-            child: TextField(
-              controller: questions[index].descController,
+            child: const TextField(
               maxLines: null,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Descripción...',
-                hintStyle: TextStyle(color: Color(0xFF858484), fontWeight: FontWeight.bold),
+                hintStyle: TextStyle(
+                    color: Color(0xFF858484), fontWeight: FontWeight.bold),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.all(16),
               ),
@@ -249,12 +229,12 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                 ),
               ],
             ),
-            child: TextField(
-              controller: questions[index].responseController,
+            child: const TextField(
               maxLines: null,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Respuesta...',
-                hintStyle: TextStyle(color: Color(0xFF858484), fontWeight: FontWeight.bold),
+                hintStyle: TextStyle(
+                    color: Color(0xFF858484), fontWeight: FontWeight.bold),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.all(16),
               ),
@@ -282,7 +262,8 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                   height: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFF4CAF50), width: 1.5),
+                    border:
+                        Border.all(color: const Color(0xFF4CAF50), width: 1.5),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   alignment: Alignment.center,
@@ -295,10 +276,9 @@ class _CrearEjercicioPracticoScreenState extends State<CrearEjercicioPracticoScr
                     ),
                   ),
                 ),
-                Expanded(
+                const Expanded(
                   child: TextField(
-                    controller: questions[index].correctOptionController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(horizontal: 12),
                     ),
@@ -332,7 +312,7 @@ class _DottedBorderPainter extends CustomPainter {
       Rect.fromLTWH(0, 0, size.width, size.height),
       const Radius.circular(16),
     );
-    
+
     var path = Path()..addRRect(rrect);
     var dottedPath = Path();
     for (var metric in path.computeMetrics()) {
