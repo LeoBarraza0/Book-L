@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../controller/auth_controller.dart';
 
 class MensajeRecuperacionDialog extends StatelessWidget {
   const MensajeRecuperacionDialog({super.key});

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 import '../widgets/auth_recovery_header.dart';
 import '../widgets/auth_pro_tip.dart';
+import '../controller/auth_controller.dart';
 
 class IngresarCodigoScreen extends StatefulWidget {
   const IngresarCodigoScreen({super.key});
@@ -174,7 +175,15 @@ class _IngresarCodigoScreenState extends State<IngresarCodigoScreen> {
                           final codigo = getCodigo();
 
                           if (codigo.length == 6) {
-                            Navigator.pushNamed(context, '/cambiar_password');
+                            if (AuthController().validateRecoveryCode(codigo)) {
+                              Navigator.pushNamed(context, '/cambiar_password');
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Código incorrecto. Intenta de nuevo.'),
+                                ),
+                              );
+                            }
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
