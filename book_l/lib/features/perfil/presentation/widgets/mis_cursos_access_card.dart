@@ -43,7 +43,7 @@ class MisCursosAccessCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-            
+
             // Text
             const Expanded(
               child: Text(
@@ -55,7 +55,7 @@ class MisCursosAccessCard extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Arrow
             const Icon(
               Icons.arrow_forward_ios_rounded,

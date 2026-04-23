@@ -5,56 +5,115 @@ class BusquedaController extends ChangeNotifier {
   // ── Singleton ──────────────────────────────────────────────────────────────
   static final BusquedaController _instance = BusquedaController._internal();
   factory BusquedaController() => _instance;
-  BusquedaController._internal();
+  BusquedaController._internal() {
+    _cargarHistorial();
+  }
 
   final BusquedaRepository _repository = BusquedaRepository();
-  
-  List<Map<String, dynamic>> resultados = [];
-  bool isLoading = false;
-  
-  String currentQuery = '';
-  
-  // Lista de historial de búsquedas (podría persistirse localmente)
-  List<String> historialBusquedas = [
-    'Matemáticas Discretas',
-    'Leyes de derecho en Colombia',
-    'Cálculo Diferencial',
-    'Programación',
-  ];
 
-  Future<void> buscar(String query, {String filtro = 'Todas'}) async {
-    if (query.trim().isEmpty) {
-      resultados = [];
+  // ── Estado ─────────────────────────────────────────────────────────────────
+  List<ResultadoBusqueda> resultados = [];
+  List<String> sugerencias = [];
+  List<String> historial = [];
+  bool isLoading = false;
+  bool mostrandoSugerencias = false;
+  String currentQuery = '';
+  String filtroActivo = 'Todos';
+
+  // Filtros disponibles para la pantalla de resultados
+  static const List<String> filtros = ['Todos', 'Cursos', 'Lecciones', 'Autores'];
+
+  // ── Historial (SharedPreferences) ─────────────────────────────────────────
+  Future<void> _cargarHistorial() async {
+    historial = await _repository.cargarHistorial();
+    notifyListeners();
+  }
+
+  Future<void> _guardarHistorial() async {
+    await _repository.guardarHistorial(historial);
+  }
+
+  void _agregarAlHistorial(String query) {
+    final q = query.trim();
+    if (q.isEmpty) return;
+    historial.remove(q); // evita duplicados
+    historial.insert(0, q);
+    if (historial.length > 15) historial = historial.sublist(0, 15);
+    _guardarHistorial();
+  }
+
+  void eliminarDelHistorial(int index) {
+    historial.removeAt(index);
+    _guardarHistorial();
+    notifyListeners();
+  }
+
+  void limpiarHistorial() {
+    historial.clear();
+    _guardarHistorial();
+    notifyListeners();
+  }
+
+  // ── Sugerencias en tiempo real (tipo YouTube) ─────────────────────────────
+  Future<void> actualizarSugerencias(String query) async {
+    if (query.trim().length < 2) {
+      sugerencias = [];
+      mostrandoSugerencias = false;
       notifyListeners();
       return;
     }
-    
-    isLoading = true;
-    currentQuery = query;
-    notifyListeners();
 
-    // Guardar en historial si no está
-    if (!historialBusquedas.contains(query)) {
-      historialBusquedas.insert(0, query);
-      if (historialBusquedas.length > 10) {
-        historialBusquedas.removeLast();
-      }
+    mostrandoSugerencias = true;
+    sugerencias = await _repository.sugerencias(query);
+    notifyListeners();
+  }
+
+  void ocultarSugerencias() {
+    mostrandoSugerencias = false;
+    notifyListeners();
+  }
+
+  // ── Búsqueda principal ────────────────────────────────────────────────────
+  Future<void> buscar(String query, {String? filtro}) async {
+    final q = query.trim();
+    if (filtro != null) filtroActivo = filtro;
+
+    ocultarSugerencias();
+
+    if (q.isEmpty) {
+      resultados = [];
+      currentQuery = '';
+      notifyListeners();
+      return;
     }
 
-    resultados = await _repository.buscarCursos(query, filtro: filtro);
-    
+    isLoading = true;
+    currentQuery = q;
+    _agregarAlHistorial(q);
+    notifyListeners();
+
+    resultados = await _repository.buscar(q, filtro: filtroActivo);
+
     isLoading = false;
     notifyListeners();
   }
 
-  void eliminarDelHistorial(int index) {
-    historialBusquedas.removeAt(index);
-    notifyListeners();
+  void cambiarFiltro(String filtro) {
+    if (filtro == filtroActivo) return;
+    filtroActivo = filtro;
+    if (currentQuery.isNotEmpty) {
+      buscar(currentQuery, filtro: filtro);
+    } else {
+      notifyListeners();
+    }
   }
-  
+
   void limpiarResultados() {
     resultados = [];
+    sugerencias = [];
     currentQuery = '';
+    filtroActivo = 'Todos';
+    mostrandoSugerencias = false;
     notifyListeners();
   }
 }
