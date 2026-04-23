@@ -538,9 +538,9 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
             const Spacer(),
             const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
             const SizedBox(width: 3),
-            const Text(
-              '4.5',
-              style: TextStyle(
+            Text(
+              (_cursoOriginal?.rating ?? 4.5).toString(),
+              style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -571,7 +571,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
           child: _StatCard(
             color: const Color(0xFFFEB95C),
             icon: Icons.star_border,
-            title: 'Rate: 4.5',
+            title: 'Rate: ${_cursoOriginal?.rating ?? 4.5}',
             subtitle: '167 comentarios',
           ),
         ),

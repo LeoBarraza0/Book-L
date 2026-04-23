@@ -8,6 +8,7 @@ class DiscusionScreen extends StatefulWidget {
   final int? idLeccion;
   final int? idCurso;
   final DiscusionController? controller;
+  final Future<void> Function(int)? onRatingChanged;
 
   const DiscusionScreen({
     super.key,
@@ -15,6 +16,7 @@ class DiscusionScreen extends StatefulWidget {
     this.idLeccion,
     this.idCurso,
     this.controller,
+    this.onRatingChanged,
   });
 
   @override
@@ -48,7 +50,11 @@ class _DiscusionScreenState extends State<DiscusionScreen> {
           children: [
             // Rating opcional
             if (widget.showRating) ...[
-              Center(child: StarsRatingWidget()),
+              Center(
+                child: StarsRatingWidget(
+                  onRatingChanged: widget.onRatingChanged,
+                ),
+              ),
               const SizedBox(height: 28),
             ],
 

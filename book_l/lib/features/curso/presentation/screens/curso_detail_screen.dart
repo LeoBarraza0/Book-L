@@ -11,6 +11,7 @@ import '../../../leccion/presentation/controller/leccion_controller.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../../core/services/bookl_service.dart';
+import '../../../calificacion/presentation/controller/calificacion_controller.dart';
 
 class CursoDetailScreen extends StatefulWidget {
   final int? idCurso;
@@ -36,6 +37,44 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  Future<void> _handleRatingChanged(int valor) async {
+    final cursoId = widget.idCurso;
+    if (cursoId == null) return;
+
+    final result =
+        await CalificacionController().calificarCurso(cursoId, valor);
+        
+    if (result != null && mounted) {
+      final nuevoRating = result.$1;
+      final isUpdate = result.$2;
+
+      _ctrl.seleccionarCurso(cursoId);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  isUpdate 
+                    ? '¡Reseña de curso actualizada!'
+                    : '¡Gracias por calificar este curso!',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF4DC130),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          margin: const EdgeInsets.all(20),
+        ),
+      );
+    }
   }
 
   @override
@@ -318,9 +357,9 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Text(
-                              '|  4.5',
-                              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                            Text(
+                              '|  ${curso?.rating ?? 4.5}',
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                             ),
                             const SizedBox(width: 4),
                             const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
@@ -431,11 +470,14 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Rate: 4.5',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                    ListenableBuilder(
+                      listenable: _ctrl,
+                      builder: (context, _) => Text(
+                        'Rate: ${_ctrl.state.selected?.rating ?? 4.5}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                     ListenableBuilder(
@@ -513,6 +555,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
           showRating: true,
           idCurso: widget.idCurso,
           controller: _discCtrl,
+          onRatingChanged: _handleRatingChanged,
         )
       ],
     );
