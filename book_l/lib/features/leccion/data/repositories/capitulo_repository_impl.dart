@@ -29,7 +29,7 @@ class CapituloRepositoryImpl implements CapituloRepository {
   Future<int> addCapitulo(Capitulo capitulo) async {
     final newId = _service.nextCapituloId();
     final nuevo = capitulo.copyWith(idCapitulo: newId);
-    _service.capitulos.add(nuevo);
+    _service.addCapitulo(nuevo);
     return newId;
   }
 
@@ -37,15 +37,13 @@ class CapituloRepositoryImpl implements CapituloRepository {
 
   @override
   Future<void> updateCapitulo(Capitulo capitulo) async {
-    final index = _service.capitulos
-        .indexWhere((c) => c.idCapitulo == capitulo.idCapitulo);
-    if (index != -1) _service.capitulos[index] = capitulo;
+    _service.updateCapitulo(capitulo);
   }
 
   // ── DELETE ─────────────────────────────────────────────────────────────────
 
   @override
   Future<void> deleteCapitulo(int id) async {
-    _service.capitulos.removeWhere((c) => c.idCapitulo == id);
+    _service.removeCapitulo(id);
   }
 }

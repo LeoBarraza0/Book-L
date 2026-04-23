@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
+import '../../../../shared/widgets/video_player_widget.dart';
+import '../../../../shared/widgets/pdf_viewer_widget.dart';
 import '../../../../core/storage/local_storage.dart';
 
 import '../controller/leccion_controller.dart';
@@ -98,10 +100,23 @@ class _CapituloScreenState extends State<CapituloScreen> {
                                         ],
                                         if (s['tiene_video'] == true) ...[
                                           const SizedBox(height: 12),
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(12),
-                                            child: _buildMediaItem(Icons.play_circle_filled, 'Video adjunto', const Color(0xFFFF606F)),
-                                          ),
+                                          if (s['video_path'] != null && s['video_path'].toString().isNotEmpty)
+                                            VideoPlayerWidget(path: s['video_path'].toString())
+                                          else
+                                            ClipRRect(
+                                              borderRadius: BorderRadius.circular(12),
+                                              child: _buildMediaItem(Icons.play_circle_filled, 'Video adjunto', const Color(0xFFFF606F)),
+                                            ),
+                                        ],
+                                        if (s['tiene_pdf'] == true) ...[
+                                          const SizedBox(height: 12),
+                                          if (s['pdf_path'] != null && s['pdf_path'].toString().isNotEmpty)
+                                            PdfViewerWidget(
+                                              path: s['pdf_path'].toString(),
+                                              nombre: s['pdf_nombre'] as String?,
+                                            )
+                                          else
+                                            _buildMediaItem(Icons.picture_as_pdf, 'PDF adjunto', const Color(0xFF7B2FBE)),
                                         ],
                                       ],
                                     ),

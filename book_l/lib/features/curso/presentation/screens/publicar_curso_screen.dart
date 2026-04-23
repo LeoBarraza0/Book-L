@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/storage/local_storage.dart';
-import '../../../leccion/presentation/widgets/seccion_editor_widget.dart';
+import '../../../../shared/widgets/seccion_editor_widget.dart';
 import '../../../leccion/presentation/widgets/agregar_seccion_button.dart';
 import '../controller/curso_controller.dart';
 

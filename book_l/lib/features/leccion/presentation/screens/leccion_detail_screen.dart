@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
@@ -12,6 +13,8 @@ import '../../../../core/storage/local_storage.dart';
 import '../../../../core/services/bookl_service.dart';
 import '../../../curso/domain/entities/curso.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
+import '../../../../shared/widgets/video_player_widget.dart';
+import '../../../../shared/widgets/pdf_viewer_widget.dart';
 
 enum CapituloStatus { completed, inProgress, locked }
 
@@ -310,7 +313,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          creator?.nombreCompleto ?? 'Autor_id',
+                          creator?.nombreCompleto ?? AppSession().nombreCompleto ?? 'Autor de la lección',
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
@@ -596,7 +599,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                         const SizedBox(height: 12),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: _buildMediaItem(Icons.play_circle_filled, 'Video adjunto', const Color(0xFFFF606F)),
+                          child: _buildCuerpoVideo(s['video_path']?.toString()),
                         ),
                       ],
                     ],
@@ -662,10 +665,51 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
               children: materiales.map((m) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _buildMaterialItem(
-                  icon: m.tipo == 'documento' || m.tipo == 'pdf' ? Icons.insert_drive_file : Icons.play_arrow,
+                  icon: m.tipo == 'documento' || m.tipo == 'pdf' ? Icons.picture_as_pdf : Icons.play_circle_filled,
                   title: m.nombre,
-                  duration: '${(m.tamanoBytes / (1024 * 1024)).toStringAsFixed(1)} MB',
+                  duration: m.tamanoBytes > 0 ? '${(m.tamanoBytes / (1024 * 1024)).toStringAsFixed(1)} MB' : 'Enlace',
                   iconColor: m.tipo == 'video' ? const Color(0xFFFF606F) : const Color(0xFF4DC130),
+                  onTap: () async {
+                    if (m.url == null || m.url!.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Este material no tiene un archivo o enlace válido.')),
+                      );
+                      return;
+                    }
+
+                    bool isWebUrl = m.url!.startsWith('http');
+                    bool isYouTube = isWebUrl && (m.url!.contains('youtube.com') || m.url!.contains('youtu.be'));
+
+                    if (m.tipo == 'video') {
+                      if (isYouTube) {
+                        try {
+                          await launchUrl(Uri.parse(m.url!), mode: LaunchMode.externalApplication);
+                        } catch (_) {}
+                        return;
+                      }
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
+                        appBar: AppBar(title: Text(m.nombre), elevation: 0),
+                        backgroundColor: Colors.black,
+                        body: Center(child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: VideoPlayerWidget(path: m.url!),
+                        )),
+                      )));
+                    } else if (m.tipo == 'pdf' || m.tipo == 'documento') {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
+                        appBar: AppBar(title: Text(m.nombre), elevation: 0),
+                        body: PdfViewerWidget(path: m.url!),
+                      )));
+                    } else if (m.tipo == 'enlace') {
+                      try {
+                        await launchUrl(Uri.parse(m.url!), mode: LaunchMode.externalApplication);
+                      } catch (_) {
+                         ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('No se pudo abrir el enlace: ${m.url}')),
+                        );
+                      }
+                    }
+                  },
                 ),
               )).toList(),
             );
@@ -680,6 +724,28 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
         _buildAutorCard(),
       ],
     );
+  }
+
+  Widget _buildCuerpoVideo(String? path) {
+    if (path == null || path.isEmpty) {
+      return _buildMediaItem(Icons.play_circle_filled, 'Falta la ruta del video', const Color(0xFFFF606F));
+    }
+
+    final isWebUrl = path.startsWith('http');
+    final isYouTube = isWebUrl && (path.contains('youtube.com') || path.contains('youtu.be'));
+
+    if (isYouTube) {
+      return GestureDetector(
+        onTap: () async {
+          try {
+            await launchUrl(Uri.parse(path), mode: LaunchMode.externalApplication);
+          } catch (_) {}
+        },
+        child: _buildMediaItem(Icons.ondemand_video, 'Ver en YouTube', const Color(0xFFFF0000)),
+      );
+    }
+
+    return VideoPlayerWidget(path: path);
   }
 
   // Convierte segundos a texto legible (ej: 900 → "15 min")
@@ -806,41 +872,45 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
     required String title,
     required String duration,
     Color iconColor = const Color(0xFF4DC130),
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFD9D9D9),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(color: iconColor, shape: BoxShape.circle),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 14)),
-                const SizedBox(height: 2),
-                Text(duration,
-                    style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF676767),
-                        fontWeight: FontWeight.w600)),
-              ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFD9D9D9),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(color: iconColor, shape: BoxShape.circle),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
-          ),
-          const Icon(Icons.arrow_forward_outlined,
-              size: 20, color: Color(0xFF787878)),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14)),
+                  const SizedBox(height: 2),
+                  Text(duration,
+                      style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF676767),
+                          fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_outlined,
+                size: 20, color: Color(0xFF787878)),
+          ],
+        ),
       ),
     );
   }
@@ -882,7 +952,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        creator?.nombreCompleto ?? 'Emanuel Barranco',
+                        creator?.nombreCompleto ?? AppSession().nombreCompleto ?? 'Autor de la lección',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

@@ -327,9 +327,25 @@ class BooklService extends ChangeNotifier {
     _save();
   }
 
+  void updateLeccion(Leccion leccion) {
+    final idx = lecciones.indexWhere((l) => l.idLeccion == leccion.idLeccion);
+    if (idx != -1) {
+      lecciones[idx] = leccion;
+      _save();
+    }
+  }
+
   void addCapitulo(Capitulo capitulo) {
     capitulos.add(capitulo);
     _save();
+  }
+
+  void updateCapitulo(Capitulo capitulo) {
+    final idx = capitulos.indexWhere((c) => c.idCapitulo == capitulo.idCapitulo);
+    if (idx != -1) {
+      capitulos[idx] = capitulo;
+      _save();
+    }
   }
 
   void updateCurso(Curso curso) {
@@ -441,8 +457,33 @@ class BooklService extends ChangeNotifier {
   int nextCapituloId() =>
       _nextId(capitulos, (c) => (c as Capitulo).idCapitulo);
   int nextUsuarioId() => _nextId(usuarios, (u) => (u as Usuario).idUsuario);
+  int nextMaterialId() =>
+      _nextId(materiales, (m) => (m as MaterialEducativo).idMaterial);
 
   // Generador de IDs único para nuevos registros locales
   // Se usa microsegundos para minimizar riesgo de colisión en ráfagas.
   int generateId() => DateTime.now().microsecondsSinceEpoch;
+
+  // ── Operaciones Material Educativo ──────────────────────────────────────────
+  void addMaterial(MaterialEducativo m) {
+    materiales.add(m);
+    _save();
+  }
+
+  void updateMaterial(MaterialEducativo m) {
+    final idx = materiales.indexWhere((x) => x.idMaterial == m.idMaterial);
+    if (idx != -1) {
+      materiales[idx] = m;
+      _save();
+    }
+  }
+
+  void removeMaterial(int id) {
+    materiales.removeWhere((m) => m.idMaterial == id);
+    _save();
+  }
+
+  List<MaterialEducativo> materialesDeLeccion(int idLeccion) {
+    return materiales.where((m) => m.idLeccionFk == idLeccion).toList();
+  }
 }

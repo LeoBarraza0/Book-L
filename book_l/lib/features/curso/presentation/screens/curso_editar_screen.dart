@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../leccion/presentation/screens/leccion_editar_screen.dart';
-import '../../../leccion/presentation/widgets/seccion_editor_widget.dart';
+import '../../../../shared/widgets/seccion_editor_widget.dart';
 import '../../../leccion/presentation/widgets/agregar_seccion_button.dart';
 
 import '../../../../core/services/bookl_service.dart';
