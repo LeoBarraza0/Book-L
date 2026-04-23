@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart'; // Plugin para cámara y galería
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../domain/entities/usuarios.dart';
+import '../../../../core/services/bookl_service.dart';
 
 class AddUsuarioScreen extends StatefulWidget {
   const AddUsuarioScreen({super.key});
@@ -26,19 +27,11 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
   DateTime? _selectedDate;
   String? _selectedPrograma;
   int? _selectedSemestre;
+  String? _selectedRol = 'Estudiante';
 
-  final List<String> _programas = [
-    'Ingenieria de Sistemas',
-    'Ingenieria Industrial',
-    'Ingenieria Civil',
-    'Contaduria Publica',
-    'Administracion de Empresas',
-    'Derecho',
-    'Medicina',
-    'Psicologia',
-    'Enfermeria',
-    'Arquitectura'
-  ];
+  final List<String> _roles = ['Estudiante', 'Profesor'];
+
+  late final List<String> _programas;
 
   // ─── Estado del avatar ──────────────────────────────────────────────────
   // _avatarImage: Archivo local seleccionado desde cámara/galería.
@@ -50,6 +43,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
   @override
   void initState() {
     super.initState();
+    _programas = BooklService().programas;
     _nombreController = TextEditingController();
     _usernameController = TextEditingController();
     _correoController = TextEditingController();
@@ -157,7 +151,8 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                 // Opción 1: Cámara
                 // ImageSource.camera abre la cámara nativa del dispositivo
                 ListTile(
-                  leading: const Icon(Icons.camera_alt, color: Color(0xFF44BD32)),
+                  leading:
+                      const Icon(Icons.camera_alt, color: Color(0xFF44BD32)),
                   title: const Text('Tomar foto'),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -168,7 +163,8 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                 // Opción 2: Galería
                 // ImageSource.gallery abre el selector de fotos del dispositivo
                 ListTile(
-                  leading: const Icon(Icons.photo_library, color: Color(0xFFF1B440)),
+                  leading:
+                      const Icon(Icons.photo_library, color: Color(0xFFF1B440)),
                   title: const Text('Elegir de la galería'),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -179,7 +175,8 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                 // Opción 3: Eliminar (solo si ya seleccionó una)
                 if (_avatarImage != null)
                   ListTile(
-                    leading: const Icon(Icons.delete_outline, color: Colors.red),
+                    leading:
+                        const Icon(Icons.delete_outline, color: Colors.red),
                     title: const Text('Quitar foto'),
                     onTap: () {
                       Navigator.pop(ctx);
@@ -213,7 +210,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
         imageQuality: 85, // Comprime al 85% para reducir tamaño del archivo
-        maxWidth: 800,    // Ancho máximo en píxeles para no sobrecargar memoria
+        maxWidth: 800, // Ancho máximo en píxeles para no sobrecargar memoria
       );
 
       if (pickedFile != null) {
@@ -247,54 +244,60 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
             child: Column(
               children: [
                 // ── HEADER ────────────────────────────────────────────────
-                SizedBox(
-                  height: 200,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: Image.asset(
-                          'assets/images/yellow_bg.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        top: topPadding + 8,
-                        left: 20,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            shape: BoxShape.circle,
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                  child: SizedBox(
+                    height: 200,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Image.asset(
+                            'assets/images/yellow_bg.png',
+                            fit: BoxFit.cover,
                           ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () => Navigator.pop(context),
-                              customBorder: const CircleBorder(),
-                              child: const Icon(Icons.arrow_back,
-                                  color: Colors.white),
+                        ),
+                        Positioned(
+                          top: topPadding + 8,
+                          left: 20,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => Navigator.pop(context),
+                                customBorder: const CircleBorder(),
+                                child: const Icon(Icons.arrow_back,
+                                    color: Colors.white),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const Positioned(
-                        left: 0,
-                        right: 0,
-                        top: 80,
-                        child: Center(
-                          child: Text(
-                            'Añadir Usuario',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontFamily: 'Baloo',
-                              fontWeight: FontWeight.w400,
+                        const Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 80,
+                          child: Center(
+                            child: Text(
+                              'Añadir Usuario',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontFamily: 'Baloo',
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 
@@ -318,7 +321,8 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                                   // Si _avatarImage tiene valor, usamos FileImage (imagen local)
                                   // Si no, mostramos el ícono de persona como placeholder
                                   backgroundImage: _avatarImage != null
-                                      ? FileImage(_avatarImage!) as ImageProvider
+                                      ? FileImage(_avatarImage!)
+                                          as ImageProvider
                                       : null,
                                   child: _avatarImage == null
                                       ? const Icon(Icons.person,
@@ -453,7 +457,6 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                       ),
                       const SizedBox(height: 20),
 
-<<<<<<< HEAD
                       // Fila 5: Rol
                       _buildDropdownField('Rol: *', _roles, _selectedRol,
                           (val) {
@@ -466,10 +469,6 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                       // Al guardar se convierte automáticamente a JSON: {"intereses": [...]}
                       _buildTextField('Preferencias (separar con comas)',
                           _preferenciasController,
-=======
-                      // Preferencias
-                      _buildTextField('Preferencias', _preferenciasController,
->>>>>>> fb962a61fda8e7ccf14902b0ece179483bbe4389
                           maxLines: 4),
 
                       const SizedBox(height: 30),
@@ -505,27 +504,21 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                                 programa: _selectedPrograma,
                                 semestre: _selectedSemestre,
                                 // Convertir el texto de intereses al formato JSON
-                                preferencias: _preferenciasController.text.isNotEmpty
-                                    ? _buildPreferenciasJson(_preferenciasController.text)
-                                    : null,
+                                preferencias:
+                                    _preferenciasController.text.isNotEmpty
+                                        ? _buildPreferenciasJson(
+                                            _preferenciasController.text)
+                                        : null,
                                 activo: true,
-<<<<<<< HEAD
                                 rol: _selectedRol ?? 'Estudiante',
                                 // Por ahora el avatarUrl no se guarda (requeriría subir el File a un servidor)
                                 // En producción se haría upload del File y se guardaría la URL resultante
                                 avatarUrl: null,
-=======
-                                rol: 'User',
->>>>>>> fb962a61fda8e7ccf14902b0ece179483bbe4389
                               );
                               Navigator.pop(context, newUser);
                             },
                             borderRadius: BorderRadius.circular(24.50),
-<<<<<<< HEAD
                             child: const SizedBox(
-=======
-                            child: SizedBox(
->>>>>>> fb962a61fda8e7ccf14902b0ece179483bbe4389
                               width: 156,
                               height: 49,
                               child: Center(
@@ -616,6 +609,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
             child: DropdownButton<String>(
               isExpanded: true,
               value: value,
+              menuMaxHeight: 250, // Permite scrollear si la lista es grande
               hint:
                   const Text('Seleccionar...', style: TextStyle(fontSize: 14)),
               items: items.map((String item) {
