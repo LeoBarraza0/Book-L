@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:image_picker/image_picker.dart';
+import 'package:video_player/video_player.dart';
 
 class SeccionData {
   final TextEditingController tituloCtrl;
@@ -71,6 +72,7 @@ class SeccionEditorWidget extends StatefulWidget {
   final SeccionData data;
   final int index;
   final VoidCallback onEliminar;
+
   /// Cuando es true el título no es editable y no aparece el botón de eliminar.
   final bool tituloFijo;
 
@@ -91,6 +93,8 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
   late AnimationController _controller;
   late Animation<double> _scaleAnim;
   late Animation<double> _fadeAnim;
+  VideoPlayerController? _videoPreviewCtrl;
+  bool _videoInitialized = false;
 
   @override
   void initState() {
@@ -103,16 +107,41 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
         CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
     _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
+
+    if (widget.data.tieneVideo && widget.data.videoPath != null) {
+      _initVideoPreview(widget.data.videoPath!);
+    }
+  }
+
+  Future<void> _initVideoPreview(String path) async {
+    try {
+      final ctrl = path.startsWith('http')
+          ? VideoPlayerController.networkUrl(Uri.parse(path))
+          : VideoPlayerController.file(File(path));
+      await ctrl.initialize();
+      if (mounted) {
+        setState(() {
+          _videoPreviewCtrl = ctrl;
+          _videoInitialized = true;
+        });
+      }
+    } catch (_) {
+      // Si falla la inicialización, mostrar placeholder de icono
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _videoPreviewCtrl?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool hasAnyMedia =
+        widget.data.tieneImagen || widget.data.tieneVideo;
+
     return FadeTransition(
       opacity: _fadeAnim,
       child: ScaleTransition(
@@ -137,8 +166,7 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
               _buildTituloField(),
               const Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE)),
               _buildQuillEditor(),
-              if (widget.data.tieneImagen || widget.data.tieneVideo)
-                _buildMediaRow(),
+              if (hasAnyMedia) _buildMediaPreviews(),
               _buildMediaActions(),
             ],
           ),
@@ -168,7 +196,6 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
             ),
           ),
           const Spacer(),
-          // Ocultar botón eliminar si el título está fijo
           if (!widget.tituloFijo)
             GestureDetector(
               onTap: widget.onEliminar,
@@ -189,7 +216,6 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
   }
 
   Widget _buildTituloField() {
-    // Si el título está fijo, mostrar como etiqueta estática no editable
     if (widget.tituloFijo) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -236,7 +262,6 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Toolbar: QuillSimpleToolbar con controller directo
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
@@ -258,7 +283,6 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
             ),
           ),
         ),
-        // Editor: QuillEditor.basic con controller directo
         Container(
           constraints: const BoxConstraints(minHeight: 120),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -287,108 +311,142 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
     );
   }
 
-  Widget _buildMediaRow() {
+  // ── Media Previews ────────────────────────────────────────────────────────
+
+  Widget _buildMediaPreviews() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (widget.data.tieneImagen) ...[
-            _buildMediaPlaceholder(
-              icon: Icons.image_outlined,
-              label: 'Imagen',
-              color: const Color(0xFF4DC130),
-              path: widget.data.imagenPath,
-              onRemove: () => setState(() {
+            _buildImagePreview(),
+            const SizedBox(height: 10),
+          ],
+          if (widget.data.tieneVideo) _buildVideoPreview(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImagePreview() {
+    final path = widget.data.imagenPath;
+    return Stack(
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          height: 140,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0F0F0),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+                color: const Color(0xFF4DC130).withOpacity(0.3), width: 1.5),
+          ),
+          child: path != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: _buildImageWidget(path),
+                )
+              : _buildIconContent(
+                  Icons.image_outlined, 'Imagen', const Color(0xFF4DC130)),
+        ),
+        Positioned(
+          top: 6,
+          right: 6,
+          child: _buildRemoveButton(() => setState(() {
                 widget.data.tieneImagen = false;
                 widget.data.imagenPath = null;
-              }),
-            ),
-            const SizedBox(width: 12),
-          ],
-          if (widget.data.tieneVideo)
-            _buildMediaPlaceholder(
-              icon: Icons.play_circle_filled,
-              label: 'Video',
-              color: const Color(0xFFFF606F),
-              path: widget.data.videoPath,
-              onRemove: () => setState(() {
-                widget.data.tieneVideo = false;
-                widget.data.videoPath = null;
-              }),
-            ),
-        ],
-      ),
+              })),
+        ),
+        Positioned(
+          bottom: 8,
+          left: 8,
+          child: _buildTypeBadge(Icons.image, 'Imagen', const Color(0xFF4DC130)),
+        ),
+      ],
     );
   }
 
-  Widget _buildMediaPlaceholder({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onRemove,
-    String? path,
-  }) {
-    return Expanded(
-      child: Stack(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            height: 100,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F0F0),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: color.withOpacity(0.3), width: 1.5),
-            ),
-            child: path != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: path.startsWith('http') || path.startsWith('assets/')
-                        ? Image.network(
-                            path,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (_, __, ___) => _buildIconContent(icon, label, color),
-                          )
-                        : kIsWeb
-                            ? Image.network(
-                                path,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                errorBuilder: (_, __, ___) => _buildIconContent(icon, label, color),
-                              )
-                            : Image.file(
-                                File(path),
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                errorBuilder: (_, __, ___) => _buildIconContent(icon, label, color),
-                              ),
+  Widget _buildVideoPreview() {
+    return Stack(
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          height: 160,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A2E),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+                color: const Color(0xFFFF606F).withOpacity(0.4), width: 1.5),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: _videoInitialized && _videoPreviewCtrl != null
+                ? Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox.expand(
+                        child: FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: _videoPreviewCtrl!.value.size.width,
+                            height: _videoPreviewCtrl!.value.size.height,
+                            child: VideoPlayer(_videoPreviewCtrl!),
+                          ),
+                        ),
+                      ),
+                      Container(color: Colors.black38),
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.play_arrow_rounded,
+                            color: Color(0xFFFF606F), size: 32),
+                      ),
+                    ],
                   )
-                : _buildIconContent(icon, label, color),
+                : _buildIconContent(
+                    Icons.play_circle_filled,
+                    widget.data.videoPath != null
+                        ? 'Cargando previsualización...'
+                        : 'Video',
+                    const Color(0xFFFF606F),
+                  ),
           ),
-          Positioned(
-            top: 6,
-            right: 6,
-            child: GestureDetector(
-              onTap: onRemove,
-              child: Container(
-                width: 22,
-                height: 22,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFD63030),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.close, color: Colors.white, size: 12),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+        Positioned(
+          top: 6,
+          right: 6,
+          child: _buildRemoveButton(() {
+            _videoPreviewCtrl?.dispose();
+            _videoPreviewCtrl = null;
+            setState(() {
+              widget.data.tieneVideo = false;
+              widget.data.videoPath = null;
+              _videoInitialized = false;
+            });
+          }),
+        ),
+        Positioned(
+          bottom: 8,
+          left: 8,
+          child: _buildTypeBadge(
+              Icons.videocam, 'Video', const Color(0xFFFF606F)),
+        ),
+      ],
     );
   }
+
+  // ── Media Actions Bar ─────────────────────────────────────────────────────
 
   Widget _buildMediaActions() {
-    final bool ambos = widget.data.tieneImagen && widget.data.tieneVideo;
-    if (ambos) return const SizedBox(height: 8);
+    final allAdded = widget.data.tieneImagen && widget.data.tieneVideo;
+    if (allAdded) return const SizedBox(height: 8);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
@@ -446,7 +504,45 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
     );
   }
 
-  // Contenido interno del icono (usado si no hay path o da error al cargar)
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  Widget _buildRemoveButton(VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: const BoxDecoration(
+          color: Color(0xFFD63030),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.close, color: Colors.white, size: 13),
+      ),
+    );
+  }
+
+  Widget _buildTypeBadge(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 12),
+          const SizedBox(width: 4),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildIconContent(IconData icon, String label, Color color) {
     return Center(
       child: Column(
@@ -457,41 +553,120 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color.withOpacity(0.7),
-            ),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color.withOpacity(0.7)),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildImageWidget(String path) {
+    if (path.startsWith('http') || path.startsWith('assets/')) {
+      return Image.network(
+        path,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, __, ___) =>
+            _buildIconContent(Icons.image_outlined, 'Imagen', const Color(0xFF4DC130)),
+      );
+    }
+    if (kIsWeb) {
+      return Image.network(
+        path,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        errorBuilder: (_, __, ___) =>
+            _buildIconContent(Icons.image_outlined, 'Imagen', const Color(0xFF4DC130)),
+      );
+    }
+    return Image.file(
+      File(path),
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      errorBuilder: (_, __, ___) =>
+          _buildIconContent(Icons.image_outlined, 'Imagen', const Color(0xFF4DC130)),
+    );
+  }
+
+  // ── Pickers ───────────────────────────────────────────────────────────────
+
   Future<void> _agregarImagen() async {
     final picker = ImagePicker();
     final img = await picker.pickImage(source: ImageSource.gallery);
-    if (img != null) {
-      setState(() {
-        widget.data.tieneImagen = true;
-        widget.data.imagenPath = img.path;
-      });
-      // Llama a onChanged si exisitera para auto-guardar
-    } else {
-      // Por si solo quería activar el placeholder y canceló (opcional, pero puedes dejarlo en true sin path)
-      setState(() => widget.data.tieneImagen = true);
-    }
+    setState(() {
+      widget.data.tieneImagen = true;
+      widget.data.imagenPath = img?.path;
+    });
   }
 
   Future<void> _agregarVideo() async {
-    final picker = ImagePicker();
-    final vid = await picker.pickVideo(source: ImageSource.gallery);
-    if (vid != null) {
-      setState(() {
-        widget.data.tieneVideo = true;
-        widget.data.videoPath = vid.path;
-      });
-    } else {
-      setState(() => widget.data.tieneVideo = true);
-    }
+    final TextEditingController urlCtrl = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Agregar video', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold, fontSize: 18)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Puedes pegar un enlace de YouTube/Web o subir un archivo local.', style: TextStyle(fontSize: 13, color: Colors.black54)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: urlCtrl,
+              decoration: InputDecoration(
+                 labelText: 'URL (ej. YouTube)',
+                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.upload_file, color: Colors.white),
+              label: const Text('Elegir de galería', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF606F)),
+              onPressed: () async {
+                Navigator.pop(ctx, 'file');
+              },
+            )
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () {
+               if (urlCtrl.text.trim().isNotEmpty) {
+                  Navigator.pop(ctx, urlCtrl.text.trim());
+               }
+            }, 
+            child: const Text('Aceptar URL')
+          ),
+        ],
+      ),
+    ).then((result) async {
+       if (result == 'file') {
+          final picker = ImagePicker();
+          final vid = await picker.pickVideo(source: ImageSource.gallery);
+          if (vid != null) {
+            setState(() {
+              widget.data.tieneVideo = true;
+              widget.data.videoPath = vid.path;
+              _videoInitialized = false;
+            });
+            _initVideoPreview(vid.path);
+          }
+       } else if (result != null && result is String) {
+          setState(() {
+            widget.data.tieneVideo = true;
+            widget.data.videoPath = result;
+            _videoInitialized = false;
+          });
+          // Para youtube u otras web url no locales, desactivamos _initVideoPreview si falla,
+          // o lo intentamos aislar. La UI mostrará el preview de _buildImageWidget(path) o fallará seguro,
+          // pero como _videoInitialized quedará falso, mostrará el _buildIconContent.
+       }
+    });
   }
 }

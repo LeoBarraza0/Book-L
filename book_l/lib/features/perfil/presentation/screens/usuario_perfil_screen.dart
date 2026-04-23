@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/course_card_widget.dart';
 import '../widgets/mis_cursos_access_card.dart';
 import 'mis_cursos_screen.dart';
 
@@ -50,8 +49,8 @@ class _UsuarioPerfilScreenState extends State<UsuarioPerfilScreen>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                   Color(0xFFE3EFFC),
-                   Color(0x00F4F7FB),
+                  Color(0xFFE3EFFC),
+                  Color(0x00F4F7FB),
                 ],
               ),
             ),
@@ -73,7 +72,8 @@ class _UsuarioPerfilScreenState extends State<UsuarioPerfilScreen>
                           shape: BoxShape.circle,
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                          icon: const Icon(Icons.arrow_back,
+                              color: Colors.white, size: 28),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ),
@@ -85,7 +85,8 @@ class _UsuarioPerfilScreenState extends State<UsuarioPerfilScreen>
                           color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(width: 48), // Spacer to balance back button
+                      const SizedBox(
+                          width: 48), // Spacer to balance back button
                     ],
                   ),
                 ),
@@ -186,10 +187,11 @@ class _UsuarioPerfilScreenState extends State<UsuarioPerfilScreen>
                             });
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: isFollowing 
-                                ? const Color(0xFFE3EFFC) 
+                            backgroundColor: isFollowing
+                                ? const Color(0xFFE3EFFC)
                                 : const Color(0xFF4DC130),
-                            foregroundColor: isFollowing ? Colors.black87 : Colors.white,
+                            foregroundColor:
+                                isFollowing ? Colors.black87 : Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -209,7 +211,8 @@ class _UsuarioPerfilScreenState extends State<UsuarioPerfilScreen>
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.mail_outline, color: Colors.black),
+                          icon: const Icon(Icons.mail_outline,
+                              color: Colors.black),
                           onPressed: () {},
                         ),
                       ),
@@ -240,7 +243,9 @@ class _UsuarioPerfilScreenState extends State<UsuarioPerfilScreen>
                     controller: _tabController,
                     children: [
                       _buildCoursesAccess(),
-                      const Center(child: Text('Favoritos', style: TextStyle(color: Colors.grey))),
+                      const Center(
+                          child: Text('Favoritos',
+                              style: TextStyle(color: Colors.grey))),
                     ],
                   ),
                 ),
@@ -257,12 +262,14 @@ class _UsuarioPerfilScreenState extends State<UsuarioPerfilScreen>
       children: [
         Text(
           label,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black87),
+          style: const TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black87),
         ),
         const SizedBox(height: 6),
         Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
+          style: const TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
         ),
       ],
     );

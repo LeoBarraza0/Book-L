@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:book_l/core/storage/local_storage.dart';
 import 'package:book_l/shared/data/course_repository.dart';
 import 'package:book_l/shared/domain/models/curso_model.dart';
 

@@ -21,6 +21,8 @@ import '../../features/ejercicio/data/dto/ejercicio_dto.dart';
 import '../../features/ejercicio/domain/entities/ejercicio.dart';
 import '../../features/ejercicio/domain/entities/pregunta.dart';
 import '../../features/ejercicio/domain/entities/opcion.dart';
+import '../../features/calificacion/data/dto/calificacion_dto.dart';
+import '../../features/calificacion/domain/entities/calificacion.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -81,6 +83,9 @@ class BooklService extends ChangeNotifier {
   List<Ejercicio> ejercicios = [];
   List<Pregunta> preguntas = [];
   List<Opcion> opciones = [];
+
+  // Calificaciones (Reseñas)
+  List<Calificacion> calificaciones = [];
 
   // ── Inicialización (llamar una sola vez desde main.dart) ───────────────────
   Future<void> init() async {
@@ -232,6 +237,14 @@ class BooklService extends ChangeNotifier {
       reportes = [];
     }
 
+    if (data.containsKey('calificaciones')) {
+      calificaciones = (data['calificaciones'] as List)
+          .map((e) => CalificacionDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      calificaciones = [];
+    }
+
     // Leemos siempre del asset para ver si hay reportes nuevos agregados manualmente
     try {
       final rawAsset = await rootBundle.loadString('assets/data/bookl_data.json');
@@ -302,6 +315,7 @@ class BooklService extends ChangeNotifier {
         'opciones': opciones.map((o) => OpcionDto.toJson(o)).toList(),
         'reportes': reportes,
         'lecciones_cursos': leccionesCursos,
+        'calificaciones': calificaciones.map((c) => CalificacionDto.toJson(c)).toList(),
       };
       await prefs.setString(_storageKey, json.encode(fullData));
       notifyListeners();
@@ -327,9 +341,25 @@ class BooklService extends ChangeNotifier {
     _save();
   }
 
+  void updateLeccion(Leccion leccion) {
+    final idx = lecciones.indexWhere((l) => l.idLeccion == leccion.idLeccion);
+    if (idx != -1) {
+      lecciones[idx] = leccion;
+      _save();
+    }
+  }
+
   void addCapitulo(Capitulo capitulo) {
     capitulos.add(capitulo);
     _save();
+  }
+
+  void updateCapitulo(Capitulo capitulo) {
+    final idx = capitulos.indexWhere((c) => c.idCapitulo == capitulo.idCapitulo);
+    if (idx != -1) {
+      capitulos[idx] = capitulo;
+      _save();
+    }
   }
 
   void updateCurso(Curso curso) {
@@ -441,8 +471,93 @@ class BooklService extends ChangeNotifier {
   int nextCapituloId() =>
       _nextId(capitulos, (c) => (c as Capitulo).idCapitulo);
   int nextUsuarioId() => _nextId(usuarios, (u) => (u as Usuario).idUsuario);
+  int nextMaterialId() =>
+      _nextId(materiales, (m) => (m as MaterialEducativo).idMaterial);
 
   // Generador de IDs único para nuevos registros locales
   // Se usa microsegundos para minimizar riesgo de colisión en ráfagas.
   int generateId() => DateTime.now().microsecondsSinceEpoch;
+
+  // ── Operaciones Material Educativo ──────────────────────────────────────────
+  void addMaterial(MaterialEducativo m) {
+    materiales.add(m);
+    _save();
+  }
+
+  void updateMaterial(MaterialEducativo m) {
+    final idx = materiales.indexWhere((x) => x.idMaterial == m.idMaterial);
+    if (idx != -1) {
+      materiales[idx] = m;
+      _save();
+    }
+  }
+
+  void removeMaterial(int id) {
+    materiales.removeWhere((m) => m.idMaterial == id);
+    _save();
+  }
+
+  List<MaterialEducativo> materialesDeLeccion(int idLeccion) {
+    return materiales.where((m) => m.idLeccionFk == idLeccion).toList();
+  }
+
+  // ── Calificaciones (Reseñas Dinámicas) ─────────────────────────────────────
+  
+  Future<(double, bool)> agregarOActualizarCalificacion(
+      int idObjeto, String tipoObjeto, int idUsuario, int valor) async {
+    bool isUpdate = false;
+    // 1. Buscar si ya existe una calificación de este usuario para este objeto
+    final index = calificaciones.indexWhere((c) =>
+        c.idObjetoFk == idObjeto &&
+        c.tipoObjeto == tipoObjeto &&
+        c.idUsuarioFk == idUsuario);
+
+    if (index >= 0) {
+      // Actualizar existente
+      calificaciones[index] = calificaciones[index].copyWith(valor: valor);
+      isUpdate = true;
+    } else {
+      // Crear nueva
+      final newId = calificaciones.isEmpty
+          ? 1
+          : calificaciones.map((c) => c.idCalificacion).reduce((a, b) => a > b ? a : b) + 1;
+      calificaciones.add(Calificacion(
+        idCalificacion: newId,
+        idObjetoFk: idObjeto,
+        tipoObjeto: tipoObjeto,
+        idUsuarioFk: idUsuario,
+        valor: valor,
+      ));
+    }
+
+    // 2. Calcular nuevo promedio ponderado
+    final calificacionesDelObjeto = calificaciones
+        .where((c) => c.idObjetoFk == idObjeto && c.tipoObjeto == tipoObjeto)
+        .toList();
+
+    double nuevoPromedio = 0.0;
+    if (calificacionesDelObjeto.isNotEmpty) {
+      final suma = calificacionesDelObjeto.fold<int>(0, (sum, c) => sum + c.valor);
+      nuevoPromedio = suma / calificacionesDelObjeto.length;
+    }
+
+    // 3. Modificar la memoria del objeto destino (Leccion o Curso)
+    if (tipoObjeto == 'leccion') {
+      final iLeccion = lecciones.indexWhere((l) => l.idLeccion == idObjeto);
+      if (iLeccion >= 0) {
+        lecciones[iLeccion] = lecciones[iLeccion].copyWith(rating: double.parse(nuevoPromedio.toStringAsFixed(1)));
+        nuevoPromedio = lecciones[iLeccion].rating; // Mantenemos 1 decimal congruente
+      }
+    } else if (tipoObjeto == 'curso') {
+      final iCurso = cursos.indexWhere((c) => c.idCurso == idObjeto);
+      if (iCurso >= 0) {
+        cursos[iCurso] = cursos[iCurso].copyWith(rating: double.parse(nuevoPromedio.toStringAsFixed(1)));
+        nuevoPromedio = cursos[iCurso].rating;
+      }
+    }
+
+    // 4. Persistir cambios 
+    await _save();
+    return (nuevoPromedio, isUpdate);
+  }
 }

@@ -179,15 +179,17 @@ class SharedLeccionCard extends StatelessWidget {
           );
         },
       ),
-      bottomArea: const Row(
+      bottomArea: Row(
         children: [
-          Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
-          SizedBox(width: 2),
-          Text('N/A',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: Colors.black87)),
+          const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
+          const SizedBox(width: 2),
+          Text(
+            leccion.rating > 0 ? leccion.rating.toStringAsFixed(1) : '4.5',
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: Colors.black87),
+          ),
         ],
       ),
       favoriteButton: _buildFavoriteButton(leccion.idLeccion, true),
@@ -286,11 +288,28 @@ class SharedCursoCard extends StatelessWidget {
       onTap: () => Navigator.pushNamed(context, '/curso_detail',
           arguments: curso.idCurso),
       tagsArea: const SizedBox(), // Título queda arriba al hacer esto vacío
-      bottomArea: const Text('Toca para explorar el curso',
-          style: TextStyle(
-              fontSize: 12,
-              color: Color(0xFF888888),
-              fontWeight: FontWeight.w500)),
+      bottomArea: Row(
+        children: [
+          const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
+          const SizedBox(width: 4),
+          Text(
+            curso.rating > 0 ? curso.rating.toStringAsFixed(1) : '4.5',
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: Colors.black87),
+          ),
+          const SizedBox(width: 8),
+          const Text('•',
+              style: TextStyle(fontSize: 12, color: Colors.black26)),
+          const SizedBox(width: 8),
+          const Text('Toca para explorar',
+              style: TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF888888),
+                  fontWeight: FontWeight.w500)),
+        ],
+      ),
       favoriteButton: ListenableBuilder(
         listenable: AppSession().savedCursos,
         builder: (context, _) {
@@ -364,6 +383,7 @@ class _BaseFypCard extends StatelessWidget {
   final Color iconColor;
   final Widget favoriteButton;
   final String durationStr;
+  final double rating;
   final String? imageUrl;
   final VoidCallback onTap;
 
@@ -376,6 +396,7 @@ class _BaseFypCard extends StatelessWidget {
     required this.iconColor,
     required this.favoriteButton,
     required this.durationStr,
+    required this.rating,
     this.imageUrl,
     required this.onTap,
   });
@@ -470,16 +491,18 @@ class _BaseFypCard extends StatelessWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.only(right: 8.0, top: 4.0),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.star_rounded,
+                      const Icon(Icons.star_rounded,
                           color: Color(0xFFFFB800), size: 20),
-                      SizedBox(width: 4),
-                      Text('4.9',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: Colors.black)),
+                      const SizedBox(width: 4),
+                      Text(
+                        rating > 0 ? rating.toStringAsFixed(1) : '4.5',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: Colors.black),
+                      ),
                     ],
                   ),
                 ),
@@ -507,6 +530,7 @@ class FypLeccionCard extends StatelessWidget {
       iconData: Icons.menu_book_rounded,
       imageUrl: _extractImageUrl(leccion.contenido),
       durationStr: '3H 2M',
+      rating: leccion.rating,
       onTap: () => Navigator.pushNamed(context, '/leccion_detail',
           arguments: leccion.idLeccion),
       newBadge: _buildTag('Nuevo', const Color(0xFFF6B55C)), // Naranja
@@ -597,6 +621,7 @@ class FypCursoCard extends StatelessWidget {
       iconData: Icons.school_rounded,
       imageUrl: _extractImageUrl(curso.contenido),
       durationStr: '8H 15M',
+      rating: curso.rating,
       onTap: () => Navigator.pushNamed(context, '/curso_detail',
           arguments: curso.idCurso),
       newBadge: null, // Cursos en FYP no tienen badge Nuevo por ahora

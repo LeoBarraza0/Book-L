@@ -11,6 +11,7 @@ import '../widgets/mis_contenidos_tab_widget.dart';
 import '../widgets/mis_favoritos_tab_widget.dart';
 
 import '../../../auth/domain/entities/usuario.dart';
+import '../../../../shared/widgets/custom_avatar.dart';
 
 class PerfilScreen extends StatefulWidget {
   final int? idUsuario;
@@ -198,14 +199,11 @@ class _PerfilScreenState extends State<PerfilScreen>
                                           0xFF4DC130), // Solid green border
                                       shape: BoxShape.circle,
                                     ),
-                                    child: CircleAvatar(
+                                    child: CustomAvatar(
                                       radius: 45,
+                                      url: _user?.avatarUrl,
+                                      nombre: _user?.nombreCompleto ?? 'Usuario',
                                       backgroundColor: Colors.white,
-                                      backgroundImage: _user?.avatarUrl != null
-                                          ? NetworkImage(_user!.avatarUrl!)
-                                          : NetworkImage(
-                                                  'https://ui-avatars.com/api/?name=${_user?.nombreCompleto ?? 'U'}&background=random')
-                                              as ImageProvider,
                                     ),
                                   ),
                                   Positioned(
@@ -283,8 +281,10 @@ class _PerfilScreenState extends State<PerfilScreen>
                                     .where((c) =>
                                         c.idUsuarioFk == _user?.idUsuario)
                                     .length;
-                                final followersCount = BooklService().getFollowersCount(_user?.idUsuario ?? 0);
-                                final followingCount = BooklService().getFollowingCount(_user?.idUsuario ?? 0);
+                                final followersCount = BooklService()
+                                    .getFollowersCount(_user?.idUsuario ?? 0);
+                                final followingCount = BooklService()
+                                    .getFollowingCount(_user?.idUsuario ?? 0);
                                 return Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
@@ -301,14 +301,17 @@ class _PerfilScreenState extends State<PerfilScreen>
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => SeguidoresScreen(
-                                              idUsuarioFocus: _user?.idUsuario ?? 0,
+                                            builder: (context) =>
+                                                SeguidoresScreen(
+                                              idUsuarioFocus:
+                                                  _user?.idUsuario ?? 0,
                                               isSeguidores: true,
                                             ),
                                           ),
                                         );
                                       },
-                                      child: _buildStatItem('Seguidores', followersCount.toString()),
+                                      child: _buildStatItem('Seguidores',
+                                          followersCount.toString()),
                                     ),
                                     Container(
                                         width: 1,
@@ -319,14 +322,17 @@ class _PerfilScreenState extends State<PerfilScreen>
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => SeguidoresScreen(
-                                              idUsuarioFocus: _user?.idUsuario ?? 0,
+                                            builder: (context) =>
+                                                SeguidoresScreen(
+                                              idUsuarioFocus:
+                                                  _user?.idUsuario ?? 0,
                                               isSeguidores: false,
                                             ),
                                           ),
                                         );
                                       },
-                                      child: _buildStatItem('Seguidos', followingCount.toString()),
+                                      child: _buildStatItem('Seguidos',
+                                          followingCount.toString()),
                                     ),
                                   ],
                                 );
@@ -367,38 +373,44 @@ class _PerfilScreenState extends State<PerfilScreen>
                           )
                         else
                           ListenableBuilder(
-                            listenable: BooklService(),
-                            builder: (context, _) {
-                              final isFollowing = BooklService().isFollowing(
-                                AppSession().usuarioId ?? 0, 
-                                _user?.idUsuario ?? 0
-                              );
-                              return ElevatedButton(
-                                onPressed: () {
-                                  if (AppSession().usuarioId != null && _user?.idUsuario != null) {
-                                    BooklService().toggleSeguir(AppSession().usuarioId!, _user!.idUsuario);
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: isFollowing ? Colors.grey[300] : const Color(0xFF4DC130),
-                                  foregroundColor: isFollowing ? Colors.black87 : Colors.white,
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                              listenable: BooklService(),
+                              builder: (context, _) {
+                                final isFollowing = BooklService().isFollowing(
+                                    AppSession().usuarioId ?? 0,
+                                    _user?.idUsuario ?? 0);
+                                return ElevatedButton(
+                                  onPressed: () {
+                                    if (AppSession().usuarioId != null &&
+                                        _user?.idUsuario != null) {
+                                      BooklService().toggleSeguir(
+                                          AppSession().usuarioId!,
+                                          _user!.idUsuario);
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isFollowing
+                                        ? Colors.grey[300]
+                                        : const Color(0xFF4DC130),
+                                    foregroundColor: isFollowing
+                                        ? Colors.black87
+                                        : Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 32,
+                                      vertical: 12,
+                                    ),
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 32,
-                                    vertical: 12,
+                                  child: Text(
+                                    isFollowing ? 'Siguiendo' : 'Seguir',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14),
                                   ),
-                                ),
-                                child: Text(
-                                  isFollowing ? 'Siguiendo' : 'Seguir',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 14),
-                                ),
-                              );
-                            }
-                          ),
+                                );
+                              }),
                         const SizedBox(height: 25),
                       ],
                     ),

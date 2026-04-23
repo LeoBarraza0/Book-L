@@ -68,7 +68,7 @@ class CourseRepository {
       duracion: model.duracion,
       estudiantes: model.estudiantes,
       progreso: model.progreso,
-      tagColor: model.tagColor?.value,
+      tagColor: model.tagColor.value,
       esNuevo: model.esNuevo,
       estado: 'activo',
       createdAt: DateTime.now(),

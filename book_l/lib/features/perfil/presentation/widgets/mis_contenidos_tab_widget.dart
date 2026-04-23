@@ -42,11 +42,11 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
         // Fuente única: BooklService. Filtramos por usuario activo.
         final misLecciones = BooklService()
             .lecciones
-            .where((l) => userId == null || l.idUsuarioFk == userId)
+            .where((l) => l.idUsuarioFk == userId)
             .toList();
         final misCursos = BooklService()
             .cursos
-            .where((c) => userId == null || c.idUsuarioFk == userId)
+            .where((c) => c.idUsuarioFk == userId)
             .toList();
 
         final filteredLecciones = _query.isEmpty

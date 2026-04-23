@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class StarsRatingWidget extends StatefulWidget {
-  final Function(int)? onRatingChanged;
+  final Future<void> Function(int)? onRatingChanged;
   final bool showTitle;
   final bool showSendButton;
   final double starSize;
@@ -20,14 +20,27 @@ class StarsRatingWidget extends StatefulWidget {
 
 class _StarsRatingWidgetState extends State<StarsRatingWidget> {
   int _currentRating = 0;
+  bool _isLoading = false;
 
-  void _handleTap(int index) {
+  Future<void> _handleSend() async {
+    if (_currentRating == 0 || _isLoading) return;
+
+    setState(() => _isLoading = true);
+    
+    if (widget.onRatingChanged != null) {
+      await widget.onRatingChanged!(_currentRating);
+    }
+    
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _handleStarTap(int index) {
+    if (_isLoading) return;
     setState(() {
       _currentRating = index + 1;
     });
-    if (widget.onRatingChanged != null) {
-      widget.onRatingChanged!(_currentRating);
-    }
   }
 
   @override
@@ -55,7 +68,7 @@ class _StarsRatingWidgetState extends State<StarsRatingWidget> {
             
             return _StarItem(
               isSelected: isSelected,
-              onTap: () => _handleTap(index),
+              onTap: () => _handleStarTap(index),
               starSize: widget.starSize,
             );
           }),
@@ -68,28 +81,28 @@ class _StarsRatingWidgetState extends State<StarsRatingWidget> {
             duration: const Duration(milliseconds: 300),
             child: Visibility(
               visible: _currentRating > 0,
-              child: TextButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('¡Gracias por calificar con $_currentRating estrellas!'),
-                      backgroundColor: const Color(0xFF4DC130),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              child: _isLoading 
+                ? const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4DC130)),
                     ),
-                  );
-                },
-                child: const Text(
-                  '¡Enviar reseña!',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontFamily: 'Inter',
-                    color: Color(0xFF4DC130),
-                    fontWeight: FontWeight.w700,
-                    decoration: TextDecoration.underline,
+                  )
+                : TextButton(
+                    onPressed: _handleSend,
+                    child: const Text(
+                      '¡Enviar reseña!',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontFamily: 'Inter',
+                        color: Color(0xFF4DC130),
+                        fontWeight: FontWeight.w700,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
                   ),
-                ),
-              ),
             ),
           ),
       ],
