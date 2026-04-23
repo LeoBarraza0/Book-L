@@ -15,6 +15,7 @@ import '../../../curso/domain/entities/curso.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
 import '../../../../shared/widgets/video_player_widget.dart';
 import '../../../../shared/widgets/pdf_viewer_widget.dart';
+import '../../../calificacion/presentation/controller/calificacion_controller.dart';
 
 enum CapituloStatus { completed, inProgress, locked }
 
@@ -46,6 +47,45 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  Future<void> _handleRatingChanged(int valor) async {
+    final leccionId = widget.idLeccion;
+    if (leccionId == null) return;
+
+    final result =
+        await CalificacionController().calificarLeccion(leccionId, valor);
+        
+    if (result != null && mounted) {
+      final nuevoRating = result.$1;
+      final isUpdate = result.$2;
+      
+      // Forzar actualización del controlador de lección local para refrescar el header
+      _ctrl.seleccionarLeccion(leccionId);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  isUpdate 
+                    ? '¡Reseña actualizada con éxito!'
+                    : '¡Gracias por compartir tu opinión!',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF4DC130),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          margin: const EdgeInsets.all(20),
+        ),
+      );
+    }
   }
 
 
@@ -120,6 +160,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                                             showRating: true,
                                             idLeccion: widget.idLeccion,
                                             controller: _discCtrl,
+                                            onRatingChanged: _handleRatingChanged,
                                           ),
                                         ),
                             ),
@@ -336,8 +377,8 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text('|  4.5',
-                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                        Text('|  ${leccion?.rating ?? 4.5}',
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                         const SizedBox(width: 4),
                         const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
                       ],

@@ -515,26 +515,120 @@
   ],
   "sugerencias": [],
   "seguidores": [
-    { "id_seguidor": 2, "id_seguido": 1, "estado": "activo", "created_at": "2026-01-01T10:00:00"},
-    { "id_seguidor": 3, "id_seguido": 1, "estado": "activo", "created_at": "2026-01-01T10:00:00"},
-    { "id_seguidor": 1, "id_seguido": 2, "estado": "activo", "created_at": "2026-01-01T10:00:00"}
+    {
+      "id_seguidor": 2,
+      "id_seguido": 1,
+      "estado": "activo",
+      "created_at": "2026-01-01T10:00:00"
+    },
+    {
+      "id_seguidor": 3,
+      "id_seguido": 1,
+      "estado": "activo",
+      "created_at": "2026-01-01T10:00:00"
+    },
+    {
+      "id_seguidor": 1,
+      "id_seguido": 2,
+      "estado": "activo",
+      "created_at": "2026-01-01T10:00:00"
+    }
   ],
   "discusiones": [
-    { "id_discusion": 1, "id_curso_fk": null, "id_leccion_fk": 1 },
-    { "id_discusion": 2, "id_curso_fk": null, "id_leccion_fk": 2 },
-    { "id_discusion": 3, "id_curso_fk": 1,    "id_leccion_fk": null },
-    { "id_discusion": 4, "id_curso_fk": null, "id_leccion_fk": 3 }
+    {
+      "id_discusion": 1,
+      "id_curso_fk": null,
+      "id_leccion_fk": 1
+    },
+    {
+      "id_discusion": 2,
+      "id_curso_fk": null,
+      "id_leccion_fk": 2
+    },
+    {
+      "id_discusion": 3,
+      "id_curso_fk": 1,
+      "id_leccion_fk": null
+    },
+    {
+      "id_discusion": 4,
+      "id_curso_fk": null,
+      "id_leccion_fk": 3
+    }
   ],
   "comentarios": [
-    { "id_comentario": 1, "id_discusion_fk": 1, "id_usuario_fk": 2, "contenido": "¡Excelente lección! Me ayudó muchísimo a entender las tablas de verdad.", "id_padre": null, "created_at": "2026-02-10T08:20:00" },
-    { "id_comentario": 2, "id_discusion_fk": 1, "id_usuario_fk": 3, "contenido": "Totalmente de acuerdo, aunque me gustaría más ejemplos prácticos.", "id_padre": null, "created_at": "2026-02-10T09:15:00" },
-    { "id_comentario": 3, "id_discusion_fk": 1, "id_usuario_fk": 1, "contenido": "¡Gracias! Pronto agregaré ejercicios adicionales en el capítulo 2.", "id_padre": 1, "created_at": "2026-02-10T10:05:00" },
-    { "id_comentario": 4, "id_discusion_fk": 1, "id_usuario_fk": 5, "contenido": "¿Cuándo estará disponible el siguiente capítulo?", "id_padre": null, "created_at": "2026-02-11T14:00:00" },
-    { "id_comentario": 5, "id_discusion_fk": 1, "id_usuario_fk": 2, "contenido": "Yo también me pregunto lo mismo 🤔", "id_padre": 4, "created_at": "2026-02-11T15:30:00" },
-    { "id_comentario": 6, "id_discusion_fk": 3, "id_usuario_fk": 3, "contenido": "El curso de Matemáticas Discretas es increíble, muy bien estructurado.", "id_padre": null, "created_at": "2026-03-01T11:00:00" },
-    { "id_comentario": 7, "id_discusion_fk": 3, "id_usuario_fk": 5, "contenido": "Sí, aunque los ejercicios podrían ser más variados.", "id_padre": 6, "created_at": "2026-03-01T12:30:00" },
-    { "id_comentario": 8, "id_discusion_fk": 4, "id_usuario_fk": 2, "contenido": "La complejidad algorítmica me parece un tema muy denso. ¿Algún consejo?", "id_padre": null, "created_at": "2026-03-15T16:00:00" },
-    { "id_comentario": 9, "id_discusion_fk": 4, "id_usuario_fk": 1, "contenido": "Te recomiendo visualizar los algoritmos con diagramas. ¡Funciona muy bien!", "id_padre": 8, "created_at": "2026-03-15T17:45:00" }
+    {
+      "id_comentario": 1,
+      "id_discusion_fk": 1,
+      "id_usuario_fk": 2,
+      "contenido": "¡Excelente lección! Me ayudó muchísimo a entender las tablas de verdad.",
+      "id_padre": null,
+      "created_at": "2026-02-10T08:20:00"
+    },
+    {
+      "id_comentario": 2,
+      "id_discusion_fk": 1,
+      "id_usuario_fk": 3,
+      "contenido": "Totalmente de acuerdo, aunque me gustaría más ejemplos prácticos.",
+      "id_padre": null,
+      "created_at": "2026-02-10T09:15:00"
+    },
+    {
+      "id_comentario": 3,
+      "id_discusion_fk": 1,
+      "id_usuario_fk": 1,
+      "contenido": "¡Gracias! Pronto agregaré ejercicios adicionales en el capítulo 2.",
+      "id_padre": 1,
+      "created_at": "2026-02-10T10:05:00"
+    },
+    {
+      "id_comentario": 4,
+      "id_discusion_fk": 1,
+      "id_usuario_fk": 5,
+      "contenido": "¿Cuándo estará disponible el siguiente capítulo?",
+      "id_padre": null,
+      "created_at": "2026-02-11T14:00:00"
+    },
+    {
+      "id_comentario": 5,
+      "id_discusion_fk": 1,
+      "id_usuario_fk": 2,
+      "contenido": "Yo también me pregunto lo mismo 🤔",
+      "id_padre": 4,
+      "created_at": "2026-02-11T15:30:00"
+    },
+    {
+      "id_comentario": 6,
+      "id_discusion_fk": 3,
+      "id_usuario_fk": 3,
+      "contenido": "El curso de Matemáticas Discretas es increíble, muy bien estructurado.",
+      "id_padre": null,
+      "created_at": "2026-03-01T11:00:00"
+    },
+    {
+      "id_comentario": 7,
+      "id_discusion_fk": 3,
+      "id_usuario_fk": 5,
+      "contenido": "Sí, aunque los ejercicios podrían ser más variados.",
+      "id_padre": 6,
+      "created_at": "2026-03-01T12:30:00"
+    },
+    {
+      "id_comentario": 8,
+      "id_discusion_fk": 4,
+      "id_usuario_fk": 2,
+      "contenido": "La complejidad algorítmica me parece un tema muy denso. ¿Algún consejo?",
+      "id_padre": null,
+      "created_at": "2026-03-15T16:00:00"
+    },
+    {
+      "id_comentario": 9,
+      "id_discusion_fk": 4,
+      "id_usuario_fk": 1,
+      "contenido": "Te recomiendo visualizar los algoritmos con diagramas. ¡Funciona muy bien!",
+      "id_padre": 8,
+      "created_at": "2026-03-15T17:45:00"
+    }
   ],
   "reportes": [
     {
@@ -579,42 +673,175 @@
     }
   ],
   "ejercicios": [
-    { "id_ejercicio": 1, "id_capitulo": 1, "tipo": "multiple_choice", "titulo": "Cuestionario Lógico II", "descripcion": "Valida tus conocimientos previos sobre proposiciones de la materia." },
-    { "id_ejercicio": 2, "id_capitulo": 1, "tipo": "true_false", "titulo": "Conceptos de Verdad", "descripcion": "Ejercicios de falso y verdadero basándose en lectura del capítulo." },
-    { "id_ejercicio": 3, "id_capitulo": 2, "tipo": "multiple_choice", "titulo": "Teoría de la Intersección", "descripcion": "Preguntas avanzadas del uso de operadores AND y OR." }
+    {
+      "id_ejercicio": 1,
+      "id_capitulo": 1,
+      "tipo": "multiple_choice",
+      "titulo": "Cuestionario Lógico II",
+      "descripcion": "Valida tus conocimientos previos sobre proposiciones de la materia."
+    },
+    {
+      "id_ejercicio": 2,
+      "id_capitulo": 1,
+      "tipo": "true_false",
+      "titulo": "Conceptos de Verdad",
+      "descripcion": "Ejercicios de falso y verdadero basándose en lectura del capítulo."
+    },
+    {
+      "id_ejercicio": 3,
+      "id_capitulo": 2,
+      "tipo": "multiple_choice",
+      "titulo": "Teoría de la Intersección",
+      "descripcion": "Preguntas avanzadas del uso de operadores AND y OR."
+    }
   ],
   "preguntas": [
-    { "id_pregunta": 1, "id_ejercicio_fk": 1, "contenido": "¿Qué es exactamente una proposición en matemáticas discretas?", "explicacion": "Una proposición es estrictamente un enunciado del cual se puede determinar su valor de verdad y no puede ser ambos (V y F)." },
-    { "id_pregunta": 2, "id_ejercicio_fk": 1, "contenido": "¿A qué símbolo obedece el operador lógico AND?", "explicacion": "El operador se simboliza matemáticamente con '∧' (conjunción)." },
-    { "id_pregunta": 3, "id_ejercicio_fk": 1, "contenido": "¿Cual es el valor de (V y F)?", "explicacion": "Si cualquiera de las sentencias del AND es falso, todo el AND es Falso." },
-    { "id_pregunta": 4, "id_ejercicio_fk": 2, "contenido": "El operador OR requiere que ambas proposiciones sean verdaderas para que toda la oración sea cierta.", "explicacion": "Falso. En el operador OR (disyunción), basta con que UNA proposición sea verdadera." },
-    { "id_pregunta": 5, "id_ejercicio_fk": 2, "contenido": "La negación de V siempre será F, independientemente de la ecuación mayor.", "explicacion": "¡Efectivamente! La negación de un valor dado invierte estáticamente su lado booleano." },
-    { "id_pregunta": 6, "id_ejercicio_fk": 3, "contenido": "Las leyes de de Morgan dicen que ~(P ∧ Q) es lógicamente equivalente a:", "explicacion": "La negación de una conjunción es la disyunción de las negaciones: ~P ∨ ~Q." }
+    {
+      "id_pregunta": 1,
+      "id_ejercicio_fk": 1,
+      "contenido": "¿Qué es exactamente una proposición en matemáticas discretas?",
+      "explicacion": "Una proposición es estrictamente un enunciado del cual se puede determinar su valor de verdad y no puede ser ambos (V y F)."
+    },
+    {
+      "id_pregunta": 2,
+      "id_ejercicio_fk": 1,
+      "contenido": "¿A qué símbolo obedece el operador lógico AND?",
+      "explicacion": "El operador se simboliza matemáticamente con '∧' (conjunción)."
+    },
+    {
+      "id_pregunta": 3,
+      "id_ejercicio_fk": 1,
+      "contenido": "¿Cual es el valor de (V y F)?",
+      "explicacion": "Si cualquiera de las sentencias del AND es falso, todo el AND es Falso."
+    },
+    {
+      "id_pregunta": 4,
+      "id_ejercicio_fk": 2,
+      "contenido": "El operador OR requiere que ambas proposiciones sean verdaderas para que toda la oración sea cierta.",
+      "explicacion": "Falso. En el operador OR (disyunción), basta con que UNA proposición sea verdadera."
+    },
+    {
+      "id_pregunta": 5,
+      "id_ejercicio_fk": 2,
+      "contenido": "La negación de V siempre será F, independientemente de la ecuación mayor.",
+      "explicacion": "¡Efectivamente! La negación de un valor dado invierte estáticamente su lado booleano."
+    },
+    {
+      "id_pregunta": 6,
+      "id_ejercicio_fk": 3,
+      "contenido": "Las leyes de de Morgan dicen que ~(P ∧ Q) es lógicamente equivalente a:",
+      "explicacion": "La negación de una conjunción es la disyunción de las negaciones: ~P ∨ ~Q."
+    }
   ],
   "opciones": [
-    { "id_opcion": 1, "id_pregunta_fk": 1, "contenido": "Un enunciado subjetivo", "correcta": 0 },
-    { "id_opcion": 2, "id_pregunta_fk": 1, "contenido": "Un enunciado falso o verdadero (no ambos)", "correcta": 1 },
-    { "id_opcion": 3, "id_pregunta_fk": 1, "contenido": "Una pregunta directa sin respuesta", "correcta": 0 },
-    { "id_opcion": 4, "id_pregunta_fk": 1, "contenido": "Algoritmo de paso a paso", "correcta": 0 },
-    
-    { "id_opcion": 5, "id_pregunta_fk": 2, "contenido": "||", "correcta": 0 },
-    { "id_opcion": 6, "id_pregunta_fk": 2, "contenido": "∨", "correcta": 0 },
-    { "id_opcion": 7, "id_pregunta_fk": 2, "contenido": "∧", "correcta": 1 },
-    { "id_opcion": 8, "id_pregunta_fk": 2, "contenido": "~", "correcta": 0 },
-    
-    { "id_opcion": 9, "id_pregunta_fk": 3, "contenido": "Verdadero", "correcta": 0 },
-    { "id_opcion": 10, "id_pregunta_fk": 3, "contenido": "Falso", "correcta": 1 },
-    
-    { "id_opcion": 11, "id_pregunta_fk": 4, "contenido": "Verdadero", "correcta": 0 },
-    { "id_opcion": 12, "id_pregunta_fk": 4, "contenido": "Falso", "correcta": 1 },
-    
-    { "id_opcion": 13, "id_pregunta_fk": 5, "contenido": "Verdadero", "correcta": 1 },
-    { "id_opcion": 14, "id_pregunta_fk": 5, "contenido": "Falso", "correcta": 0 },
-    
-    { "id_opcion": 15, "id_pregunta_fk": 6, "contenido": "~P ∨ ~Q", "correcta": 1 },
-    { "id_opcion": 16, "id_pregunta_fk": 6, "contenido": "P ∨ Q", "correcta": 0 },
-    { "id_opcion": 17, "id_pregunta_fk": 6, "contenido": "~P ∧ ~Q", "correcta": 0 },
-    { "id_opcion": 18, "id_pregunta_fk": 6, "contenido": "~(P ∨ Q)", "correcta": 0 }
+    {
+      "id_opcion": 1,
+      "id_pregunta_fk": 1,
+      "contenido": "Un enunciado subjetivo",
+      "correcta": 0
+    },
+    {
+      "id_opcion": 2,
+      "id_pregunta_fk": 1,
+      "contenido": "Un enunciado falso o verdadero (no ambos)",
+      "correcta": 1
+    },
+    {
+      "id_opcion": 3,
+      "id_pregunta_fk": 1,
+      "contenido": "Una pregunta directa sin respuesta",
+      "correcta": 0
+    },
+    {
+      "id_opcion": 4,
+      "id_pregunta_fk": 1,
+      "contenido": "Algoritmo de paso a paso",
+      "correcta": 0
+    },
+    {
+      "id_opcion": 5,
+      "id_pregunta_fk": 2,
+      "contenido": "||",
+      "correcta": 0
+    },
+    {
+      "id_opcion": 6,
+      "id_pregunta_fk": 2,
+      "contenido": "∨",
+      "correcta": 0
+    },
+    {
+      "id_opcion": 7,
+      "id_pregunta_fk": 2,
+      "contenido": "∧",
+      "correcta": 1
+    },
+    {
+      "id_opcion": 8,
+      "id_pregunta_fk": 2,
+      "contenido": "~",
+      "correcta": 0
+    },
+    {
+      "id_opcion": 9,
+      "id_pregunta_fk": 3,
+      "contenido": "Verdadero",
+      "correcta": 0
+    },
+    {
+      "id_opcion": 10,
+      "id_pregunta_fk": 3,
+      "contenido": "Falso",
+      "correcta": 1
+    },
+    {
+      "id_opcion": 11,
+      "id_pregunta_fk": 4,
+      "contenido": "Verdadero",
+      "correcta": 0
+    },
+    {
+      "id_opcion": 12,
+      "id_pregunta_fk": 4,
+      "contenido": "Falso",
+      "correcta": 1
+    },
+    {
+      "id_opcion": 13,
+      "id_pregunta_fk": 5,
+      "contenido": "Verdadero",
+      "correcta": 1
+    },
+    {
+      "id_opcion": 14,
+      "id_pregunta_fk": 5,
+      "contenido": "Falso",
+      "correcta": 0
+    },
+    {
+      "id_opcion": 15,
+      "id_pregunta_fk": 6,
+      "contenido": "~P ∨ ~Q",
+      "correcta": 1
+    },
+    {
+      "id_opcion": 16,
+      "id_pregunta_fk": 6,
+      "contenido": "P ∨ Q",
+      "correcta": 0
+    },
+    {
+      "id_opcion": 17,
+      "id_pregunta_fk": 6,
+      "contenido": "~P ∧ ~Q",
+      "correcta": 0
+    },
+    {
+      "id_opcion": 18,
+      "id_pregunta_fk": 6,
+      "contenido": "~(P ∨ Q)",
+      "correcta": 0
+    }
   ],
   "materiales": [
     { "id_material": 1, "id_leccion_fk": 1, "nombre": "Guía de Lógica Proposicional", "tipo": "pdf", "url": null, "descripcion": "Documento teórico completo con ejemplos", "tamano_bytes": 2621440 },
@@ -639,7 +866,18 @@
     {
       "id_intencion": 1,
       "nombre_intencion": "saludo",
-      "palabras_clave": ["hola", "hey", "buenas", "buenos días", "buenas tardes", "buenas noches", "saludos", "qué tal", "hi", "hello"],
+      "palabras_clave": [
+        "hola",
+        "hey",
+        "buenas",
+        "buenos días",
+        "buenas tardes",
+        "buenas noches",
+        "saludos",
+        "qué tal",
+        "hi",
+        "hello"
+      ],
       "respuestas": [
         "¡Hola! 👋 Soy Booki, tu asistente virtual de Book-L. ¿En qué puedo ayudarte hoy?",
         "¡Hey! ¿Cómo estás? Estoy aquí para ayudarte con lo que necesites en Book-L 📚",
@@ -649,7 +887,16 @@
     {
       "id_intencion": 2,
       "nombre_intencion": "despedida",
-      "palabras_clave": ["adiós", "adios", "chao", "bye", "hasta luego", "nos vemos", "me voy", "gracias por todo"],
+      "palabras_clave": [
+        "adiós",
+        "adios",
+        "chao",
+        "bye",
+        "hasta luego",
+        "nos vemos",
+        "me voy",
+        "gracias por todo"
+      ],
       "respuestas": [
         "¡Hasta luego! 👋 Recuerda que siempre estaré aquí cuando me necesites.",
         "¡Nos vemos! Sigue aprendiendo y practicando 💪📚",
@@ -659,7 +906,17 @@
     {
       "id_intencion": 3,
       "nombre_intencion": "que_es_bookl",
-      "palabras_clave": ["qué es book-l", "que es bookl", "qué es esta app", "para qué sirve", "para que sirve", "de qué trata", "de que trata", "sobre la app", "sobre bookl"],
+      "palabras_clave": [
+        "qué es book-l",
+        "que es bookl",
+        "qué es esta app",
+        "para qué sirve",
+        "para que sirve",
+        "de qué trata",
+        "de que trata",
+        "sobre la app",
+        "sobre bookl"
+      ],
       "respuestas": [
         "Book-L es una plataforma móvil colaborativa para el refuerzo académico 📚. Aquí puedes acceder a cursos, lecciones, ejercicios y mucho más. ¡Todo diseñado para estudiantes de la Universidad Libre!",
         "¡Excelente pregunta! Book-L es tu compañero de estudio digital 🎓. Ofrece cursos, lecciones interactivas, ejercicios prácticos y un sistema de progreso para que sigas mejorando cada día."
@@ -668,7 +925,18 @@
     {
       "id_intencion": 4,
       "nombre_intencion": "como_crear_leccion",
-      "palabras_clave": ["crear lección", "crear leccion", "nueva lección", "nueva leccion", "agregar lección", "agregar leccion", "añadir lección", "añadir leccion", "cómo creo una lección", "como creo una leccion"],
+      "palabras_clave": [
+        "crear lección",
+        "crear leccion",
+        "nueva lección",
+        "nueva leccion",
+        "agregar lección",
+        "agregar leccion",
+        "añadir lección",
+        "añadir leccion",
+        "cómo creo una lección",
+        "como creo una leccion"
+      ],
       "respuestas": [
         "Para crear una lección en Book-L: \n1️⃣ Ve a la sección de Lecciones desde el menú principal.\n2️⃣ Presiona el botón '+' o 'Crear lección'.\n3️⃣ Completa el título, contenido y materiales de apoyo.\n4️⃣ ¡Publica tu lección y compártela con la comunidad! 🚀",
         "¡Crear lecciones es muy fácil! 📝 Solo necesitas ir a la sección de lecciones, tocar el botón de agregar, rellenar el contenido con tu material educativo y publicar. ¡Tus compañeros te lo agradecerán!"
@@ -677,7 +945,18 @@
     {
       "id_intencion": 5,
       "nombre_intencion": "como_usar_app",
-      "palabras_clave": ["cómo usar", "como usar", "cómo funciona", "como funciona", "instructivo", "tutorial", "guía", "guia", "ayuda general", "necesito ayuda"],
+      "palabras_clave": [
+        "cómo usar",
+        "como usar",
+        "cómo funciona",
+        "como funciona",
+        "instructivo",
+        "tutorial",
+        "guía",
+        "guia",
+        "ayuda general",
+        "necesito ayuda"
+      ],
       "respuestas": [
         "¡Te explico cómo usar Book-L! 📱\n\n🏠 **Home**: Tu pantalla principal con accesos rápidos.\n🔍 **Buscar**: Encuentra cursos y lecciones.\n👤 **Perfil**: Gestiona tu información y progreso.\n🤖 **Booki**: ¡Soy yo! Tu asistente virtual.\n\nDesde Home puedes acceder a tus cursos, lecciones y ver tu racha de estudio. ¡Explora y aprende!",
         "Book-L tiene todo lo que necesitas 🎓:\n\n📚 **Cursos y Lecciones**: Contenido académico organizado.\n📝 **Ejercicios**: Practica con cuestionarios interactivos.\n💬 **Discusiones**: Comenta y debate con tus compañeros.\n📊 **Progreso**: Mide tu avance y mantén tu racha.\n\n¡Navega por el menú inferior para explorar cada sección!"
@@ -686,7 +965,17 @@
     {
       "id_intencion": 6,
       "nombre_intencion": "cursos",
-      "palabras_clave": ["cursos", "curso", "ver cursos", "mis cursos", "catálogo", "catalogo", "cursos disponibles", "qué cursos hay", "que cursos hay"],
+      "palabras_clave": [
+        "cursos",
+        "curso",
+        "ver cursos",
+        "mis cursos",
+        "catálogo",
+        "catalogo",
+        "cursos disponibles",
+        "qué cursos hay",
+        "que cursos hay"
+      ],
       "respuestas": [
         "En Book-L puedes encontrar cursos de diferentes áreas académicas 📚. Ve a la sección 'Buscar' para explorar el catálogo completo. Cada curso contiene lecciones organizadas por temas. ¡Hay cursos de Matemáticas, Programación, Derecho, Psicología y más!",
         "Los cursos en Book-L están organizados por materia 📖. Puedes explorarlos desde la sección de búsqueda o desde Home. Cada curso tiene lecciones con capítulos, materiales y ejercicios prácticos. ¡Encuentra el que más te interese!"
@@ -695,7 +984,15 @@
     {
       "id_intencion": 7,
       "nombre_intencion": "lecciones",
-      "palabras_clave": ["lecciones", "lección", "leccion", "ver lecciones", "mis lecciones", "material de estudio", "contenido educativo"],
+      "palabras_clave": [
+        "lecciones",
+        "lección",
+        "leccion",
+        "ver lecciones",
+        "mis lecciones",
+        "material de estudio",
+        "contenido educativo"
+      ],
       "respuestas": [
         "Las lecciones son el corazón de Book-L 💚. Cada lección tiene capítulos con contenido educativo, materiales de apoyo (PDFs, videos) y ejercicios para practicar. ¡Puedes acceder a ellas desde los cursos o directamente desde la búsqueda!",
         "¡Las lecciones en Book-L son geniales! 🌟 Incluyen:\n\n📖 Capítulos con contenido detallado\n📎 Materiales de apoyo (PDFs, videos, enlaces)\n✏️ Ejercicios interactivos\n💬 Foro de discusión\n\n¡Todo para que aprendas de la mejor manera!"
@@ -704,7 +1001,18 @@
     {
       "id_intencion": 8,
       "nombre_intencion": "ejercicios",
-      "palabras_clave": ["ejercicios", "ejercicio", "cuestionario", "quiz", "examen", "practicar", "test", "evaluación", "evaluacion", "preguntas"],
+      "palabras_clave": [
+        "ejercicios",
+        "ejercicio",
+        "cuestionario",
+        "quiz",
+        "examen",
+        "practicar",
+        "test",
+        "evaluación",
+        "evaluacion",
+        "preguntas"
+      ],
       "respuestas": [
         "Los ejercicios en Book-L te ayudan a reforzar lo aprendido 💪. Hay distintos tipos:\n\n✅ Selección múltiple\n✅ Verdadero o falso\n✅ Respuesta corta\n\n¡Practica después de cada capítulo para afianzar tus conocimientos!",
         "¡A practicar! 📝 Los ejercicios están dentro de cada capítulo de las lecciones. Responde las preguntas y recibe retroalimentación inmediata. ¡Sigue practicando para lograr mejores resultados! 💯"
@@ -713,7 +1021,17 @@
     {
       "id_intencion": 9,
       "nombre_intencion": "progreso_racha",
-      "palabras_clave": ["progreso", "mi progreso", "racha", "streak", "avance", "estadísticas", "estadisticas", "cuánto llevo", "cuanto llevo"],
+      "palabras_clave": [
+        "progreso",
+        "mi progreso",
+        "racha",
+        "streak",
+        "avance",
+        "estadísticas",
+        "estadisticas",
+        "cuánto llevo",
+        "cuanto llevo"
+      ],
       "respuestas": [
         "Tu progreso se registra automáticamente en Book-L 📊. Cada vez que completas una lección o ejercicio, tu avance se actualiza. ¡Mantén tu racha de estudio diaria para no perderla! 🔥",
         "¡El sistema de rachas te motiva a estudiar todos los días! 🔥 Cada día que estudias, tu racha crece. Puedes ver tu progreso detallado en la sección de perfil. ¡No dejes que se rompa tu racha!"
@@ -722,7 +1040,16 @@
     {
       "id_intencion": 10,
       "nombre_intencion": "perfil",
-      "palabras_clave": ["perfil", "mi perfil", "editar perfil", "cambiar foto", "datos personales", "mi cuenta", "configuración", "configuracion"],
+      "palabras_clave": [
+        "perfil",
+        "mi perfil",
+        "editar perfil",
+        "cambiar foto",
+        "datos personales",
+        "mi cuenta",
+        "configuración",
+        "configuracion"
+      ],
       "respuestas": [
         "Para ver o editar tu perfil, toca el ícono 👤 en la barra de navegación inferior. Desde ahí puedes:\n\n✏️ Editar tu información personal\n📊 Ver tu progreso general\n👥 Ver tus seguidores y seguidos\n⚙️ Acceder a configuración",
         "Tu perfil es tu espacio personal en Book-L 🏠. Puedes personalizar tu información, ver estadísticas de estudio y gestionar tu cuenta desde la sección de Perfil en la barra inferior."
@@ -731,7 +1058,17 @@
     {
       "id_intencion": 11,
       "nombre_intencion": "buscar",
-      "palabras_clave": ["buscar", "búsqueda", "busqueda", "encontrar", "dónde está", "donde esta", "cómo encuentro", "como encuentro", "filtrar"],
+      "palabras_clave": [
+        "buscar",
+        "búsqueda",
+        "busqueda",
+        "encontrar",
+        "dónde está",
+        "donde esta",
+        "cómo encuentro",
+        "como encuentro",
+        "filtrar"
+      ],
       "respuestas": [
         "La sección de Búsqueda 🔍 te permite encontrar cursos y lecciones rápidamente. Usa palabras clave para filtrar el contenido. ¡Toca el ícono de lupa en la barra de navegación para comenzar!",
         "¿Buscas algo específico? 🔎 Ve a la sección de Búsqueda desde el menú inferior. Puedes buscar por nombre de curso, lección o tema. ¡Los resultados aparecen al instante!"
@@ -740,7 +1077,17 @@
     {
       "id_intencion": 12,
       "nombre_intencion": "discusiones",
-      "palabras_clave": ["discusión", "discusion", "discusiones", "foro", "comentarios", "comentar", "debate", "opinar", "preguntar en foro"],
+      "palabras_clave": [
+        "discusión",
+        "discusion",
+        "discusiones",
+        "foro",
+        "comentarios",
+        "comentar",
+        "debate",
+        "opinar",
+        "preguntar en foro"
+      ],
       "respuestas": [
         "Las discusiones en Book-L te permiten interactuar con otros estudiantes 💬. Cada curso y lección tiene su propio foro donde puedes:\n\n💡 Hacer preguntas\n🤝 Ayudar a otros compañeros\n📢 Compartir tus opiniones\n\n¡La colaboración hace que todos aprendamos mejor!",
         "¡El foro de discusiones es genial para aprender en comunidad! 🌐 Puedes comentar en cursos y lecciones, responder a otros compañeros y crear debates académicos. ¡Tu opinión cuenta!"
@@ -749,7 +1096,15 @@
     {
       "id_intencion": 13,
       "nombre_intencion": "seguidores",
-      "palabras_clave": ["seguir", "seguidores", "seguidos", "seguir usuario", "seguir a alguien", "amigos", "comunidad"],
+      "palabras_clave": [
+        "seguir",
+        "seguidores",
+        "seguidos",
+        "seguir usuario",
+        "seguir a alguien",
+        "amigos",
+        "comunidad"
+      ],
       "respuestas": [
         "En Book-L puedes seguir a otros usuarios 👥. Visita el perfil de un compañero y toca 'Seguir'. ¡Así podrás estar al tanto de su actividad y contenido! La comunidad académica crece cuando nos conectamos 🤝",
         "¡El sistema de seguidores te conecta con la comunidad! 🌟 Desde tu perfil puedes ver a quiénes sigues y quién te sigue. ¡Conecta con tus compañeros de estudio!"
@@ -758,7 +1113,18 @@
     {
       "id_intencion": 14,
       "nombre_intencion": "agradecimiento",
-      "palabras_clave": ["gracias", "te lo agradezco", "muchas gracias", "thanks", "genial", "excelente", "perfecto", "increíble", "increible", "muy bien"],
+      "palabras_clave": [
+        "gracias",
+        "te lo agradezco",
+        "muchas gracias",
+        "thanks",
+        "genial",
+        "excelente",
+        "perfecto",
+        "increíble",
+        "increible",
+        "muy bien"
+      ],
       "respuestas": [
         "¡De nada! 😊 Siempre es un placer ayudarte. Si tienes más preguntas, ¡aquí estaré! 📚",
         "¡Me alegra haberte ayudado! 💚 No dudes en escribirme cuando necesites algo. ¡Sigue aprendiendo! 🚀",
@@ -768,7 +1134,18 @@
     {
       "id_intencion": 15,
       "nombre_intencion": "reportar_problema",
-      "palabras_clave": ["problema", "error", "bug", "no funciona", "falla", "reportar", "reporte", "queja", "no carga", "se traba"],
+      "palabras_clave": [
+        "problema",
+        "error",
+        "bug",
+        "no funciona",
+        "falla",
+        "reportar",
+        "reporte",
+        "queja",
+        "no carga",
+        "se traba"
+      ],
       "respuestas": [
         "Lamento que tengas problemas 😔. Para reportar un error puedes:\n\n1️⃣ Ir a tu Perfil → Configuración\n2️⃣ Buscar la opción 'Enviar sugerencia o reporte'\n3️⃣ Describe el problema con detalle\n\n¡Nuestro equipo lo revisará lo antes posible! 🔧",
         "¡Oh no! 😟 Si algo no funciona correctamente, puedes reportarlo desde la sección de Configuración en tu perfil. Describe qué pasó y nuestro equipo técnico lo atenderá. ¡Queremos que tu experiencia sea la mejor!"
@@ -777,7 +1154,17 @@
     {
       "id_intencion": 16,
       "nombre_intencion": "materiales",
-      "palabras_clave": ["materiales", "material", "pdf", "video", "recurso", "recursos", "descargar", "documento", "archivo"],
+      "palabras_clave": [
+        "materiales",
+        "material",
+        "pdf",
+        "video",
+        "recurso",
+        "recursos",
+        "descargar",
+        "documento",
+        "archivo"
+      ],
       "respuestas": [
         "Los materiales educativos están dentro de cada lección 📎. Puedes encontrar:\n\n📄 Documentos PDF\n🎬 Videos explicativos\n🔗 Enlaces externos\n\n¡Accede a ellos desde los capítulos de cada lección para complementar tu estudio!",
         "¡Book-L tiene materiales de apoyo increíbles! 📚 Dentro de cada lección encontrarás PDFs, videos y más recursos que te ayudarán a profundizar en cada tema. ¡Aprovéchalos al máximo!"
@@ -786,7 +1173,17 @@
     {
       "id_intencion": 17,
       "nombre_intencion": "navegacion",
-      "palabras_clave": ["barra de navegación", "barra inferior", "menú", "menu", "navegar", "ir a", "secciones", "pantallas", "tabs"],
+      "palabras_clave": [
+        "barra de navegación",
+        "barra inferior",
+        "menú",
+        "menu",
+        "navegar",
+        "ir a",
+        "secciones",
+        "pantallas",
+        "tabs"
+      ],
       "respuestas": [
         "La barra de navegación inferior tiene 4 secciones principales 📱:\n\n🏠 **Home**: Pantalla principal con accesos rápidos\n🔍 **Buscar**: Encuentra cursos y lecciones\n👤 **Perfil**: Tu información y progreso\n🤖 **Booki**: ¡Tu asistente (yo)!\n\n¡Toca cualquier ícono para navegar entre secciones!",
         "¡Navegar en Book-L es súper fácil! 🧭 Usa la barra inferior para moverte entre Home, Búsqueda, Perfil y Booki (¡aquí estoy yo! 🤖). Cada sección tiene su propio contenido y funciones."
