@@ -7,7 +7,7 @@ import '../../domain/entities/curso.dart';
 import '../../domain/usecases/curso_usecases.dart';
 import '../../../leccion/domain/entities/leccion.dart';
 import '../../../leccion/presentation/controller/leccion_controller.dart';
-import '../../../../core/storage/local_storage.dart';
+
 // Adaptador primario — orquesta los casos de uso y notifica a la UI.
 // La UI solo lo instancia e invoca sus métodos; nunca toca repositorios.
 class CursoController extends ChangeNotifier {
@@ -51,8 +51,8 @@ class CursoController extends ChangeNotifier {
       final cursos = await _getCursos();
       state = state.copyWith(status: DataStatus.loaded, items: cursos);
     } catch (e) {
-      state = state.copyWith(
-          status: DataStatus.error, errorMessage: e.toString());
+      state =
+          state.copyWith(status: DataStatus.error, errorMessage: e.toString());
     }
     notifyListeners();
   }
@@ -62,12 +62,11 @@ class CursoController extends ChangeNotifier {
       final curso = await _getCursoById(id);
       if (curso != null) {
         state = state.copyWith(selected: curso);
-        leccionesDeCurso =
-            (await _getLecciones(id)).cast<Leccion>();
+        leccionesDeCurso = (await _getLecciones(id)).cast<Leccion>();
       }
     } catch (e) {
-      state = state.copyWith(
-          status: DataStatus.error, errorMessage: e.toString());
+      state =
+          state.copyWith(status: DataStatus.error, errorMessage: e.toString());
     }
     notifyListeners();
   }
@@ -106,8 +105,7 @@ class CursoController extends ChangeNotifier {
   Future<void> eliminarCurso(int id) async {
     await _deleteCurso(id);
     if (state.selected?.idCurso == id) {
-      state = DataState<Curso>(
-          status: DataStatus.loaded, items: state.items);
+      state = DataState<Curso>(status: DataStatus.loaded, items: state.items);
     }
     await cargarCursos();
   }
