@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../domain/entities/usuarios.dart';
 import '../../../../core/services/bookl_service.dart';
@@ -26,6 +30,12 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
   String? _selectedRol;
   late List<String> _roles;
 
+  // ─── Estado del avatar ────────────────────────────────────────────────
+  File? _avatarImage; // Imagen local seleccionada (cámara/galería)
+  String? _avatarNetworkUrl; // URL remota del avatar existente
+  final ImagePicker _picker = ImagePicker();
+
+  bool? _temaOscuroOriginal;
   late final List<String> _programas;
 
   @override
@@ -39,10 +49,13 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
     _passwordController = TextEditingController(text: widget.usuario.password);
     _celularController =
         TextEditingController(text: widget.usuario.celular?.toString() ?? '');
-    _preferenciasController =
-        TextEditingController(text: widget.usuario.preferencias ?? '');
+    _preferenciasController = TextEditingController(
+      text: _extractIntereses(widget.usuario.preferencias),
+    );
+    _temaOscuroOriginal = _extractTemaOscuro(widget.usuario.preferencias);
+    _avatarNetworkUrl = widget.usuario.avatarUrl;
     _selectedDate = widget.usuario.nacimiento;
-    // Solo asigna el programa si existe en la lista; si no, deja null (sin selección).
+
     final programa = widget.usuario.programa;
     _selectedPrograma =
         (programa != null && _programas.contains(programa)) ? programa : null;
@@ -77,7 +90,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFFF1B440), // Yellow color from palette
+              primary: Color(0xFFF1B440),
               onPrimary: Colors.white,
               onSurface: Colors.black,
             ),
@@ -93,6 +106,153 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
     }
   }
 
+  String _extractIntereses(String? preferenciasJson) {
+    if (preferenciasJson == null || preferenciasJson.isEmpty) return '';
+    try {
+      final map = jsonDecode(preferenciasJson);
+      if (map is Map<String, dynamic> && map.containsKey('intereses')) {
+        final intereses = List<String>.from(map['intereses'] ?? []);
+        return intereses.join(', ');
+      }
+    } catch (_) {}
+    return preferenciasJson;
+  }
+
+  bool? _extractTemaOscuro(String? preferenciasJson) {
+    if (preferenciasJson == null || preferenciasJson.isEmpty) return null;
+    try {
+      final map = jsonDecode(preferenciasJson);
+      if (map is Map<String, dynamic> && map.containsKey('tema_oscuro')) {
+        return map['tema_oscuro'] as bool?;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  String _rebuildPreferencias(String interesesTexto) {
+    final intereses = interesesTexto
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    final map = <String, dynamic>{
+      'intereses': intereses,
+    };
+    if (_temaOscuroOriginal != null) {
+      map['tema_oscuro'] = _temaOscuroOriginal;
+    }
+    return jsonEncode(map);
+  }
+
+  /// Devuelve el ImageProvider adecuado para el avatar:
+  /// - Si hay imagen local seleccionada → FileImage
+  /// - Si no, pero hay URL remota guardada → NetworkImage
+  /// - Si ninguna → null (para mostrar el icono por defecto)
+  ImageProvider? _getAvatarImageProvider() {
+    if (_avatarImage != null) {
+      return FileImage(_avatarImage!);
+    } else if (_avatarNetworkUrl != null && _avatarNetworkUrl!.isNotEmpty) {
+      return NetworkImage(_avatarNetworkUrl!);
+    }
+    return null;
+  }
+
+  void _showImagePickerSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const Text(
+                  'Cambiar foto de perfil',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading:
+                      const Icon(Icons.camera_alt, color: Color(0xFF44BD32)),
+                  title: const Text('Tomar foto'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading:
+                      const Icon(Icons.photo_library, color: Color(0xFFF1B440)),
+                  title: const Text('Elegir de la galería'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+                if (_avatarImage != null || _avatarNetworkUrl != null)
+                  ListTile(
+                    leading:
+                        const Icon(Icons.delete_outline, color: Colors.red),
+                    title: const Text('Eliminar foto actual'),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      setState(() {
+                        _avatarImage = null;
+                        _avatarNetworkUrl = null;
+                      });
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 800,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _avatarImage = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al seleccionar imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
@@ -104,7 +264,6 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
           SingleChildScrollView(
             child: Column(
               children: [
-                // ── HEADER ────────────────────────────────────────────────
                 ClipRRect(
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(20),
@@ -161,42 +320,48 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                     ),
                   ),
                 ),
-
-                // ── CONTENIDO ─────────────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     children: [
-                      // Perfil: Avatar + Nombre
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Stack(
-                            children: [
-                              Container(
-                                width: 80,
-                                height: 80,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
+                          GestureDetector(
+                            onTap: _showImagePickerSheet,
+                            child: Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: Colors.white,
+                                  backgroundImage: _getAvatarImageProvider(),
+                                  child: (_avatarImage == null &&
+                                          _avatarNetworkUrl == null)
+                                      ? const Icon(Icons.person,
+                                          size: 50, color: Colors.grey)
+                                      : null,
                                 ),
-                                child: const Icon(Icons.person,
-                                    size: 50, color: Colors.grey),
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF44BD32),
-                                    shape: BoxShape.circle,
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF44BD32),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      (_avatarImage != null ||
+                                              _avatarNetworkUrl != null)
+                                          ? Icons.edit
+                                          : Icons.add,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
                                   ),
-                                  child: const Icon(Icons.add,
-                                      color: Colors.white, size: 16),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           const SizedBox(width: 15),
                           Expanded(
@@ -213,8 +378,6 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                         ],
                       ),
                       const SizedBox(height: 20),
-
-                      // Fila 2: Fecha Nacimiento & Email
                       Row(
                         children: [
                           Expanded(
@@ -238,10 +401,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                                   'Correo electrónico: *', _correoController)),
                         ],
                       ),
-
                       const SizedBox(height: 20),
-
-                      // Fila 3: Contraseña & Celular
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -279,8 +439,6 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                         ],
                       ),
                       const SizedBox(height: 20),
-
-                      // Fila 4: Programa & Semestre
                       Row(
                         children: [
                           Expanded(
@@ -303,20 +461,14 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                         ],
                       ),
                       const SizedBox(height: 20),
-
-                      // Fila 5: Rol
                       _buildDropdownField('Rol: *', _roles, _selectedRol,
                           (val) {
                         setState(() => _selectedRol = val);
                       }),
                       const SizedBox(height: 20),
-
-                      // Preferencias
                       _buildTextField('Preferencias', _preferenciasController,
                           maxLines: 4),
-
                       const SizedBox(height: 30),
-
                       Container(
                         decoration: ShapeDecoration(
                           color: const Color(0xFFFDCD51),
@@ -325,8 +477,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                           ),
                           shadows: const [
                             BoxShadow(
-                              color: Color(
-                                  0x3F000000), // 0x3F = ~0.247 de opacidad
+                              color: Color(0x3F000000),
                               blurRadius: 4,
                               offset: Offset(0, 4),
                               spreadRadius: 0,
@@ -347,7 +498,8 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                                 nacimiento: _selectedDate,
                                 programa: _selectedPrograma,
                                 semestre: _selectedSemestre,
-                                preferencias: _preferenciasController.text,
+                                preferencias: _rebuildPreferencias(
+                                    _preferenciasController.text),
                                 activo: widget.usuario.activo,
                                 rol: _selectedRol,
                                 avatarUrl: widget.usuario.avatarUrl,
@@ -371,15 +523,13 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 100), // Espacio para la navbar
+                      const SizedBox(height: 100),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-
-          // ── BOTTOM NAV BAR ─────────────────────────────────────────────
           const Positioned(
             left: 20,
             right: 20,

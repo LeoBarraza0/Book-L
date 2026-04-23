@@ -1,4 +1,8 @@
+import 'dart:convert'; // Para jsonEncode al reconstruir las preferencias
+import 'dart:io'; // Necesario para usar File (imagen local del dispositivo)
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // Plugin para cámara y galería
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../domain/entities/usuarios.dart';
 import '../../../../core/services/bookl_service.dart';
@@ -16,6 +20,8 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
   late TextEditingController _correoController;
   late TextEditingController _passwordController;
   late TextEditingController _celularController;
+  // Preferencias: el admin escribe los intereses separados por comas.
+  // Al guardar, se convierten a JSON: {"intereses": [...]}
   late TextEditingController _preferenciasController;
 
   DateTime? _selectedDate;
@@ -27,6 +33,13 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
 
   late final List<String> _programas;
 
+  // ─── Estado del avatar ──────────────────────────────────────────────────
+  // _avatarImage: Archivo local seleccionado desde cámara/galería.
+  // Null al inicio (usuario nuevo no tiene foto aún).
+  File? _avatarImage;
+  // Instancia del plugin image_picker — se crea una sola vez como campo de clase
+  final ImagePicker _picker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +49,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
     _correoController = TextEditingController();
     _passwordController = TextEditingController();
     _celularController = TextEditingController();
+    // Campo vacío al iniciar — el admin escribe los intereses en texto plano
     _preferenciasController = TextEditingController();
   }
 
@@ -73,6 +87,145 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
       setState(() {
         _selectedDate = picked;
       });
+    }
+  }
+
+  /// Convierte el texto del campo de preferencias al formato JSON del sistema.
+  ///
+  /// El admin escribe: "matemáticas, programación"
+  /// Se convierte a:  {"intereses": ["matemáticas", "programación"]}
+  ///
+  /// Para usuarios nuevos no hay tema_oscuro original, así que no se incluye.
+  String _buildPreferenciasJson(String interesesTexto) {
+    final intereses = interesesTexto
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    return jsonEncode({'intereses': intereses});
+  }
+
+  /// ─── Selección de imagen con image_picker ──────────────────────────────
+  /// Muestra un bottom sheet estilo móvil con opciones para elegir foto.
+  ///
+  /// Funcionamiento de image_picker:
+  /// - Se llama a _picker.pickImage(source: ImageSource.camera/gallery)
+  /// - Retorna un XFile? (ruta temporal en el sistema de archivos del dispositivo)
+  /// - Se convierte a File de dart:io para mostrarlo con FileImage()
+  /// - imageQuality: 85 comprime la imagen sin pérdida visual notable
+  /// - maxWidth: 800 limita el ancho para no saturar memoria
+  void _showImagePickerSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Indicador visual de drag (patrón estándar de bottom sheet móvil)
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const Text(
+                  'Añadir foto de perfil',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Opción 1: Cámara
+                // ImageSource.camera abre la cámara nativa del dispositivo
+                ListTile(
+                  leading: const Icon(Icons.camera_alt, color: Color(0xFF44BD32)),
+                  title: const Text('Tomar foto'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+
+                // Opción 2: Galería
+                // ImageSource.gallery abre el selector de fotos del dispositivo
+                ListTile(
+                  leading: const Icon(Icons.photo_library, color: Color(0xFFF1B440)),
+                  title: const Text('Elegir de la galería'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+
+                // Opción 3: Eliminar (solo si ya seleccionó una)
+                if (_avatarImage != null)
+                  ListTile(
+                    leading: const Icon(Icons.delete_outline, color: Colors.red),
+                    title: const Text('Quitar foto'),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      setState(() {
+                        _avatarImage = null;
+                      });
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Método centralizado que ejecuta la selección de imagen.
+  ///
+  /// [source]: ImageSource.camera → abre cámara / ImageSource.gallery → abre galería
+  ///
+  /// Flujo completo:
+  /// 1. _picker.pickImage() abre la interfaz nativa del dispositivo
+  /// 2. El usuario captura o selecciona una imagen
+  /// 3. XFile contiene la ruta temporal del archivo en el dispositivo
+  /// 4. File(pickedFile.path) convierte esa ruta a un objeto File de Dart
+  /// 5. FileImage(File) es el ImageProvider que Flutter usa para mostrarlo
+  /// 6. setState() actualiza el CircleAvatar para mostrar la imagen elegida
+  /// 7. Si el usuario cancela, pickedFile es null y no ocurre nada
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: source,
+        imageQuality: 85, // Comprime al 85% para reducir tamaño del archivo
+        maxWidth: 800,    // Ancho máximo en píxeles para no sobrecargar memoria
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          // File() de dart:io convierte la ruta a un objeto File legible por Flutter
+          _avatarImage = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      // Si hay error (ej: usuario denegó permisos), mostramos mensaje
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al seleccionar imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -154,32 +307,45 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Stack(
-                            children: [
-                              Container(
-                                width: 80,
-                                height: 80,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
+                          // GestureDetector envuelve el avatar para capturar el tap
+                          GestureDetector(
+                            onTap: _showImagePickerSheet,
+                            child: Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: Colors.white,
+                                  // Si _avatarImage tiene valor, usamos FileImage (imagen local)
+                                  // Si no, mostramos el ícono de persona como placeholder
+                                  backgroundImage: _avatarImage != null
+                                      ? FileImage(_avatarImage!) as ImageProvider
+                                      : null,
+                                  child: _avatarImage == null
+                                      ? const Icon(Icons.person,
+                                          size: 50, color: Colors.grey)
+                                      : null,
                                 ),
-                                child: const Icon(Icons.person,
-                                    size: 50, color: Colors.grey),
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF44BD32),
-                                    shape: BoxShape.circle,
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF44BD32),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      // Ícono dinámico: lápiz si tiene foto, '+' si no
+                                      _avatarImage != null
+                                          ? Icons.edit
+                                          : Icons.add,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
                                   ),
-                                  child: const Icon(Icons.add,
-                                      color: Colors.white, size: 16),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           const SizedBox(width: 15),
                           Expanded(
@@ -294,8 +460,11 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                       }),
                       const SizedBox(height: 20),
 
-                      // Preferencias
-                      _buildTextField('Preferencias', _preferenciasController,
+                      // Preferencias: el admin escribe los intereses separados por comas
+                      // Ejemplo: "matemáticas, programación, diseño"
+                      // Al guardar se convierte automáticamente a JSON: {"intereses": [...]}
+                      _buildTextField('Preferencias (separar con comas)',
+                          _preferenciasController,
                           maxLines: 4),
 
                       const SizedBox(height: 30),
@@ -308,8 +477,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                           ),
                           shadows: const [
                             BoxShadow(
-                              color: Color(
-                                  0x3F000000), // 0x3F = ~0.247 de opacidad
+                              color: Color(0x3F000000),
                               blurRadius: 4,
                               offset: Offset(0, 4),
                               spreadRadius: 0,
@@ -331,17 +499,23 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                                 nacimiento: _selectedDate,
                                 programa: _selectedPrograma,
                                 semestre: _selectedSemestre,
-                                preferencias: _preferenciasController.text,
+                                // Convertir el texto de intereses al formato JSON
+                                preferencias: _preferenciasController.text.isNotEmpty
+                                    ? _buildPreferenciasJson(_preferenciasController.text)
+                                    : null,
                                 activo: true,
                                 rol: _selectedRol ?? 'Estudiante',
+                                // Por ahora el avatarUrl no se guarda (requeriría subir el File a un servidor)
+                                // En producción se haría upload del File y se guardaría la URL resultante
+                                avatarUrl: null,
                               );
                               Navigator.pop(context, newUser);
                             },
                             borderRadius: BorderRadius.circular(24.50),
-                            child: Container(
+                            child: const SizedBox(
                               width: 156,
                               height: 49,
-                              child: const Center(
+                              child: Center(
                                 child: Text(
                                   'Guardar',
                                   style: TextStyle(
