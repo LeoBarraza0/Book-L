@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../core/services/bookl_service.dart';
+import '../controller/busqueda_controller.dart';
 
 class ResultadoScreen extends StatefulWidget {
   const ResultadoScreen({super.key});
@@ -10,108 +11,28 @@ class ResultadoScreen extends StatefulWidget {
 }
 
 class _ResultadoScreenState extends State<ResultadoScreen> {
-  final TextEditingController _searchController = TextEditingController(
-    text: 'Vectores Bidimensionales',
-  );
+  final TextEditingController _searchController = TextEditingController();
+  final BusquedaController _ctrl = BusquedaController();
 
   final List<String> _filtros = ['Todas', 'Recientes', 'Calificación', '...'];
   int _filtroSeleccionado = 0;
 
-  final List<Map<String, dynamic>> _resultados = [
-    {
-      'tags': [
-        {
-          'text': 'Cálculo diferencial',
-          'color': const Color(0xFF67C947),
-          'textColor': Colors.white,
-        },
-      ],
-      'titulo': 'Derivadas',
-      'duracion': '1 Hora',
-      'calificacion': '4.9',
-      'estudiantes': '1.200',
-      'progreso': 0.20,
-      'favorito': true,
-      'imageColor': const Color(0xFF9DE596),
-    },
-    {
-      'tags': [
-        {
-          'text': 'JAVA',
-          'color': const Color(0xFF67C947),
-          'textColor': Colors.white,
-        },
-        {
-          'text': 'P.O.O',
-          'color': const Color(0xFFFA8E9E),
-          'textColor': Colors.white,
-        },
-      ],
-      'titulo': 'Herencia',
-      'duracion': '1 Hora',
-      'calificacion': '4.9',
-      'estudiantes': '1.200',
-      'progreso': 0.20,
-      'favorito': true,
-      'imageColor': const Color(0xFF96D4DB),
-    },
-    {
-      'tags': [
-        {
-          'text': 'Cálculo diferencial',
-          'color': const Color(0xFFF6CE74),
-          'textColor': Colors.white,
-        },
-      ],
-      'titulo': 'Derivadas',
-      'duracion': '1 Hora',
-      'calificacion': '4.9',
-      'estudiantes': '1.200',
-      'progreso': 0.20,
-      'favorito': true,
-      'imageColor': const Color(0xFF888BC6),
-    },
-    {
-      'tags': [
-        {
-          'text': 'Cálculo diferencial',
-          'color': const Color(0xFF67C947),
-          'textColor': Colors.white,
-        },
-      ],
-      'titulo': 'Derivadas',
-      'duracion': '1 Hora',
-      'calificacion': '4.9',
-      'estudiantes': '1.200',
-      'progreso': 0.20,
-      'favorito': true,
-      'imageColor': const Color(0xFF9DE596),
-    },
-    {
-      'tags': [
-        {
-          'text': 'JAVA',
-          'color': const Color(0xFF67C947),
-          'textColor': Colors.white,
-        },
-        {
-          'text': 'P.O.O',
-          'color': const Color(0xFFFA8E9E),
-          'textColor': Colors.white,
-        },
-      ],
-      'titulo': 'Herencia',
-      'duracion': '1 Hora',
-      'calificacion': '4.9',
-      'estudiantes': '1.200',
-      'progreso': 0.20,
-      'favorito': true,
-      'imageColor': const Color(0xFF96D4DB),
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _searchController.text = _ctrl.currentQuery;
+    _ctrl.addListener(_onControllerChange);
+  }
+
+  void _onControllerChange() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   @override
   void dispose() {
+    _ctrl.removeListener(_onControllerChange);
     _searchController.dispose();
     super.dispose();
   }
@@ -132,18 +53,33 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
 
               // 3. Resultados
               Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(
-                    left: 20,
-                    right: 20,
-                    top: 5,
-                    bottom: 100, // Espacio para el Bottom Navigation Bar
-                  ),
-                  itemCount: _resultados.length,
-                  itemBuilder: (context, index) {
-                    return _buildResultCard(_resultados[index]);
-                  },
-                ),
+                child: _ctrl.isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Color(0xFF4DC130)),
+                      )
+                    : _ctrl.resultados.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'No se encontraron resultados',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF888888),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.only(
+                              left: 20,
+                              right: 20,
+                              top: 5,
+                              bottom: 100, // Espacio para el Bottom Navigation Bar
+                            ),
+                            itemCount: _ctrl.resultados.length,
+                            itemBuilder: (context, index) {
+                              return _buildResultCard(_ctrl.resultados[index]);
+                            },
+                          ),
               ),
             ],
           ),
@@ -272,6 +208,10 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                     child: TextField(
                       controller: _searchController,
                       cursorColor: const Color(0xFF5AB639),
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (val) {
+                        _ctrl.buscar(val);
+                      },
                       style: const TextStyle(
                         color: Color(0xFF444444), // Texto gris oscuro
                         fontWeight: FontWeight.w500,
@@ -293,6 +233,7 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                           onPressed: () {
                             setState(() {
                               _searchController.clear();
+                              _ctrl.buscar('');
                             });
                           },
                         ),
@@ -306,7 +247,7 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                 IconButton(
                   icon: const Icon(Icons.search, color: Colors.white, size: 32),
                   onPressed: () {
-                    // Acción de búsqueda
+                    _ctrl.buscar(_searchController.text);
                   },
                 ),
               ],

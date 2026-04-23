@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../controller/busqueda_controller.dart';
 
 class BusquedaScreen extends StatefulWidget {
   const BusquedaScreen({super.key});
@@ -10,12 +11,15 @@ class BusquedaScreen extends StatefulWidget {
 
 class _BusquedaScreenState extends State<BusquedaScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _historialBusquedas = [
-    'Vectores Bidimensionales - Ingrid',
-    'Leyes de derecho en Colombia',
-    'Cálculo Diferencial Avanzado',
-    'Introducción a la programación',
-  ];
+  final BusquedaController _ctrl = BusquedaController();
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
@@ -24,9 +28,14 @@ class _BusquedaScreenState extends State<BusquedaScreen> {
   }
 
   void _eliminarBusqueda(int index) {
-    setState(() {
-      _historialBusquedas.removeAt(index);
-    });
+    _ctrl.eliminarDelHistorial(index);
+  }
+
+  void _ejecutarBusqueda(String query) {
+    if (query.trim().isNotEmpty) {
+      _ctrl.buscar(query);
+      Navigator.pushNamed(context, '/resultado');
+    }
   }
 
   @override
@@ -88,6 +97,8 @@ class _BusquedaScreenState extends State<BusquedaScreen> {
                           child: TextField(
                             controller: _searchController,
                             cursorColor: const Color(0xFF5AB639),
+                            textInputAction: TextInputAction.search,
+                            onSubmitted: _ejecutarBusqueda,
                             decoration: InputDecoration(
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.only(
@@ -131,7 +142,7 @@ class _BusquedaScreenState extends State<BusquedaScreen> {
                             size: 26,
                           ),
                           onPressed: () {
-                            Navigator.pushNamed(context, '/resultado');
+                            _ejecutarBusqueda(_searchController.text);
                           },
                         ),
                       ),
@@ -159,7 +170,7 @@ class _BusquedaScreenState extends State<BusquedaScreen> {
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
-                    itemCount: _historialBusquedas.length,
+                    itemCount: _ctrl.historialBusquedas.length,
                     itemBuilder: (context, index) {
                       return ListTile(
                         leading: const Icon(
@@ -167,13 +178,17 @@ class _BusquedaScreenState extends State<BusquedaScreen> {
                           color: Color(0xFFBDBDBD),
                         ),
                         title: Text(
-                          _historialBusquedas[index],
+                          _ctrl.historialBusquedas[index],
                           style: const TextStyle(
                             fontSize: 15,
                             color: Color(0xFF555555),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                        onTap: () {
+                          _searchController.text = _ctrl.historialBusquedas[index];
+                          _ejecutarBusqueda(_ctrl.historialBusquedas[index]);
+                        },
                         trailing: IconButton(
                           icon: const Icon(
                             Icons.close,
