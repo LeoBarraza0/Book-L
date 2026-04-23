@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../domain/entities/usuarios.dart';
-import '../../../../core/services/bookl_service.dart';
 
 class AddUsuarioScreen extends StatefulWidget {
   const AddUsuarioScreen({super.key});
@@ -21,16 +20,23 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
   DateTime? _selectedDate;
   String? _selectedPrograma;
   int? _selectedSemestre;
-  String? _selectedRol = 'Estudiante';
 
-  final List<String> _roles = ['Estudiante', 'Profesor'];
-
-  late final List<String> _programas;
+  final List<String> _programas = [
+    'Ingenieria de Sistemas',
+    'Ingenieria Industrial',
+    'Ingenieria Civil',
+    'Contaduria Publica',
+    'Administracion de Empresas',
+    'Derecho',
+    'Medicina',
+    'Psicologia',
+    'Enfermeria',
+    'Arquitectura'
+  ];
 
   @override
   void initState() {
     super.initState();
-    _programas = BooklService().programas;
     _nombreController = TextEditingController();
     _usernameController = TextEditingController();
     _correoController = TextEditingController();
@@ -88,60 +94,54 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
             child: Column(
               children: [
                 // ── HEADER ────────────────────────────────────────────────
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
-                  ),
-                  child: SizedBox(
-                    height: 200,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Image.asset(
-                            'assets/images/yellow_bg.png',
-                            fit: BoxFit.cover,
-                          ),
+                SizedBox(
+                  height: 200,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Image.asset(
+                          'assets/images/yellow_bg.png',
+                          fit: BoxFit.cover,
                         ),
-                        Positioned(
-                          top: topPadding + 8,
-                          left: 20,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () => Navigator.pop(context),
-                                customBorder: const CircleBorder(),
-                                child: const Icon(Icons.arrow_back,
-                                    color: Colors.white),
-                              ),
+                      ),
+                      Positioned(
+                        top: topPadding + 8,
+                        left: 20,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => Navigator.pop(context),
+                              customBorder: const CircleBorder(),
+                              child: const Icon(Icons.arrow_back,
+                                  color: Colors.white),
                             ),
                           ),
                         ),
-                        const Positioned(
-                          left: 0,
-                          right: 0,
-                          top: 80,
-                          child: Center(
-                            child: Text(
-                              'Añadir Usuario',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 32,
-                                fontFamily: 'Baloo',
-                                fontWeight: FontWeight.w400,
-                              ),
+                      ),
+                      const Positioned(
+                        left: 0,
+                        right: 0,
+                        top: 80,
+                        child: Center(
+                          child: Text(
+                            'Añadir Usuario',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontFamily: 'Baloo',
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
 
@@ -287,13 +287,6 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Fila 5: Rol
-                      _buildDropdownField('Rol: *', _roles, _selectedRol,
-                          (val) {
-                        setState(() => _selectedRol = val);
-                      }),
-                      const SizedBox(height: 20),
-
                       // Preferencias
                       _buildTextField('Preferencias', _preferenciasController,
                           maxLines: 4),
@@ -333,12 +326,12 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                                 semestre: _selectedSemestre,
                                 preferencias: _preferenciasController.text,
                                 activo: true,
-                                rol: _selectedRol ?? 'Estudiante',
+                                rol: 'User',
                               );
                               Navigator.pop(context, newUser);
                             },
                             borderRadius: BorderRadius.circular(24.50),
-                            child: Container(
+                            child: SizedBox(
                               width: 156,
                               height: 49,
                               child: const Center(
@@ -429,7 +422,6 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
             child: DropdownButton<String>(
               isExpanded: true,
               value: value,
-              menuMaxHeight: 250, // Permite scrollear si la lista es grande
               hint:
                   const Text('Seleccionar...', style: TextStyle(fontSize: 14)),
               items: items.map((String item) {
