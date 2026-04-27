@@ -194,7 +194,7 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                             ),
                             itemCount: lecciones.length,
                             itemBuilder: (context, index) {
-                              return _buildLeccionCard(lecciones[index]);
+                              return _buildLeccionCard(context, lecciones[index]);
                             },
                           );
                         },
@@ -218,12 +218,11 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
     );
   }
 
-  Widget _buildLeccionCard(Leccion item) {
+  Widget _buildLeccionCard(BuildContext context, Leccion item) {
     final nCapitulos = _leccionCtrl.capitulosDe(item.idLeccion).length;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFD9D9D9),
         borderRadius: BorderRadius.circular(14),
@@ -235,9 +234,19 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {
+            Navigator.pushNamed(context, '/leccion_detail', arguments: item.idLeccion);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
           // Thumbnail
           Container(
             width: 72,
@@ -375,6 +384,9 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
             ],
           ),
         ],
+      ),
+          ),
+        ),
       ),
     );
   }

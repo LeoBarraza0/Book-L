@@ -71,7 +71,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       const SizedBox(height: 30),
                       ListenableBuilder(
                         listenable: _controller,
-                        builder: (context, _) => _buildNovedadesSection(),
+                        builder: (context, _) => _buildNovedadesSection(context),
                       ),
                       const SizedBox(height: 100), // Bottom nav space
                     ],
@@ -348,7 +348,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  Widget _buildNovedadesSection() {
+  Widget _buildNovedadesSection(BuildContext context) {
     final state = _controller.state;
 
     return Column(
@@ -368,7 +368,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         else if (state is AdminHomeLoaded && state.novedades.isNotEmpty) ...
           [
             for (int i = 0; i < state.novedades.length; i++) ...[
-              _buildNovedadCard(state.novedades[i]),
+              _buildNovedadCard(context, state.novedades[i]),
               if (i < state.novedades.length - 1) const SizedBox(height: 12),
             ],
           ]
@@ -384,7 +384,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  Widget _buildNovedadCard(Novedad novedad) {
+  Widget _buildNovedadCard(BuildContext context, Novedad novedad) {
     final IconData icon;
     switch (novedad.tipo) {
       case 'Curso':
@@ -409,10 +409,25 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            if (novedad.tipo == 'Curso') {
+              Navigator.pushNamed(context, '/curso_detail', arguments: novedad.idEntidad);
+            } else if (novedad.tipo == 'Lección') {
+              Navigator.pushNamed(context, '/leccion_detail', arguments: novedad.idEntidad);
+            } else {
+              Navigator.pushNamed(context, '/capitulo_detail', arguments: novedad.idEntidad);
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
           // Thumbnail con icono coloreado según tipo
           Container(
             width: 60,
@@ -482,6 +497,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             ),
           ),
         ],
+      ),
+          ),
+        ),
       ),
     );
   }
