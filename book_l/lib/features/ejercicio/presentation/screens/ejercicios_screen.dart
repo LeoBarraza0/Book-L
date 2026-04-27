@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../domain/entities/ejercicio.dart';
+import '../controller/ejercicios_controller.dart';
 import 'banco_ejercicios_screen.dart';
 
+/// Pestaña "Ejercicios" dentro de leccion_detail_screen.
+/// Muestra una card por cada tipo de ejercicio que exista en los capítulos
+/// de la lección. Si aparecen nuevos tipos, se generan automáticamente.
 class EjerciciosScreen extends StatefulWidget {
   final int idLeccion;
   const EjerciciosScreen({super.key, required this.idLeccion});
@@ -11,83 +16,182 @@ class EjerciciosScreen extends StatefulWidget {
 
 class _EjerciciosScreenState extends State<EjerciciosScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+  final EjerciciosController _ctrl = EjerciciosController();
+  late AnimationController _animCtrl;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _animCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 600));
-    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _slideAnimation = Tween<Offset>(
-            begin: const Offset(0, 0.2), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
-    _controller.forward();
+    _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(
+            begin: const Offset(0, 0.15), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic));
+    _animCtrl.forward();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _animCtrl.dispose();
     super.dispose();
   }
 
+  // Configuración visual por tipo
+  static const _tipoConfig = <TipoEjercicio, _TipoVisual>{
+    TipoEjercicio.multipleChoice: _TipoVisual(
+      icon: Icons.quiz_outlined,
+      color: Color(0xFF4DC130),
+      bgAsset: 'assets/images/green_bg.png',
+      gradientColors: [Color(0xFF6BCA54), Color(0xFF389222)],
+    ),
+    TipoEjercicio.trueFalse: _TipoVisual(
+      icon: Icons.check_circle_outline,
+      color: Color(0xFFF6B55C),
+      bgAsset: 'assets/images/yellow_bg.png',
+      gradientColors: [Color(0xFFF6B55C), Color(0xFFE09830)],
+    ),
+    TipoEjercicio.ordenar: _TipoVisual(
+      icon: Icons.swap_vert_rounded,
+      color: Color(0xFF4DB0FF),
+      bgAsset: null,
+      gradientColors: [Color(0xFF4DB0FF), Color(0xFF2B7FD4)],
+    ),
+    TipoEjercicio.rellenar: _TipoVisual(
+      icon: Icons.text_fields_rounded,
+      color: Color(0xFFFF606F),
+      bgAsset: null,
+      gradientColors: [Color(0xFFFF606F), Color(0xFFD43A48)],
+    ),
+    TipoEjercicio.respuestaCorta: _TipoVisual(
+      icon: Icons.short_text_rounded,
+      color: Color(0xFF9B51E0),
+      bgAsset: null,
+      gradientColors: [Color(0xFF9B51E0), Color(0xFF7B3BB8)],
+    ),
+  };
+
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: Column(
-          children: [
-            _buildAnimatedCard(
-              title: "Teóricos",
-              imageUrl: 'assets/images/green_bg.png',
-              delay: 0,
+    return ListenableBuilder(
+      listenable: _ctrl,
+      builder: (context, _) {
+        final tipos = _ctrl.tiposDisponibles(widget.idLeccion);
+
+        if (tipos.isEmpty) {
+          return FadeTransition(
+            opacity: _fadeAnim,
+            child: _buildEmptyState(),
+          );
+        }
+
+        return FadeTransition(
+          opacity: _fadeAnim,
+          child: SlideTransition(
+            position: _slideAnim,
+            child: Column(
+              children: List.generate(tipos.length, (i) {
+                final tipo = tipos[i];
+                final count = _ctrl.ejerciciosPorTipo(widget.idLeccion, tipo).length;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _EjercicioTipoCard(
+                    tipo: tipo,
+                    visual: _tipoConfig[tipo] ?? _tipoConfig[TipoEjercicio.multipleChoice]!,
+                    count: count,
+                    delay: i * 120,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BancoEjerciciosScreen(
+                            idLeccion: widget.idLeccion,
+                            title: 'Ejercicios: ${tipo.displayName}',
+                            tipoFiltro: tipo,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }),
             ),
-            const SizedBox(height: 20),
-            _buildAnimatedCard(
-              title: "Prácticos",
-              imageUrl: 'assets/images/yellow_bg.png',
-              delay: 200,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+      child: Column(
+        children: [
+          Container(
+            width: 72, height: 72,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4DC130).withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
-          ],
-        ),
+            child: const Icon(Icons.quiz_outlined, size: 36, color: Color(0xFF4DC130)),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Sin ejercicios disponibles',
+            style: TextStyle(
+              fontFamily: 'Inter', fontSize: 17, fontWeight: FontWeight.w700, color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Los ejercicios se agregan desde la edición de capítulos.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Inter', fontSize: 13, color: Colors.black38, height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }
-
-  Widget _buildAnimatedCard(
-      {required String title, required String imageUrl, required int delay}) {
-    return _HoverScaleCard(
-      title: title,
-      imageUrl: imageUrl,
-      delay: delay,
-      idLeccion: widget.idLeccion,
-    );
-  }
 }
 
-class _HoverScaleCard extends StatefulWidget {
-  final String title;
-  final String imageUrl;
-  final int delay;
-  final int idLeccion;
+class _TipoVisual {
+  final IconData icon;
+  final Color color;
+  final String? bgAsset;
+  final List<Color> gradientColors;
 
-  const _HoverScaleCard({
-    required this.title,
-    required this.imageUrl,
+  const _TipoVisual({
+    required this.icon,
+    required this.color,
+    this.bgAsset,
+    required this.gradientColors,
+  });
+}
+
+class _EjercicioTipoCard extends StatefulWidget {
+  final TipoEjercicio tipo;
+  final _TipoVisual visual;
+  final int count;
+  final int delay;
+  final VoidCallback onTap;
+
+  const _EjercicioTipoCard({
+    required this.tipo,
+    required this.visual,
+    required this.count,
     required this.delay,
-    required this.idLeccion,
+    required this.onTap,
   });
 
   @override
-  State<_HoverScaleCard> createState() => _HoverScaleCardState();
+  State<_EjercicioTipoCard> createState() => _EjercicioTipoCardState();
 }
 
-class _HoverScaleCardState extends State<_HoverScaleCard> {
+class _EjercicioTipoCardState extends State<_EjercicioTipoCard> {
   bool _isPressed = false;
   bool _isVisible = false;
 
@@ -95,11 +199,7 @@ class _HoverScaleCardState extends State<_HoverScaleCard> {
   void initState() {
     super.initState();
     Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) {
-        setState(() {
-          _isVisible = true;
-        });
-      }
+      if (mounted) setState(() => _isVisible = true);
     });
   }
 
@@ -117,61 +217,47 @@ class _HoverScaleCardState extends State<_HoverScaleCard> {
           onTapDown: (_) => setState(() => _isPressed = true),
           onTapUp: (_) {
             setState(() => _isPressed = false);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => BancoEjerciciosScreen(
-                  idLeccion: widget.idLeccion,
-                  title: 'Ejercicios ${widget.title.toLowerCase()}',
-                ),
-              ),
-            );
+            widget.onTap();
           },
           onTapCancel: () => setState(() => _isPressed = false),
           child: Container(
-            height: 140,
+            height: 120,
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                )
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
               ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Stack(
                 children: [
+                  // Background
                   Positioned.fill(
-                    child: Transform.scale(
-                      scale: 1.15,
-                      child: Image.asset(
-                        widget.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: widget.title == 'Teóricos'
-                                  ? [const Color(0xFF6BCA54), const Color(0xFF389222)]
-                                  : [const Color(0xFF5A5A5A), const Color(0xFF2C2C2C)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                    child: widget.visual.bgAsset != null
+                        ? Transform.scale(
+                            scale: 1.15,
+                            child: Image.asset(
+                              widget.visual.bgAsset!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _buildGradientBg(),
                             ),
-                          ),
-                        ),
-                      ),
-                    ),
+                          )
+                        : _buildGradientBg(),
                   ),
+                  // Overlay
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.black.withValues(alpha: 0.0),
-                            Colors.black.withValues(alpha: 0.7),
+                            Colors.black.withOpacity(0.0),
+                            Colors.black.withOpacity(0.65),
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -179,36 +265,67 @@ class _HoverScaleCardState extends State<_HoverScaleCard> {
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: 20,
-                    left: 20,
-                    child: Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w700,
-                        fontSize: 24,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                  const Positioned(
-                    top: 0,
-                    bottom: 0,
-                    right: 20,
-                    child: Center(
-                      child: Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 28,
-                      ),
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(widget.visual.icon, color: Colors.white70, size: 18),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      '${widget.count} ejercicio${widget.count != 1 ? 's' : ''}',
+                                      style: const TextStyle(
+                                        fontFamily: 'Inter', fontSize: 11,
+                                        fontWeight: FontWeight.w600, color: Colors.white70,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                widget.tipo.displayName,
+                                style: const TextStyle(
+                                  fontFamily: 'Inter', fontWeight: FontWeight.w700,
+                                  fontSize: 20, color: Colors.white, letterSpacing: 0.3,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 22),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradientBg() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: widget.visual.gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
     );

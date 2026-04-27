@@ -3,13 +3,13 @@ import '../../../../shared/widgets/search_filter_bar.dart';
 import '../controller/ejercicios_controller.dart';
 import '../../domain/entities/ejercicio.dart';
 import 'teorico_screen.dart';
-import 'dart:math';
 
 class BancoEjerciciosScreen extends StatefulWidget {
   final int idLeccion;
   final String title;
+  final TipoEjercicio? tipoFiltro;
 
-  const BancoEjerciciosScreen({super.key, required this.idLeccion, required this.title});
+  const BancoEjerciciosScreen({super.key, required this.idLeccion, required this.title, this.tipoFiltro});
 
   @override
   State<BancoEjerciciosScreen> createState() => _BancoEjerciciosScreenState();
@@ -24,6 +24,11 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _ctrl.loadEjercicios(widget.idLeccion);
+      // Pre-filtrar por tipo si viene especificado
+      if (widget.tipoFiltro != null) {
+        final idx = TipoEjercicio.values.indexOf(widget.tipoFiltro!) + 1;
+        _ctrl.setFilter(idx);
+      }
     });
   }
 

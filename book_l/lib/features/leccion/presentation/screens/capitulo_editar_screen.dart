@@ -3,6 +3,8 @@ import '../../../../shared/widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
+import '../../../ejercicio/domain/entities/ejercicio.dart';
+import '../../../ejercicio/presentation/screens/crear_ejercicio_screen.dart';
 
 class CapituloEditarScreen extends StatefulWidget {
   /// ID del capítulo a editar. Si es null se crea uno nuevo.
@@ -378,9 +380,21 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
   }
 
   void _mostrarOpcionesPrueba(BuildContext context) {
+    final idCapitulo = _capituloActual?.idCapitulo ?? 0;
+
+    // Configuración visual por tipo
+    const tipoConfigs = <TipoEjercicio, ({IconData icon, Color color, String subtitle})>{
+      TipoEjercicio.multipleChoice: (icon: Icons.quiz_outlined, color: Color(0xFF4DC130), subtitle: 'Seleccionar una respuesta entre varias'),
+      TipoEjercicio.trueFalse: (icon: Icons.check_circle_outline, color: Color(0xFFF6B55C), subtitle: 'Determinar si un enunciado es V o F'),
+      TipoEjercicio.ordenar: (icon: Icons.swap_vert_rounded, color: Color(0xFF4DB0FF), subtitle: 'Organizar elementos en el orden correcto'),
+      TipoEjercicio.rellenar: (icon: Icons.text_fields_rounded, color: Color(0xFFFF606F), subtitle: 'Completar espacios vacíos en un texto'),
+      TipoEjercicio.respuestaCorta: (icon: Icons.short_text_rounded, color: Color(0xFF9B51E0), subtitle: 'Escribir la respuesta en texto libre'),
+    };
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (ctx) {
         return Container(
           decoration: const BoxDecoration(
@@ -395,70 +409,41 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 48,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                width: 48, height: 5,
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Agregar Prueba',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
+              const Text('Agregar Prueba',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
               const SizedBox(height: 8),
-              const Text(
-                '¿Qué tipo de ejercicio deseas agregar?',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: Color(0xFF676767),
-                ),
-              ),
+              const Text('¿Qué tipo de ejercicio deseas agregar?',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: Color(0xFF676767))),
               const SizedBox(height: 24),
-              _buildOpcionBottomSheet(
-                icon: Icons.quiz_outlined,
-                title: 'Crear Ejercicio Teórico',
-                subtitle: 'Opción múltiple, completar, verdadero/falso',
-                color: const Color(0xFF4DC130),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.pushNamed(context, '/crear_ejercicio_teorico');
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildOpcionBottomSheet(
-                icon: Icons.code,
-                title: 'Crear Ejercicio Práctico',
-                subtitle: 'Escribir y validar código',
-                color: const Color(0xFFFF606F),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.pushNamed(context, '/crear_ejercicio_practico');
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildOpcionBottomSheet(
-                icon: Icons.file_present_rounded,
-                title: 'Adjuntar Ejercicio Existente',
-                subtitle: 'Seleccionar del banco de ejercicios',
-                color: const Color(0xFFF6B55C),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Abriendo banco de ejercicios...'),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
+              ...TipoEjercicio.values.map((tipo) {
+                final config = tipoConfigs[tipo]!;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildOpcionBottomSheet(
+                    icon: config.icon,
+                    title: tipo.displayName,
+                    subtitle: config.subtitle,
+                    color: config.color,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CrearEjercicioScreen(
+                            idCapitulo: idCapitulo,
+                            tipo: tipo,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }),
+              const SizedBox(height: 8),
             ],
           ),
         );

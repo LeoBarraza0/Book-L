@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../../../../core/services/bookl_service.dart';
 import '../../domain/entities/ejercicio.dart';
-import '../../../leccion/domain/entities/capitulo.dart';
+import '../../domain/entities/pregunta.dart';
+import '../../domain/entities/opcion.dart';
 
 class EjerciciosController extends ChangeNotifier {
   static final EjerciciosController _instance = EjerciciosController._internal();
@@ -29,6 +30,8 @@ class EjerciciosController extends ChangeNotifier {
     TipoEjercicio.respuestaCorta.displayName,
   ];
 
+  // ── READ ───────────────────────────────────────────────────────────────────
+
   void loadEjercicios(int idLeccion) {
     // 1. Obtener capitulos de la lección
     final capitulosLeccion = _service.capitulos
@@ -45,6 +48,101 @@ class EjerciciosController extends ChangeNotifier {
     _selectedFilterIndex = 0;
     notifyListeners();
   }
+
+  /// Retorna los tipos de ejercicio que existen para una lección.
+  List<TipoEjercicio> tiposDisponibles(int idLeccion) {
+    final capitulosLeccion = _service.capitulos
+        .where((c) => c.idLeccion == idLeccion)
+        .map((c) => c.idCapitulo)
+        .toSet();
+
+    final ejerciciosLeccion = _service.ejercicios
+        .where((e) => capitulosLeccion.contains(e.idCapitulo))
+        .toList();
+
+    final tipos = ejerciciosLeccion.map((e) => e.tipo).toSet().toList();
+    // Ordenar según el enum
+    tipos.sort((a, b) => a.index.compareTo(b.index));
+    return tipos;
+  }
+
+  /// Retorna ejercicios de una lección filtrados por tipo.
+  List<Ejercicio> ejerciciosPorTipo(int idLeccion, TipoEjercicio tipo) {
+    final capitulosLeccion = _service.capitulos
+        .where((c) => c.idLeccion == idLeccion)
+        .map((c) => c.idCapitulo)
+        .toSet();
+
+    return _service.ejercicios
+        .where((e) => capitulosLeccion.contains(e.idCapitulo) && e.tipo == tipo)
+        .toList();
+  }
+
+  // ── CREATE ─────────────────────────────────────────────────────────────────
+
+  /// Crea un ejercicio completo con sus preguntas y opciones.
+  /// Retorna el ID del ejercicio creado.
+  int crearEjercicioCompleto({
+    required int idCapitulo,
+    required TipoEjercicio tipo,
+    required String titulo,
+    required String descripcion,
+    required List<PreguntaInput> preguntasInput,
+  }) {
+    final idEjercicio = _service.nextEjercicioId();
+
+    // Crear preguntas y opciones
+    final List<Pregunta> preguntasFinales = [];
+    for (final pi in preguntasInput) {
+      final idPregunta = _service.nextPreguntaId();
+      
+      final List<Opcion> opcionesFinales = [];
+      for (final oi in pi.opciones) {
+        final idOpcion = _service.nextOpcionId();
+        final opcion = Opcion(
+          idOpcion: idOpcion,
+          idPreguntaFk: idPregunta,
+          contenido: oi.contenido,
+          correcta: oi.correcta,
+        );
+        opcionesFinales.add(opcion);
+        _service.opciones.add(opcion);
+      }
+
+      final pregunta = Pregunta(
+        idPregunta: idPregunta,
+        idEjercicioFk: idEjercicio,
+        contenido: pi.contenido,
+        explicacion: pi.explicacion,
+        opciones: opcionesFinales,
+      );
+      preguntasFinales.add(pregunta);
+      _service.preguntas.add(pregunta);
+    }
+
+    final ejercicio = Ejercicio(
+      idEjercicio: idEjercicio,
+      idCapitulo: idCapitulo,
+      tipo: tipo,
+      titulo: titulo,
+      descripcion: descripcion,
+      preguntas: preguntasFinales,
+    );
+
+    _service.addEjercicio(ejercicio);
+    notifyListeners();
+    return idEjercicio;
+  }
+
+  // ── DELETE ─────────────────────────────────────────────────────────────────
+
+  void eliminarEjercicio(int idEjercicio) {
+    _service.removeEjercicio(idEjercicio);
+    _allEjercicios.removeWhere((e) => e.idEjercicio == idEjercicio);
+    notifyListeners();
+  }
+
+  // ── Filtros ────────────────────────────────────────────────────────────────
 
   void updateQuery(String query) {
     _searchQuery = query;
@@ -82,4 +180,33 @@ class EjerciciosController extends ChangeNotifier {
 
     return current;
   }
+
+  @override
+  void dispose() {
+    // Singleton — no destruir
+  }
+}
+
+/// Modelo auxiliar para input de preguntas durante la creación.
+class PreguntaInput {
+  final String contenido;
+  final String? explicacion;
+  final List<OpcionInput> opciones;
+
+  const PreguntaInput({
+    required this.contenido,
+    this.explicacion,
+    this.opciones = const [],
+  });
+}
+
+/// Modelo auxiliar para input de opciones durante la creación.
+class OpcionInput {
+  final String contenido;
+  final bool correcta;
+
+  const OpcionInput({
+    required this.contenido,
+    this.correcta = false,
+  });
 }

@@ -431,6 +431,95 @@ class BooklService extends ChangeNotifier {
     _save();
   }
 
+  // ── Operaciones Ejercicios ─────────────────────────────────────────────────
+  void addEjercicio(Ejercicio e) {
+    ejercicios.add(e);
+    // Re-anidar en el capítulo correspondiente
+    final capIdx = capitulos.indexWhere((c) => c.idCapitulo == e.idCapitulo);
+    if (capIdx != -1) {
+      final cap = capitulos[capIdx];
+      capitulos[capIdx] = cap.copyWith(
+        ejercicios: [...cap.ejercicios, e],
+      );
+    }
+    _save();
+  }
+
+  void updateEjercicio(Ejercicio e) {
+    final idx = ejercicios.indexWhere((x) => x.idEjercicio == e.idEjercicio);
+    if (idx != -1) {
+      ejercicios[idx] = e;
+      // Re-anidar en el capítulo
+      final capIdx = capitulos.indexWhere((c) => c.idCapitulo == e.idCapitulo);
+      if (capIdx != -1) {
+        final cap = capitulos[capIdx];
+        final updatedEjs = cap.ejercicios.map(
+          (x) => x.idEjercicio == e.idEjercicio ? e : x,
+        ).toList();
+        capitulos[capIdx] = cap.copyWith(ejercicios: updatedEjs);
+      }
+      _save();
+    }
+  }
+
+  void removeEjercicio(int idEjercicio) {
+    final ej = ejercicios.firstWhere(
+      (e) => e.idEjercicio == idEjercicio,
+      orElse: () => const Ejercicio(idEjercicio: -1, idCapitulo: -1, tipo: TipoEjercicio.multipleChoice, titulo: '', descripcion: ''),
+    );
+    ejercicios.removeWhere((e) => e.idEjercicio == idEjercicio);
+    // Limpiar preguntas y opciones asociadas
+    final pregIds = preguntas.where((p) => p.idEjercicioFk == idEjercicio).map((p) => p.idPregunta).toSet();
+    opciones.removeWhere((o) => pregIds.contains(o.idPreguntaFk));
+    preguntas.removeWhere((p) => p.idEjercicioFk == idEjercicio);
+    // Re-anidar en el capítulo
+    if (ej.idCapitulo != -1) {
+      final capIdx = capitulos.indexWhere((c) => c.idCapitulo == ej.idCapitulo);
+      if (capIdx != -1) {
+        final cap = capitulos[capIdx];
+        capitulos[capIdx] = cap.copyWith(
+          ejercicios: cap.ejercicios.where((e) => e.idEjercicio != idEjercicio).toList(),
+        );
+      }
+    }
+    _save();
+  }
+
+  void addPregunta(Pregunta p) {
+    preguntas.add(p);
+    // Re-anidar en el ejercicio correspondiente
+    final ejIdx = ejercicios.indexWhere((e) => e.idEjercicio == p.idEjercicioFk);
+    if (ejIdx != -1) {
+      final ej = ejercicios[ejIdx];
+      ejercicios[ejIdx] = Ejercicio(
+        idEjercicio: ej.idEjercicio,
+        idCapitulo: ej.idCapitulo,
+        tipo: ej.tipo,
+        titulo: ej.titulo,
+        descripcion: ej.descripcion,
+        preguntas: [...ej.preguntas, p],
+      );
+    }
+    _save();
+  }
+
+  void addOpcion(Opcion o) {
+    opciones.add(o);
+    // Re-anidar en la pregunta correspondiente
+    final pIdx = preguntas.indexWhere((p) => p.idPregunta == o.idPreguntaFk);
+    if (pIdx != -1) {
+      final pr = preguntas[pIdx];
+      preguntas[pIdx] = Pregunta(
+        idPregunta: pr.idPregunta,
+        idEjercicioFk: pr.idEjercicioFk,
+        contenido: pr.contenido,
+        explicacion: pr.explicacion,
+        opciones: [...pr.opciones, o],
+      );
+    }
+    _save();
+  }
+
   // ── Operaciones Discusión ─────────────────────────────────────────────────
   void addDiscusion(Discusion d) {
     discusiones.add(d);
@@ -501,6 +590,12 @@ class BooklService extends ChangeNotifier {
   int nextUsuarioId() => _nextId(usuarios, (u) => (u as Usuario).idUsuario);
   int nextMaterialId() =>
       _nextId(materiales, (m) => (m as MaterialEducativo).idMaterial);
+  int nextEjercicioId() =>
+      _nextId(ejercicios, (e) => (e as Ejercicio).idEjercicio);
+  int nextPreguntaId() =>
+      _nextId(preguntas, (p) => (p as Pregunta).idPregunta);
+  int nextOpcionId() =>
+      _nextId(opciones, (o) => (o as Opcion).idOpcion);
 
   // Generador de IDs único para nuevos registros locales
   // Se usa microsegundos para minimizar riesgo de colisión en ráfagas.
