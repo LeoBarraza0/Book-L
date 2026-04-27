@@ -9,6 +9,12 @@ class Usuario {
   final String? programa;
   final bool activo;
   final String? avatarUrl;
+  final String? username;
+  final String? descripcion;
+  final int? celular;
+  final int? semestre;
+  final DateTime? nacimiento;
+  final String? preferencias;
 
   const Usuario({
     required this.idUsuario,
@@ -18,6 +24,12 @@ class Usuario {
     this.programa,
     required this.activo,
     this.avatarUrl,
+    this.username,
+    this.descripcion,
+    this.celular,
+    this.semestre,
+    this.nacimiento,
+    this.preferencias,
   });
 
   Usuario copyWith({
@@ -28,6 +40,12 @@ class Usuario {
     String? programa,
     bool? activo,
     String? avatarUrl,
+    String? username,
+    String? descripcion,
+    int? celular,
+    int? semestre,
+    DateTime? nacimiento,
+    String? preferencias,
   }) {
     return Usuario(
       idUsuario: idUsuario ?? this.idUsuario,
@@ -37,6 +55,12 @@ class Usuario {
       programa: programa ?? this.programa,
       activo: activo ?? this.activo,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      username: username ?? this.username,
+      descripcion: descripcion ?? this.descripcion,
+      celular: celular ?? this.celular,
+      semestre: semestre ?? this.semestre,
+      nacimiento: nacimiento ?? this.nacimiento,
+      preferencias: preferencias ?? this.preferencias,
     );
   }
 }

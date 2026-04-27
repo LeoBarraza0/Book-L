@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/services/bookl_service.dart';
+import '../../../../core/storage/local_storage.dart';
 
 class EditarPerfil extends StatefulWidget {
   const EditarPerfil({super.key});
@@ -11,16 +13,62 @@ class EditarPerfil extends StatefulWidget {
 
 class _EditarPerfilState extends State<EditarPerfil> {
   // Initial State
-  String _nombre = 'Emanuel Barranco';
-  String _usuario = '@Manu7u7';
-  String _descripcion =
-      '"Natty my love, Sharay my universe ✨"\npsdt. Freddy mala paga';
-  String _programa = 'Ingeniería de Sistemas';
-  String _semestre = '7';
-  String _celular = '3214567890';
+  late String _nombre;
+  late String _usuario;
+  late String _descripcion;
+  late String _programa;
+  late String _semestre;
+  late String _celular;
 
   File? _selectedImage;
+  String? _avatarNetworkUrl;
+  late int _userId;
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  void _loadUserData() {
+    _userId = AppSession().usuarioId ?? 0;
+    try {
+      final user = BooklService().usuarios.firstWhere((u) => u.idUsuario == _userId);
+      _nombre = user.nombreCompleto;
+      _usuario = user.username ?? '';
+      _descripcion = user.descripcion ?? '';
+      _programa = user.programa ?? '';
+      _semestre = user.semestre?.toString() ?? '';
+      _celular = user.celular?.toString() ?? '';
+      _avatarNetworkUrl = user.avatarUrl;
+    } catch (e) {
+      _nombre = 'Usuario';
+      _usuario = '';
+      _descripcion = '';
+      _programa = '';
+      _semestre = '';
+      _celular = '';
+    }
+  }
+
+  void _saveUserData() {
+    try {
+      final user = BooklService().usuarios.firstWhere((u) => u.idUsuario == _userId);
+      final updatedUser = user.copyWith(
+        nombreCompleto: _nombre,
+        username: _usuario,
+        descripcion: _descripcion,
+        programa: _programa,
+        semestre: int.tryParse(_semestre),
+        celular: int.tryParse(_celular),
+        avatarUrl: _avatarNetworkUrl, // This could be updated if an image is uploaded
+      );
+      BooklService().updateUsuario(updatedUser);
+    } catch (e) {
+      // Ignorar si el usuario no se encuentra
+    }
+  }
 
   Future<void> _pickImage() async {
     try {
@@ -495,56 +543,119 @@ class _EditarPerfilState extends State<EditarPerfil> {
     );
   }
 
-  void _editarNombre() => _editarCampoTexto(
-    title: 'Nombre',
-    subtitle: 'Por favor, indique como desea ser\nllamado en Book-L',
-    hint: 'Mi nombre es...',
-    initialValue: _nombre,
-    onSave: (val) => setState(() => _nombre = val),
-  );
 
-  void _editarUsuario() => _editarCampoTexto(
-    title: 'Usuario',
-    subtitle: 'Por favor, indique como desea ser\nllamado en Book-L',
-    hint: 'Mi @User es...',
-    initialValue: _usuario,
-    onSave: (val) => setState(() => _usuario = val),
-  );
 
-  void _editarDescripcion() => _editarCampoTexto(
-    title: 'Descripción',
-    subtitle: 'Por favor, indique como desea tener\nsu descripción',
-    hint: 'Mi descripción...',
-    initialValue: _descripcion,
-    maxLines: 3,
-    onSave: (val) => setState(() => _descripcion = val),
-  );
+  void _editarNombre() {
+    _editarCampoTexto(
+      title: 'Editar Nombre',
+      subtitle: 'Añade tu nombre completo a tu cuenta.',
+      hint: 'Añade tu nombre',
+      initialValue: _nombre,
+      onSave: (val) {
+        setState(() => _nombre = val);
+        _saveUserData();
+      },
+    );
+  }
 
-  void _editarPrograma() => _editarCampoDropdown(
-    title: 'Programa',
-    subtitle:
-        'Por favor, indique en qué programa académico\nse encuentra en su universidad',
-    initialValue: _programa,
-    opciones: _programas,
-    onSave: (val) => setState(() => _programa = val),
-  );
+  void _editarUsuario() {
+    _editarCampoTexto(
+      title: 'Editar Usuario',
+      subtitle: 'Añade un nombre de usuario a tu cuenta.',
+      hint: 'Añade un usuario',
+      initialValue: _usuario,
+      onSave: (val) {
+        setState(() => _usuario = val);
+        _saveUserData();
+      },
+    );
+  }
 
-  void _editarSemestre() => _editarCampoDropdown(
-    title: 'Semestre',
-    subtitle: 'Por favor, indique en qué semestre se\nencuentra',
-    initialValue: _semestre,
-    opciones: _semestres,
-    onSave: (val) => setState(() => _semestre = val),
-  );
+  void _editarDescripcion() {
+    _editarCampoTexto(
+      title: 'Editar Descripción',
+      subtitle: 'Escribe una breve descripción sobre ti.',
+      hint: 'Añade una descripción',
+      initialValue: _descripcion,
+      maxLines: 4,
+      onSave: (val) {
+        setState(() => _descripcion = val);
+        _saveUserData();
+      },
+    );
+  }
 
-  void _editarCelular() => _editarCampoTexto(
-    title: 'Celular',
-    subtitle: 'Por favor, indique su número de celular',
-    hint: 'Mi número es...',
-    initialValue: _celular,
-    keyboardType: TextInputType.phone,
-    onSave: (val) => setState(() => _celular = val),
-  );
+  void _editarPrograma() {
+    _mostrarModal(
+      title: 'Editar Programa',
+      content: DropdownButtonFormField<String>(
+        value: _programas.contains(_programa) ? _programa : _programas.first,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: const Color(0xFFF4F5F7),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        items: _programas.map((p) {
+          return DropdownMenuItem(value: p, child: Text(p));
+        }).toList(),
+        onChanged: (val) {
+          if (val != null) {
+            setState(() => _programa = val);
+            _saveUserData();
+            Navigator.pop(context); // Auto-close on selection
+          }
+        },
+      ),
+      onSave: () {}, // Already saved on changed
+    );
+  }
+
+  void _editarSemestre() {
+    _mostrarModal(
+      title: 'Editar Semestre',
+      content: DropdownButtonFormField<String>(
+        value: _semestres.contains(_semestre) ? _semestre : _semestres.first,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: const Color(0xFFF4F5F7),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        items: _semestres.map((s) {
+          return DropdownMenuItem(value: s, child: Text(s));
+        }).toList(),
+        onChanged: (val) {
+          if (val != null) {
+            setState(() => _semestre = val);
+            _saveUserData();
+            Navigator.pop(context);
+          }
+        },
+      ),
+      onSave: () {},
+    );
+  }
+
+  void _editarCelular() {
+    _editarCampoTexto(
+      title: 'Editar Celular',
+      subtitle: 'Actualiza tu número de contacto celular.',
+      hint: 'Ej: 3001234567',
+      initialValue: _celular,
+      keyboardType: TextInputType.phone,
+      onSave: (val) {
+        setState(() => _celular = val);
+        _saveUserData();
+      },
+    );
+  }
 
   void _desactivarCuentaModal() {
     showDialog(

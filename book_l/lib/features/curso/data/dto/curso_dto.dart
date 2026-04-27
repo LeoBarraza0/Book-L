@@ -17,8 +17,12 @@ class CursoDto {
       tagColor: json['tag_color'],
       esNuevo: json['es_nuevo'] ?? true,
       estado: json['estado'] as String? ?? 'activo',
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
-      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : null,
     );
   }
 

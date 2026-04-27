@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../../domain/entities/usuario.dart';
 
 // DTO del adaptador secundario — único lugar donde vive la contraseña en memoria.
@@ -11,6 +12,12 @@ class UsuarioDto {
   final String? programa;
   final bool activo;
   final String? avatarUrl;
+  final String? username;
+  final String? descripcion;
+  final int? celular;
+  final int? semestre;
+  final DateTime? nacimiento;
+  final String? preferencias;
 
   const UsuarioDto({
     required this.idUsuario,
@@ -21,6 +28,12 @@ class UsuarioDto {
     this.programa,
     required this.activo,
     this.avatarUrl,
+    this.username,
+    this.descripcion,
+    this.celular,
+    this.semestre,
+    this.nacimiento,
+    this.preferencias,
   });
 
   factory UsuarioDto.fromJson(Map<String, dynamic> json) => UsuarioDto(
@@ -32,6 +45,12 @@ class UsuarioDto {
         programa: json['programa'] as String?,
         activo: json['activo'] as bool,
         avatarUrl: json['avatar_url'] as String?,
+        username: json['username'] as String?,
+        descripcion: json['descripcion'] as String?,
+        celular: json['celular'] as int?,
+        semestre: json['semestre'] as int?,
+        nacimiento: json['nacimiento'] != null ? DateTime.tryParse(json['nacimiento'] as String) : null,
+        preferencias: json['preferencias'] != null ? (json['preferencias'] is String ? json['preferencias'] as String : jsonEncode(json['preferencias'])) : null,
       );
 
   Map<String, dynamic> toJson() => {
@@ -43,6 +62,12 @@ class UsuarioDto {
         if (programa != null) 'programa': programa,
         'activo': activo,
         if (avatarUrl != null) 'avatar_url': avatarUrl,
+        if (username != null) 'username': username,
+        if (descripcion != null) 'descripcion': descripcion,
+        if (celular != null) 'celular': celular,
+        if (semestre != null) 'semestre': semestre,
+        if (nacimiento != null) 'nacimiento': nacimiento!.toIso8601String(),
+        if (preferencias != null) 'preferencias': preferencias,
       };
 
   /// Convierte al entity de dominio (sin contraseña).
@@ -54,5 +79,11 @@ class UsuarioDto {
         programa: programa,
         activo: activo,
         avatarUrl: avatarUrl,
+        username: username,
+        descripcion: descripcion,
+        celular: celular,
+        semestre: semestre,
+        nacimiento: nacimiento,
+        preferencias: preferencias,
       );
 }

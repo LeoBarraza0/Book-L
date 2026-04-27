@@ -325,6 +325,34 @@ class BooklService extends ChangeNotifier {
   }
 
   // ── Operaciones de Escritura ───────────────────────────────────────────────
+  void updateUsuario(Usuario usuario) {
+    final idx = usuarios.indexWhere((u) => u.idUsuario == usuario.idUsuario);
+    if (idx != -1) {
+      usuarios[idx] = usuario;
+      
+      final dtoIdx = usuariosDto.indexWhere((u) => u.idUsuario == usuario.idUsuario);
+      if (dtoIdx != -1) {
+        usuariosDto[dtoIdx] = UsuarioDto(
+          idUsuario: usuario.idUsuario,
+          nombreCompleto: usuario.nombreCompleto,
+          correo: usuario.correo,
+          contrasena: usuariosDto[dtoIdx].contrasena,
+          rol: usuario.rol,
+          programa: usuario.programa,
+          activo: usuario.activo,
+          avatarUrl: usuario.avatarUrl,
+          username: usuario.username,
+          descripcion: usuario.descripcion,
+          celular: usuario.celular,
+          semestre: usuario.semestre,
+          nacimiento: usuario.nacimiento,
+          preferencias: usuario.preferencias,
+        );
+      }
+      _save();
+    }
+  }
+
   void addCurso(Curso curso) {
     cursos.add(curso);
     _save();
