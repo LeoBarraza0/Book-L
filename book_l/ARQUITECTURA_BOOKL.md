@@ -128,6 +128,18 @@ setState(() {})               →    notifyListeners() en Controller
 >
 > Si un caso de uso necesita datos, debe hacer el CRUD contra BooklService (que es el JSON en memoria). Las únicas excepciones son los datos de sesión y preferencias almacenados en SharedPreferences (ver sección 7).
 
+### 2.6 Diseño UI y Flujos Dinámicos (Ejemplo: Módulo de Ejercicios)
+
+Para asegurar la escalabilidad del sistema y mantener la identidad visual de **Book-L**, la UI se diseña siguiendo principios de **generación dinámica** basada en los datos (JSON) y **reutilización de componentes** visuales:
+
+1. **Uso de Datos en Tiempo Real (JSON como origen):**
+   Las vistas no deben "hardcodear" información, tipos de elementos ni opciones disponibles. 
+   *Ejemplo en Ejercicios:* La pestaña "Ejercicios" (`EjerciciosScreen`) en el detalle de la lección no tiene tarjetas predefinidas estáticas para "Teórico" o "Práctico". En su lugar, el `EjerciciosController` filtra y determina dinámicamente cuáles son los tipos de ejercicios (`TipoEjercicio`) que *realmente existen* en el JSON para esa lección. Con base en esto, genera una tarjeta para cada tipo encontrado y al seleccionarla redirige al banco de ejercicios filtrado (`BancoEjerciciosScreen(tipoFiltro: ...)`). Si en el futuro se añade un nuevo tipo de ejercicio al JSON, la interfaz creará la tarjeta automáticamente sin necesidad de modificar el código de la pantalla.
+
+2. **Identidad Visual y Componentes Compartidos:**
+   La aplicación debe verse y sentirse cohesionada. Los nuevos flujos o módulos deben reutilizar la arquitectura visual existente, priorizando el uso de los elementos en `shared/widgets/` y widgets análogos en sus respectivos features (por ejemplo, `AgregarSeccionButton` o `CustomTextField`).
+   *Ejemplo en Creación de Ejercicios:* La interfaz `CrearEjercicioScreen` no duplica el diseño; es una sola vista unificada que, dependiendo del enum `TipoEjercicio` recibido como parámetro, renderiza diferentes campos dinámicamente (ej. burbujas seleccionables de letras para Opción Múltiple, toggle buttons verdes y rojos para Falso/Verdadero, cajas de texto para Respuesta Corta) al tiempo que se respeta estrictamente el estilo corporativo: tipografía `Inter`, paleta de `app_colors`, botones estilizados, sombras y bordes redondeados consistentes.
+
 ---
 
 ## 3. Estructura completa de `lib/`
