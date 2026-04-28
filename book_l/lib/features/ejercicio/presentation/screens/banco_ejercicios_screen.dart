@@ -4,6 +4,7 @@ import '../controller/ejercicios_controller.dart';
 import '../../domain/entities/ejercicio.dart';
 import 'teorico_screen.dart';
 import 'package:book_l/core/storage/local_storage.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class BancoEjerciciosScreen extends StatefulWidget {
   final int idLeccion;
@@ -55,36 +56,71 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
     }
   }
 
+  // ── Header Customizado ─────────────────────────────────────────────────────
+  Widget _buildHeader() {
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 12,
+        left: 20, right: 20, bottom: 24,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 45, height: 45,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6BCA54).withOpacity(0.9),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 24),
+                ),
+              ),
+              SvgPicture.asset('assets/images/logo.svg', width: 85, height: 42),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            widget.title,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF6BCA54).withValues(alpha: 0.41),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-        ),
-        title: Text(
-          widget.title,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 28,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-      ),
+      backgroundColor: const Color(0xFFF5F5F5), // Light background for contrast
       body: ListenableBuilder(
         listenable: _ctrl,
         builder: (context, _) {
@@ -92,6 +128,8 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
 
           return Column(
             children: [
+              _buildHeader(),
+              const SizedBox(height: 16),
               // Search and Filters
               SearchFilterBar(
                 searchController: _searchCtrl,
