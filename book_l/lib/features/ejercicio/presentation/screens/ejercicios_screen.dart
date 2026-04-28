@@ -78,9 +78,11 @@ class _EjerciciosScreenState extends State<EjerciciosScreen>
     return ListenableBuilder(
       listenable: _ctrl,
       builder: (context, _) {
-        final tipos = _ctrl.tiposDisponibles(widget.idLeccion);
+        final categorias = <String>[];
+        if (_ctrl.tieneCategoria(widget.idLeccion, 'Teórico')) categorias.add('Teórico');
+        if (_ctrl.tieneCategoria(widget.idLeccion, 'Práctico')) categorias.add('Práctico');
 
-        if (tipos.isEmpty) {
+        if (categorias.isEmpty) {
           return FadeTransition(
             opacity: _fadeAnim,
             child: _buildEmptyState(),
@@ -92,14 +94,18 @@ class _EjerciciosScreenState extends State<EjerciciosScreen>
           child: SlideTransition(
             position: _slideAnim,
             child: Column(
-              children: List.generate(tipos.length, (i) {
-                final tipo = tipos[i];
-                final count = _ctrl.ejerciciosPorTipo(widget.idLeccion, tipo).length;
+              children: List.generate(categorias.length, (i) {
+                final cat = categorias[i];
+                final count = _ctrl.getCountByCategoria(widget.idLeccion, cat);
+                final visual = cat == 'Teórico'
+                    ? _tipoConfig[TipoEjercicio.multipleChoice]!
+                    : _tipoConfig[TipoEjercicio.ordenar]!;
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: _EjercicioTipoCard(
-                    tipo: tipo,
-                    visual: _tipoConfig[tipo] ?? _tipoConfig[TipoEjercicio.multipleChoice]!,
+                    titulo: 'Ejercicios ${cat}s',
+                    visual: visual,
                     count: count,
                     delay: i * 120,
                     onTap: () {
@@ -108,8 +114,8 @@ class _EjerciciosScreenState extends State<EjerciciosScreen>
                         MaterialPageRoute(
                           builder: (_) => BancoEjerciciosScreen(
                             idLeccion: widget.idLeccion,
-                            title: 'Ejercicios: ${tipo.displayName}',
-                            tipoFiltro: tipo,
+                            title: 'Ejercicios ${cat}s',
+                            categoriaFiltro: cat,
                           ),
                         ),
                       );
@@ -173,14 +179,14 @@ class _TipoVisual {
 }
 
 class _EjercicioTipoCard extends StatefulWidget {
-  final TipoEjercicio tipo;
+  final String titulo;
   final _TipoVisual visual;
   final int count;
   final int delay;
   final VoidCallback onTap;
 
   const _EjercicioTipoCard({
-    required this.tipo,
+    required this.titulo,
     required this.visual,
     required this.count,
     required this.delay,
@@ -296,13 +302,16 @@ class _EjercicioTipoCardState extends State<_EjercicioTipoCard> {
                                 ],
                               ),
                               const SizedBox(height: 6),
-                              Text(
-                                widget.tipo.displayName,
-                                style: const TextStyle(
-                                  fontFamily: 'Inter', fontWeight: FontWeight.w700,
-                                  fontSize: 20, color: Colors.white, letterSpacing: 0.3,
+                                Text(
+                                  widget.titulo,
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.3,
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         ),

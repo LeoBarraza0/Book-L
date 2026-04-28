@@ -61,6 +61,10 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
         return q;
       case TipoEjercicio.respuestaCorta:
         return _QuestionData(numOpciones: 1);
+      case TipoEjercicio.ordenar:
+        return _QuestionData(numOpciones: 3);
+      case TipoEjercicio.rellenar:
+        return _QuestionData(numOpciones: 2);
       default:
         return _QuestionData(numOpciones: 4);
     }
@@ -165,15 +169,22 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
-                  width: 44, height: 44,
+                  width: 45, height: 45,
                   decoration: BoxDecoration(
-                    color: _accentColor.withOpacity(0.15),
+                    color: _accentColor.withOpacity(0.9),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  child: Icon(Icons.arrow_back_rounded, color: _accentColor, size: 22),
+                  child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 24),
                 ),
               ),
-              SvgPicture.asset('assets/images/logo.svg', width: 56, height: 28),
+              SvgPicture.asset('assets/images/logo.svg', width: 85, height: 42),
             ],
           ),
           const SizedBox(height: 20),
@@ -304,6 +315,8 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
         return _buildRespuestaCortaOpciones(q);
       case TipoEjercicio.rellenar:
         return _buildRellenarOpciones(q);
+      case TipoEjercicio.ordenar:
+        return _buildOrdenarOpciones(q);
       default:
         return _buildMultipleChoiceOpciones(q);
     }
@@ -435,8 +448,114 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
     );
   }
 
+  Widget _buildOrdenarOpciones(_QuestionData q) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Elementos a ordenar', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF676767))),
+        const SizedBox(height: 4),
+        const Text('Escríbelos en el orden correcto', style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: Color(0xFF999999))),
+        const SizedBox(height: 12),
+        ...List.generate(q.opciones.length, (i) {
+          final o = q.opciones[i];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 36, height: 36,
+                  decoration: const BoxDecoration(color: Color(0xFFE8E8E8), shape: BoxShape.circle),
+                  child: Center(child: Text('${i + 1}', style: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF999999)))),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    height: 46,
+                    decoration: BoxDecoration(color: const Color(0xFFF7F7F7), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFEEEEEE))),
+                    child: TextField(
+                      controller: o.ctrl,
+                      style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+                        border: InputBorder.none,
+                        hintText: 'Elemento ${i + 1}',
+                        hintStyle: const TextStyle(color: Color(0xFFBBBBBB), fontSize: 13),
+                      ),
+                    ),
+                  ),
+                ),
+                if (q.opciones.length > 2)
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle_outline, color: Color(0xFFFF606F)),
+                    onPressed: () => setState(() => q.opciones.removeAt(i)),
+                  ),
+              ],
+            ),
+          );
+        }),
+        const SizedBox(height: 8),
+        TextButton.icon(
+          onPressed: () => setState(() => q.opciones.add(_OpcionData())),
+          icon: const Icon(Icons.add, size: 18),
+          label: const Text('Añadir elemento', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+        ),
+      ],
+    );
+  }
+
   Widget _buildRellenarOpciones(_QuestionData q) {
-    return _buildMultipleChoiceOpciones(q);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Palabras para rellenar', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF676767))),
+        const SizedBox(height: 4),
+        const Text('Añade las palabras en el orden que aparecen en los espacios', style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: Color(0xFF999999))),
+        const SizedBox(height: 12),
+        ...List.generate(q.opciones.length, (i) {
+          final o = q.opciones[i];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 36, height: 36,
+                  decoration: const BoxDecoration(color: Color(0xFFE8E8E8), shape: BoxShape.circle),
+                  child: Center(child: Text('${i + 1}', style: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF999999)))),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    height: 46,
+                    decoration: BoxDecoration(color: const Color(0xFFF7F7F7), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFEEEEEE))),
+                    child: TextField(
+                      controller: o.ctrl,
+                      style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+                        border: InputBorder.none,
+                        hintText: 'Palabra ${i + 1}',
+                        hintStyle: const TextStyle(color: Color(0xFFBBBBBB), fontSize: 13),
+                      ),
+                    ),
+                  ),
+                ),
+                if (q.opciones.length > 1)
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle_outline, color: Color(0xFFFF606F)),
+                    onPressed: () => setState(() => q.opciones.removeAt(i)),
+                  ),
+              ],
+            ),
+          );
+        }),
+        const SizedBox(height: 8),
+        TextButton.icon(
+          onPressed: () => setState(() => q.opciones.add(_OpcionData())),
+          icon: const Icon(Icons.add, size: 18),
+          label: const Text('Añadir palabra', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+        ),
+      ],
+    );
   }
 
   // ── Botón agregar pregunta ──────────────────────────────────────────────────
@@ -541,8 +660,11 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
 
     final preguntasInput = _preguntas.map((q) {
       final opcionesInput = q.opciones.map((o) {
-        // Para respuesta corta, la primera opción es la correcta
-        final esCorrecta = widget.tipo == TipoEjercicio.respuestaCorta ? true : o.correcta;
+        // Para ordenar y rellenar, todas son "correctas" por estar en la lista final
+        bool esCorrecta = o.correcta;
+        if (widget.tipo == TipoEjercicio.respuestaCorta || widget.tipo == TipoEjercicio.ordenar || widget.tipo == TipoEjercicio.rellenar) {
+          esCorrecta = true;
+        }
         return OpcionInput(contenido: o.ctrl.text.trim(), correcta: esCorrecta);
       }).where((o) => o.contenido.isNotEmpty).toList();
 

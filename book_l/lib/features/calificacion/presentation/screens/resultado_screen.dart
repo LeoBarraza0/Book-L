@@ -4,8 +4,21 @@ import 'package:book_l/features/leccion/presentation/screens/leccion_detail_scre
 import '../../../../shared/widgets/nav_bar.dart';
 import '../widgets/stars_rating_widget.dart';
 
+import 'package:book_l/core/storage/local_storage.dart';
+import 'package:book_l/core/services/bookl_service.dart';
+import 'package:book_l/features/ejercicio/domain/entities/ejercicio.dart';
+
 class EjercicioResultadoScreen extends StatefulWidget {
-  const EjercicioResultadoScreen({super.key});
+  final int totalPreguntas;
+  final int respuestasCorrectas;
+  final Ejercicio ejercicio;
+
+  const EjercicioResultadoScreen({
+    super.key,
+    required this.totalPreguntas,
+    required this.respuestasCorrectas,
+    required this.ejercicio,
+  });
 
   @override
   State<EjercicioResultadoScreen> createState() =>
@@ -90,7 +103,7 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
                                     width: 140,
                                     height: 140,
                                     child: CircularProgressIndicator(
-                                      value: 2 / 3,
+                                      value: widget.totalPreguntas > 0 ? widget.respuestasCorrectas / widget.totalPreguntas : 0,
                                       strokeWidth: 12,
                                       backgroundColor: const Color(
                                         0xFFFF4858,
@@ -100,12 +113,12 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
                                       ), // Verde de aciertos
                                     ),
                                   ),
-                                  const Align(
+                                  Align(
                                     alignment: Alignment.center,
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text(
+                                        const Text(
                                           'Puntaje',
                                           style: TextStyle(
                                             fontFamily: 'Inter',
@@ -115,8 +128,8 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
                                           ),
                                         ),
                                         Text(
-                                          '2/3',
-                                          style: TextStyle(
+                                          '${widget.respuestasCorrectas}/${widget.totalPreguntas}',
+                                          style: const TextStyle(
                                             fontFamily: 'Inter',
                                             fontSize: 24,
                                             fontWeight: FontWeight.bold,
@@ -165,9 +178,9 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
                                   bottomRight: Radius.circular(15),
                                 ),
                               ),
-                              child: const Text(
-                                '¡Amigo, sigue practicando para lograr mejores resultados! 🥳',
-                                style: TextStyle(
+                              child: Text(
+                                _getMensajeMascota(),
+                                style: const TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 14,
                                   color: Colors.black87,
@@ -204,13 +217,22 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
                         height: 50,
                         child: ElevatedButton(
                           onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const LeccionDetailScreen(),
-                              ),
-                            );
+                            // Mark completion
+                            final session = AppSession();
+                            final exerciseId = widget.ejercicio.idEjercicio;
+                            final capituloId = widget.ejercicio.idCapitulo;
+                            
+                            // Guardamos que se completó este ejercicio
+                            session.marcarEjercicioCompletado(exerciseId, capituloId);
+
+                            // Verificar si todos los ejercicios del capítulo están completados
+                            final chapterExercises = BooklService().ejercicios.where((e) => e.idCapitulo == capituloId).map((e) => e.idEjercicio);
+                            if (chapterExercises.every((id) => session.completedEjercicios.value.contains(id))) {
+                              session.marcarCapituloCompletado(capituloId, true);
+                            }
+
+                            // Volvemos a la pantalla de Capítulo
+                            Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF4DC130),
@@ -323,5 +345,19 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
         ],
       ),
     );
+  }
+
+  String _getMensajeMascota() {
+    if (widget.totalPreguntas == 0) return '¡Gran esfuerzo! Sigue así.';
+    final score = widget.respuestasCorrectas / widget.totalPreguntas;
+    if (score == 1.0) {
+      return '¡Perfecto! Eres todo un maestro en este tema. 🤩';
+    } else if (score >= 0.7) {
+      return '¡Muy bien hecho! Estás muy cerca de la perfección. 🥳';
+    } else if (score >= 0.4) {
+      return '¡Buen intento! Sigue practicando para lograr mejores resultados. 🙂';
+    } else {
+      return 'No te desanimes, ¡sigue aprendiendo y lo lograrás! 💪';
+    }
   }
 }

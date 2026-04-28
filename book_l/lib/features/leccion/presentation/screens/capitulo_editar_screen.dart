@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../../../core/services/bookl_service.dart';
 import '../../../../shared/widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
 import '../../../ejercicio/domain/entities/ejercicio.dart';
 import '../../../ejercicio/presentation/screens/crear_ejercicio_screen.dart';
+import '../../../ejercicio/presentation/controller/ejercicios_controller.dart';
 
 class CapituloEditarScreen extends StatefulWidget {
   /// ID del capítulo a editar. Si es null se crea uno nuevo.
@@ -92,9 +94,14 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
 
     // Secciones iniciales si es nuevo
     if (widget.idCapitulo == null) {
-      _secciones.add(SeccionData(
-        titulo: 'Introducción',
-      ));
+      _capituloActual = Capitulo(
+        idCapitulo: BooklService().generateId(),
+        idLeccion: widget.idLeccion ?? 0,
+        nombre: '',
+        contenido: [],
+        tiempoTotal: 0,
+      );
+      _secciones.add(SeccionData(titulo: 'Introducción'));
     }
   }
 
@@ -362,11 +369,70 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
           alignment: Alignment.centerLeft,
           child: AgregarSeccionButton(onTap: _agregarSeccion),
         ),
-        const SizedBox(height: 36),
+        const SizedBox(height: 28),
+        if (_capituloActual != null) ...[
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Ejercicios del capítulo',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF363333),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...BooklService()
+              .ejercicios
+              .where((e) => e.idCapitulo == _capituloActual!.idCapitulo)
+              .map((ex) => _buildEjercicioItem(ex))
+              .toList(),
+        ],
+        const SizedBox(height: 8),
         _buildAgregarPruebaButton(),
         const SizedBox(height: 36),
         _buildGuardarButton(),
       ],
+    );
+  }
+
+  Widget _buildEjercicioItem(dynamic ex) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.quiz_outlined,
+            color: Color(0xFF4DC130),
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              ex.titulo,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18, color: Colors.redAccent),
+            onPressed: () {
+              setState(() {
+                EjerciciosController().eliminarEjercicio(ex.idEjercicio);
+              });
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -428,9 +494,9 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
                     title: tipo.displayName,
                     subtitle: config.subtitle,
                     color: config.color,
-                    onTap: () {
+                    onTap: () async {
                       Navigator.pop(ctx);
-                      Navigator.push(
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => CrearEjercicioScreen(
@@ -439,6 +505,7 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
                           ),
                         ),
                       );
+                      setState(() {}); // Refrescar vista de ejercicios
                     },
                   ),
                 );

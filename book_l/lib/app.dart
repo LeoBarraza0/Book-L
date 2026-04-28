@@ -18,8 +18,7 @@ import 'features/ejercicio/presentation/screens/teorico_screen.dart';
 import 'features/calificacion/presentation/screens/resultado_screen.dart';
 import 'features/curso/presentation/screens/publicar_curso_screen.dart';
 import 'features/leccion/presentation/screens/publicar_leccion_screen.dart';
-import 'features/ejercicio/presentation/screens/crear_ejercicio_teorico_screen.dart';
-import 'features/ejercicio/presentation/screens/crear_ejercicio_practico_screen.dart';
+
 import 'features/ejercicio/domain/entities/ejercicio.dart';
 import 'features/home/presentation/screens/admin_home_screen.dart';
 import 'features/leccion/presentation/screens/admin_leccion_screen.dart';
@@ -132,13 +131,10 @@ class BookLApp extends StatelessWidget {
                 '/teorico': (context) => TeoricoScreen(
                       ejercicio: ModalRoute.of(context)?.settings.arguments as Ejercicio,
                     ),
-                '/calificacion': (context) => const EjercicioResultadoScreen(),
+                // '/calificacion': (context) => const EjercicioResultadoScreen(),
                 '/publicar_curso': (context) => const PublicarCursoScreen(),
                 '/publicar_leccion': (context) => const PublicarLeccionScreen(),
-                '/crear_ejercicio_teorico': (context) =>
-                    const CrearEjercicioTeoricoScreen(),
-                '/crear_ejercicio_practico': (context) =>
-                    const CrearEjercicioPracticoScreen(),
+
                 '/admin_Home': (context) => const AdminHomeScreen(),
                 '/admin_leccion': (context) => const AdminLeccionScreen(),
                 '/editar_curso': (context) => const CursoEditarScreen(),

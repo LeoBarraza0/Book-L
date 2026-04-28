@@ -25,6 +25,7 @@ import '../../features/calificacion/data/dto/calificacion_dto.dart';
 import '../../features/calificacion/domain/entities/calificacion.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import '../storage/local_storage.dart';
 
 // Servicio central de datos JSON — Singleton de uso restringido.
 //
@@ -86,6 +87,16 @@ class BooklService extends ChangeNotifier {
 
   // Calificaciones (Reseñas)
   List<Calificacion> calificaciones = [];
+
+  // Progreso de usuario (por capítulo)
+  List<Map<String, dynamic>> progresoUsuario = [];
+
+  // Respuestas de usuario (historial de respuestas a preguntas)
+  List<Map<String, dynamic>> respuestasUsuario = [];
+
+  // Guardados (lecciones y cursos guardados por usuario)
+  List<Map<String, dynamic>> guardados = [];
+  List<Map<String, dynamic>> guardadosCursos = [];
 
   // ── Inicialización (llamar una sola vez desde main.dart) ───────────────────
   Future<void> init() async {
@@ -291,8 +302,89 @@ class BooklService extends ChangeNotifier {
       capitulos[i] = c.copyWith(ejercicios: ejs);
     }
 
+    // ── Cargar Progreso, Respuestas, Guardados ─────────────────────────────
+    if (data.containsKey('progreso_usuario')) {
+      progresoUsuario = List<Map<String, dynamic>>.from(data['progreso_usuario']);
+    }
+    if (data.containsKey('respuestas_usuario')) {
+      respuestasUsuario = List<Map<String, dynamic>>.from(data['respuestas_usuario']);
+    }
+    if (data.containsKey('guardados')) {
+      guardados = List<Map<String, dynamic>>.from(data['guardados']);
+    }
+    if (data.containsKey('guardados_cursos')) {
+      guardadosCursos = List<Map<String, dynamic>>.from(data['guardados_cursos']);
+    }
+
+    // ── Semilla: cargar progreso inicial en AppSession ─────────────────────
+    _seedAppSession();
+
     _loaded = true;
     notifyListeners();
+  }
+
+  /// Carga la información del JSON en AppSession para que los datos
+  /// de prueba iniciales sean visibles sin interacción previa del usuario.
+  void _seedAppSession() {
+    final session = AppSession();
+    // Solo sembramos si AppSession ya fue inicializado y no tiene data previa
+    // (es decir, la primera vez que se carga). Si ya existe data en SharedPrefs
+    // AppSession ya la habrá cargado en su propio init().
+
+    final userId = session.usuarioId;
+    if (userId == null) return; // No hay sesión activa, no sembramos
+
+    // ── Semilla: Capítulos completados ────────────────────────────────────
+    if (session.completedCapitulos.value.isEmpty) {
+      final completedCaps = progresoUsuario
+          .where((p) => p['id_usuario_fk'] == userId && p['estado'] == 'completada')
+          .map<int>((p) => p['id_capitulo_fk'] as int)
+          .toSet();
+      if (completedCaps.isNotEmpty) {
+        session.completedCapitulos.value = completedCaps;
+      }
+    }
+
+    // ── Semilla: Ejercicios completados ───────────────────────────────────
+    // Un ejercicio se considera completado si el usuario respondió TODAS sus preguntas
+    if (session.completedEjercicios.value.isEmpty) {
+      final userAnswers = respuestasUsuario.where((r) => r['id_usuario'] == userId);
+      final answeredPreguntaIds = userAnswers.map<int>((r) => r['id_pregunta'] as int).toSet();
+
+      final completedEjs = <int>{};
+      for (final ej in ejercicios) {
+        if (ej.preguntas.isEmpty) continue;
+        final allAnswered = ej.preguntas.every((p) => answeredPreguntaIds.contains(p.idPregunta));
+        if (allAnswered) {
+          completedEjs.add(ej.idEjercicio);
+        }
+      }
+      if (completedEjs.isNotEmpty) {
+        session.completedEjercicios.value = completedEjs;
+      }
+    }
+
+    // ── Semilla: Lecciones guardadas ──────────────────────────────────────
+    if (session.savedLecciones.value.isEmpty) {
+      final savedLecs = guardados
+          .where((g) => g['id_usuario'] == userId)
+          .map<int>((g) => g['id_leccion'] as int)
+          .toSet();
+      if (savedLecs.isNotEmpty) {
+        session.savedLecciones.value = savedLecs;
+      }
+    }
+
+    // ── Semilla: Cursos guardados ─────────────────────────────────────────
+    if (session.savedCursos.value.isEmpty) {
+      final savedCurs = guardadosCursos
+          .where((g) => g['id_usuario'] == userId)
+          .map<int>((g) => g['id_curso'] as int)
+          .toSet();
+      if (savedCurs.isNotEmpty) {
+        session.savedCursos.value = savedCurs;
+      }
+    }
   }
 
   // ── Persistencia ───────────────────────────────────────────────────────────
@@ -316,6 +408,10 @@ class BooklService extends ChangeNotifier {
         'reportes': reportes,
         'lecciones_cursos': leccionesCursos,
         'calificaciones': calificaciones.map((c) => CalificacionDto.toJson(c)).toList(),
+        'progreso_usuario': progresoUsuario,
+        'respuestas_usuario': respuestasUsuario,
+        'guardados': guardados,
+        'guardados_cursos': guardadosCursos,
       };
       await prefs.setString(_storageKey, json.encode(fullData));
       notifyListeners();

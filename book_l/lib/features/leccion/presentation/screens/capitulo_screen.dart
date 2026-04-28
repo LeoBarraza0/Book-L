@@ -9,6 +9,9 @@ import '../../../../core/storage/local_storage.dart';
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:book_l/core/services/bookl_service.dart';
+import 'package:book_l/features/ejercicio/domain/entities/ejercicio.dart';
+import 'package:book_l/features/ejercicio/presentation/screens/teorico_screen.dart';
 
 class CapituloScreen extends StatefulWidget {
   final int? idCapitulo;
@@ -148,20 +151,39 @@ class _CapituloScreenState extends State<CapituloScreen> {
                       const SizedBox(height: 64),
 
                       // Sección de Pruebas
-                      const Center(
-                        child: Text('¡Pon a prueba tus conocimientos!',
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold)),
+                      ListenableBuilder(
+                        listenable: AppSession().completedEjercicios, // Escuchamos cambios en ejercicios completados
+                        builder: (context, _) {
+                          final ejercicios = BooklService().ejercicios.where((e) => e.idCapitulo == widget.idCapitulo).toList();
+                          
+                          if (ejercicios.isEmpty) return const SizedBox.shrink();
+
+                          return Column(
+                            children: [
+                              const Center(
+                                child: Text('¡Pon a prueba tus conocimientos!',
+                                    style: TextStyle(
+                                        fontSize: 20, fontWeight: FontWeight.bold)),
+                              ),
+                              const SizedBox(height: 32),
+                              Wrap(
+                                spacing: 20,
+                                runSpacing: 20,
+                                alignment: WrapAlignment.spaceEvenly,
+                                children: List.generate(ejercicios.length, (i) {
+                                  final ex = ejercicios[i];
+                                  return _buildPruebaButton(
+                                    (i + 1).toString(),
+                                    ex,
+                                    context
+                                  );
+                                }),
+                              ),
+                              const SizedBox(height: 48),
+                            ],
+                          );
+                        }
                       ),
-                      const SizedBox(height: 32),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildPruebaButton('1'),
-                          _buildPruebaButton('2'),
-                        ],
-                      ),
-                      const SizedBox(height: 48),
 
                       // Botón de completar capítulo
                       ListenableBuilder(
@@ -310,47 +332,72 @@ class _CapituloScreenState extends State<CapituloScreen> {
     );
   }
 
-  Widget _buildPruebaButton(String number) {
-    return Column(
-      children: [
-        Container(
-          width: 90,
-          height: 90,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [Color(0xFFFF606F), Color(0xFFFF8B96)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 4,
-                offset: Offset(0, 4),
-              )
-            ],
+  Widget _buildPruebaButton(String number, Ejercicio ex, BuildContext context) {
+    Color getAccentColor() {
+      switch (ex.tipo) {
+        case TipoEjercicio.multipleChoice: return const Color(0xFF4DC130);
+        case TipoEjercicio.trueFalse: return const Color(0xFFF6B55C);
+        case TipoEjercicio.ordenar: return const Color(0xFF4DB0FF);
+        case TipoEjercicio.rellenar: return const Color(0xFFFF606F);
+        case TipoEjercicio.respuestaCorta: return const Color(0xFF9B51E0);
+      }
+    }
+    
+    final color = getAccentColor();
+    final isCompleted = AppSession().completedEjercicios.value.contains(ex.idEjercicio);
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TeoricoScreen(ejercicio: ex),
           ),
-          alignment: Alignment.center,
-          child: Text(
-            number,
+        );
+      },
+      child: Column(
+        children: [
+          Container(
+            width: 90,
+            height: 90,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [color, color.withOpacity(0.6)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 4,
+                  offset: Offset(0, 4),
+                )
+              ],
+            ),
+            alignment: Alignment.center,
+            child: isCompleted 
+                ? const Icon(Icons.check, color: Colors.white, size: 54)
+                : Text(
+                    number,
+                    style: const TextStyle(
+                      fontSize: 54,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            ex.tipo.displayName,
             style: const TextStyle(
-              fontSize: 54,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF565656),
             ),
           ),
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Realizar prueba',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF565656),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
   Widget _buildMediaItem(IconData icon, String label, Color color) {

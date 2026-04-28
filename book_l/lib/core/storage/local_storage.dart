@@ -27,6 +27,7 @@ class AppSession {
   static const _kSavedLecciones = 'saved_lecciones';
   static const _kOnboardingCompleted = 'onboarding_completed';
   static const _kCompletedCapitulos = 'completed_capitulos';
+  static const _kCompletedEjercicios = 'completed_ejercicios';
 
   // ── Campos en memoria (cargados desde disco en init) ───────────────────────
   String? token;
@@ -46,6 +47,8 @@ class AppSession {
   final ValueNotifier<Set<int>> savedCursos = ValueNotifier<Set<int>>({});
   final ValueNotifier<Set<int>> savedLecciones = ValueNotifier<Set<int>>({});
   final ValueNotifier<Set<int>> completedCapitulos =
+      ValueNotifier<Set<int>>({});
+  final ValueNotifier<Set<int>> completedEjercicios =
       ValueNotifier<Set<int>>({});
 
   // Notifiers globales para la UI
@@ -85,6 +88,12 @@ class AppSession {
 
     final loadedCompletados = _prefs.getStringList(_kCompletedCapitulos) ?? [];
     completedCapitulos.value = loadedCompletados
+        .map((e) => int.tryParse(e) ?? -1)
+        .where((id) => id != -1)
+        .toSet();
+
+    final loadedCompletadosEj = _prefs.getStringList(_kCompletedEjercicios) ?? [];
+    completedEjercicios.value = loadedCompletadosEj
         .map((e) => int.tryParse(e) ?? -1)
         .where((id) => id != -1)
         .toSet();
@@ -177,6 +186,14 @@ class AppSession {
     completedCapitulos.value = current;
     _prefs.setStringList(
         _kCompletedCapitulos, current.map((e) => e.toString()).toList());
+  }
+
+  void marcarEjercicioCompletado(int idEjercicio, int idCapitulo) {
+    final current = Set<int>.from(completedEjercicios.value);
+    current.add(idEjercicio);
+    completedEjercicios.value = current;
+    _prefs.setStringList(
+        _kCompletedEjercicios, current.map((e) => e.toString()).toList());
   }
 
   // ── Cerrar sesión ──────────────────────────────────────────────────────────

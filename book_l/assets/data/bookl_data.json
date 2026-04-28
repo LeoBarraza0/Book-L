@@ -850,6 +850,248 @@
     { "id_material": 4, "id_leccion_fk": 2, "nombre": "Tutorial - Límites", "tipo": "video", "url": null, "descripcion": "Video explicativo de límites", "tamano_bytes": 31457280 },
     { "id_material": 5, "id_leccion_fk": 3, "nombre": "Referencia SQL Completa", "tipo": "enlace", "url": "https://www.w3schools.com/sql/", "descripcion": "Documentación interactiva de SQL", "tamano_bytes": 0 }
   ],
+  "progreso_usuario": [
+    {
+      "id_progreso": 1,
+      "id_usuario_fk": 2,
+      "id_capitulo_fk": 1,
+      "estado": "completada",
+      "porcentaje_capitulo": 100.00,
+      "created_at": "2026-02-10T14:00:00",
+      "updated_at": "2026-02-15T18:30:00"
+    },
+    {
+      "id_progreso": 2,
+      "id_usuario_fk": 2,
+      "id_capitulo_fk": 2,
+      "estado": "en_progreso",
+      "porcentaje_capitulo": 50.00,
+      "created_at": "2026-02-16T10:00:00",
+      "updated_at": "2026-02-18T12:00:00"
+    },
+    {
+      "id_progreso": 3,
+      "id_usuario_fk": 3,
+      "id_capitulo_fk": 1,
+      "estado": "completada",
+      "porcentaje_capitulo": 100.00,
+      "created_at": "2026-02-12T09:00:00",
+      "updated_at": "2026-02-14T11:00:00"
+    },
+    {
+      "id_progreso": 4,
+      "id_usuario_fk": 3,
+      "id_capitulo_fk": 2,
+      "estado": "completada",
+      "porcentaje_capitulo": 100.00,
+      "created_at": "2026-02-15T09:00:00",
+      "updated_at": "2026-02-17T16:00:00"
+    },
+    {
+      "id_progreso": 5,
+      "id_usuario_fk": 3,
+      "id_capitulo_fk": 3,
+      "estado": "en_progreso",
+      "porcentaje_capitulo": 33.33,
+      "created_at": "2026-02-18T10:00:00",
+      "updated_at": "2026-02-20T14:00:00"
+    },
+    {
+      "id_progreso": 6,
+      "id_usuario_fk": 5,
+      "id_capitulo_fk": 5,
+      "estado": "en_progreso",
+      "porcentaje_capitulo": 25.00,
+      "created_at": "2026-03-01T10:00:00",
+      "updated_at": "2026-03-03T12:00:00"
+    }
+  ],
+  "respuestas_usuario": [
+    {
+      "id_respuesta": 1,
+      "id_usuario": 2,
+      "id_pregunta": 1,
+      "id_opcion": 2,
+      "correcta": true,
+      "fecha": "2026-02-15T14:30:00"
+    },
+    {
+      "id_respuesta": 2,
+      "id_usuario": 2,
+      "id_pregunta": 2,
+      "id_opcion": 7,
+      "correcta": true,
+      "fecha": "2026-02-15T14:32:00"
+    },
+    {
+      "id_respuesta": 3,
+      "id_usuario": 2,
+      "id_pregunta": 3,
+      "id_opcion": 10,
+      "correcta": true,
+      "fecha": "2026-02-15T14:34:00"
+    },
+    {
+      "id_respuesta": 4,
+      "id_usuario": 2,
+      "id_pregunta": 4,
+      "id_opcion": 12,
+      "correcta": true,
+      "fecha": "2026-02-15T15:00:00"
+    },
+    {
+      "id_respuesta": 5,
+      "id_usuario": 2,
+      "id_pregunta": 5,
+      "id_opcion": 13,
+      "correcta": true,
+      "fecha": "2026-02-15T15:02:00"
+    },
+    {
+      "id_respuesta": 6,
+      "id_usuario": 3,
+      "id_pregunta": 1,
+      "id_opcion": 2,
+      "correcta": true,
+      "fecha": "2026-02-14T09:30:00"
+    },
+    {
+      "id_respuesta": 7,
+      "id_usuario": 3,
+      "id_pregunta": 2,
+      "id_opcion": 5,
+      "correcta": false,
+      "fecha": "2026-02-14T09:32:00"
+    },
+    {
+      "id_respuesta": 8,
+      "id_usuario": 3,
+      "id_pregunta": 3,
+      "id_opcion": 10,
+      "correcta": true,
+      "fecha": "2026-02-14T09:34:00"
+    },
+    {
+      "id_respuesta": 9,
+      "id_usuario": 3,
+      "id_pregunta": 4,
+      "id_opcion": 12,
+      "correcta": true,
+      "fecha": "2026-02-17T10:00:00"
+    },
+    {
+      "id_respuesta": 10,
+      "id_usuario": 3,
+      "id_pregunta": 5,
+      "id_opcion": 13,
+      "correcta": true,
+      "fecha": "2026-02-17T10:02:00"
+    },
+    {
+      "id_respuesta": 11,
+      "id_usuario": 3,
+      "id_pregunta": 6,
+      "id_opcion": 15,
+      "correcta": true,
+      "fecha": "2026-02-17T15:30:00"
+    }
+  ],
+  "guardados": [
+    {
+      "id_guardado": 1,
+      "id_usuario": 2,
+      "id_leccion": 1,
+      "created_at": "2026-02-10T14:00:00"
+    },
+    {
+      "id_guardado": 2,
+      "id_usuario": 2,
+      "id_leccion": 3,
+      "created_at": "2026-02-12T16:00:00"
+    },
+    {
+      "id_guardado": 3,
+      "id_usuario": 3,
+      "id_leccion": 1,
+      "created_at": "2026-02-11T10:00:00"
+    },
+    {
+      "id_guardado": 4,
+      "id_usuario": 3,
+      "id_leccion": 2,
+      "created_at": "2026-02-13T11:00:00"
+    },
+    {
+      "id_guardado": 5,
+      "id_usuario": 5,
+      "id_leccion": 5,
+      "created_at": "2026-03-01T10:00:00"
+    }
+  ],
+  "guardados_cursos": [
+    {
+      "id_guardado": 1,
+      "id_usuario": 2,
+      "id_curso": 1,
+      "created_at": "2026-02-10T14:00:00"
+    },
+    {
+      "id_guardado": 2,
+      "id_usuario": 3,
+      "id_curso": 1,
+      "created_at": "2026-02-12T10:00:00"
+    },
+    {
+      "id_guardado": 3,
+      "id_usuario": 3,
+      "id_curso": 2,
+      "created_at": "2026-02-14T12:00:00"
+    }
+  ],
+  "calificaciones": [
+    {
+      "id_calificacion": 1,
+      "id_objeto_fk": 1,
+      "tipo_objeto": "leccion",
+      "id_usuario_fk": 2,
+      "valor": 5
+    },
+    {
+      "id_calificacion": 2,
+      "id_objeto_fk": 1,
+      "tipo_objeto": "leccion",
+      "id_usuario_fk": 3,
+      "valor": 4
+    },
+    {
+      "id_calificacion": 3,
+      "id_objeto_fk": 2,
+      "tipo_objeto": "leccion",
+      "id_usuario_fk": 3,
+      "valor": 5
+    },
+    {
+      "id_calificacion": 4,
+      "id_objeto_fk": 1,
+      "tipo_objeto": "curso",
+      "id_usuario_fk": 2,
+      "valor": 4
+    },
+    {
+      "id_calificacion": 5,
+      "id_objeto_fk": 1,
+      "tipo_objeto": "curso",
+      "id_usuario_fk": 3,
+      "valor": 5
+    },
+    {
+      "id_calificacion": 6,
+      "id_objeto_fk": 3,
+      "tipo_objeto": "leccion",
+      "id_usuario_fk": 5,
+      "valor": 3
+    }
+  ],
   "programas": [
     "Ingeniería de Sistemas",
     "Ingeniería Industrial",

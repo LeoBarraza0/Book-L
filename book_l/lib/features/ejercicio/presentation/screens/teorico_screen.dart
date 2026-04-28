@@ -18,6 +18,7 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
   int _currentQuestionIndex = 0;
   int? _selectedIndex;
   bool _hasAnswered = false;
+  int _respuestasCorrectas = 0;
 
   final List<String> _letters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
@@ -177,6 +178,7 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
                                     if (!_hasAnswered) {
                                       setState(() {
                                         _hasAnswered = true;
+                                        if (isCorrect) _respuestasCorrectas++;
                                       });
                                     } else {
                                       // Next question or Final Screen
@@ -190,7 +192,11 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
                                         Navigator.pushReplacement(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => const EjercicioResultadoScreen(),
+                                            builder: (context) => EjercicioResultadoScreen(
+                                              totalPreguntas: widget.ejercicio.preguntas.length,
+                                              respuestasCorrectas: _respuestasCorrectas,
+                                              ejercicio: widget.ejercicio,
+                                            ),
                                           ),
                                         );
                                       }

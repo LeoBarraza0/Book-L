@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/capitulo.dart';
-import 'package:book_l/shared/domain/models/ejercicio_model.dart';
 import 'package:book_l/core/services/bookl_service.dart';
 import '../../../../shared/widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
+import '../../../ejercicio/domain/entities/ejercicio.dart';
+import '../../../ejercicio/presentation/screens/crear_ejercicio_screen.dart';
+import '../../../ejercicio/presentation/controller/ejercicios_controller.dart';
 
 class CrearCapituloScreen extends StatefulWidget {
   const CrearCapituloScreen({super.key});
@@ -17,7 +19,7 @@ class _CrearCapituloScreenState extends State<CrearCapituloScreen>
   final _nombreCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   final List<SeccionData> _secciones = [];
-  final List<EjercicioModel> _ejercicios = [];
+  late final int _idCapituloGenerado;
 
   // Animaciones
   late AnimationController _headerAnimCtrl;
@@ -30,6 +32,7 @@ class _CrearCapituloScreenState extends State<CrearCapituloScreen>
   void initState() {
     super.initState();
 
+    _idCapituloGenerado = BooklService().generateId();
     _secciones.add(SeccionData(titulo: 'Contenido'));
 
     _headerAnimCtrl = AnimationController(
@@ -148,7 +151,9 @@ class _CrearCapituloScreenState extends State<CrearCapituloScreen>
                       // Ejercicio
                       _buildSeccionLabel('Ejercicios del capítulo'),
                       const SizedBox(height: 12),
-                      ..._ejercicios
+                      ...BooklService()
+                          .ejercicios
+                          .where((e) => e.idCapitulo == _idCapituloGenerado)
                           .map((ex) => _buildEjercicioItem(ex))
                           .toList(),
                       const SizedBox(height: 8),
@@ -369,10 +374,10 @@ class _CrearCapituloScreenState extends State<CrearCapituloScreen>
 
   void _guardarCapitulo() {
     final nombre = _nombreCtrl.text.trim();
-    
+
     // Unificamos secciones y ejercicios en una sola lista de "contenido"
     final List<Map<String, dynamic>> contenidoFinal = [];
-    
+
     // 1. Agregar secciones de texto (Quill)
     for (final s in _secciones) {
       contenidoFinal.add({
@@ -383,28 +388,25 @@ class _CrearCapituloScreenState extends State<CrearCapituloScreen>
         'tiene_video': false,
       });
     }
-    
-    // 2. Agregar ejercicios
-    for (final ex in _ejercicios) {
-      contenidoFinal.add({
-        'tipo': 'ejercicio',
-        'ejercicio_data': ex.toJson(),
-      });
-    }
+
+    // 2. Agregar referencias a ejercicios si es necesario
+    // (En la nueva arquitectura, los ejercicios se vinculan por idCapitulo,
+    // así que no necesitan estar embebidos en el contenido. Solo guardamos secciones).
 
     final nuevoCapitulo = Capitulo(
-      idCapitulo: BooklService().generateId(),
+      idCapitulo: _idCapituloGenerado,
       idLeccion: 0, // Se asignará al guardar la lección
       nombre: nombre.isEmpty ? 'Capítulo sin nombre' : nombre,
       contenido: contenidoFinal,
-      tiempoTotal: _secciones.length * 300, // Estimación simple: 5 min por sección
+      tiempoTotal:
+          _secciones.length * 300, // Estimación simple: 5 min por sección
     );
 
     // Retorna el capítulo a la pantalla anterior
     Navigator.pop(context, nuevoCapitulo);
   }
 
-  Widget _buildEjercicioItem(EjercicioModel ex) {
+  Widget _buildEjercicioItem(dynamic ex) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -416,16 +418,14 @@ class _CrearCapituloScreenState extends State<CrearCapituloScreen>
       child: Row(
         children: [
           Icon(
-            ex.tipo == 'teorico' ? Icons.quiz_outlined : Icons.code,
-            color: ex.tipo == 'teorico'
-                ? const Color(0xFF4DC130)
-                : const Color(0xFFFF606F),
+            Icons.quiz_outlined,
+            color: const Color(0xFF4DC130),
             size: 20,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              ex.pregunta,
+              ex.titulo,
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -433,7 +433,11 @@ class _CrearCapituloScreenState extends State<CrearCapituloScreen>
           ),
           IconButton(
             icon: const Icon(Icons.close, size: 18, color: Colors.redAccent),
-            onPressed: () => setState(() => _ejercicios.remove(ex)),
+            onPressed: () {
+              setState(() {
+                EjerciciosController().eliminarEjercicio(ex.idEjercicio);
+              });
+            },
           ),
         ],
       ),
@@ -441,9 +445,40 @@ class _CrearCapituloScreenState extends State<CrearCapituloScreen>
   }
 
   void _mostrarOpcionesPrueba(BuildContext context) {
+    // Configuración visual por tipo
+    const tipoConfigs =
+        <TipoEjercicio, ({IconData icon, Color color, String subtitle})>{
+      TipoEjercicio.multipleChoice: (
+        icon: Icons.quiz_outlined,
+        color: Color(0xFF4DC130),
+        subtitle: 'Seleccionar una respuesta entre varias'
+      ),
+      TipoEjercicio.trueFalse: (
+        icon: Icons.check_circle_outline,
+        color: Color(0xFFF6B55C),
+        subtitle: 'Determinar si un enunciado es V o F'
+      ),
+      TipoEjercicio.ordenar: (
+        icon: Icons.swap_vert_rounded,
+        color: Color(0xFF4DB0FF),
+        subtitle: 'Organizar elementos en el orden correcto'
+      ),
+      TipoEjercicio.rellenar: (
+        icon: Icons.text_fields_rounded,
+        color: Color(0xFFFF606F),
+        subtitle: 'Completar espacios vacíos en un texto'
+      ),
+      TipoEjercicio.respuestaCorta: (
+        icon: Icons.short_text_rounded,
+        color: Color(0xFF9B51E0),
+        subtitle: 'Escribir la respuesta en texto libre'
+      ),
+    };
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (ctx) {
         return Container(
           decoration: const BoxDecoration(
@@ -461,60 +496,50 @@ class _CrearCapituloScreenState extends State<CrearCapituloScreen>
                 width: 48,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10)),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Agregar Ejercicio',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
+              const Text('Agregar Prueba',
+                  style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87)),
               const SizedBox(height: 8),
-              const Text(
-                '¿Qué tipo de ejercicio deseas agregar?',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: Color(0xFF676767),
-                ),
-              ),
+              const Text('¿Qué tipo de ejercicio deseas agregar?',
+                  style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: Color(0xFF676767))),
               const SizedBox(height: 24),
-              _buildOpcionBottomSheet(
-                icon: Icons.quiz_outlined,
-                title: 'Ejercicio Teórico',
-                subtitle: 'Opción múltiple, completar, verdadero/falso',
-                color: const Color(0xFF4DC130),
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  final result = await Navigator.pushNamed(
-                      context, '/crear_ejercicio_teorico');
-                  if (result != null && result is List<EjercicioModel>) {
-                    setState(() => _ejercicios.addAll(result));
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildOpcionBottomSheet(
-                icon: Icons.code,
-                title: 'Ejercicio Práctico',
-                subtitle: 'Escribir y validar código',
-                color: const Color(0xFFFF606F),
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  final result = await Navigator.pushNamed(
-                      context, '/crear_ejercicio_practico');
-                  if (result != null && result is List<EjercicioModel>) {
-                    setState(() => _ejercicios.addAll(result));
-                  }
-                },
-              ),
-              const SizedBox(height: 20),
+              ...TipoEjercicio.values.map((tipo) {
+                final config = tipoConfigs[tipo]!;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildOpcionBottomSheet(
+                    icon: config.icon,
+                    title: tipo.displayName,
+                    subtitle: config.subtitle,
+                    color: config.color,
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CrearEjercicioScreen(
+                            idCapitulo: _idCapituloGenerado,
+                            tipo: tipo,
+                          ),
+                        ),
+                      );
+                      setState(
+                          () {}); // Refrescar para mostrar los nuevos ejercicios creados
+                    },
+                  ),
+                );
+              }),
+              const SizedBox(height: 8),
             ],
           ),
         );

@@ -3,13 +3,14 @@ import '../../../../shared/widgets/search_filter_bar.dart';
 import '../controller/ejercicios_controller.dart';
 import '../../domain/entities/ejercicio.dart';
 import 'teorico_screen.dart';
+import 'package:book_l/core/storage/local_storage.dart';
 
 class BancoEjerciciosScreen extends StatefulWidget {
   final int idLeccion;
   final String title;
-  final TipoEjercicio? tipoFiltro;
+  final String? categoriaFiltro;
 
-  const BancoEjerciciosScreen({super.key, required this.idLeccion, required this.title, this.tipoFiltro});
+  const BancoEjerciciosScreen({super.key, required this.idLeccion, required this.title, this.categoriaFiltro});
 
   @override
   State<BancoEjerciciosScreen> createState() => _BancoEjerciciosScreenState();
@@ -25,9 +26,8 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _ctrl.loadEjercicios(widget.idLeccion);
       // Pre-filtrar por tipo si viene especificado
-      if (widget.tipoFiltro != null) {
-        final idx = TipoEjercicio.values.indexOf(widget.tipoFiltro!) + 1;
-        _ctrl.setFilter(idx);
+      if (widget.categoriaFiltro != null) {
+        _ctrl.setCategoriaFiltro(widget.categoriaFiltro);
       }
     });
   }
@@ -101,7 +101,7 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
                   _searchCtrl.clear();
                   _ctrl.clearSearch();
                 },
-                filtros: _ctrl.filtros,
+                filtros: _ctrl.filtrosActivos,
                 filtroSeleccionado: _ctrl.selectedFilterIndex,
                 onFiltroChanged: _ctrl.setFilter,
               ),
@@ -124,8 +124,15 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
                           final e = ejercicios[index];
                           final colorBase = _getColorForTipo(e.tipo);
                           
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+                          return ListenableBuilder(
+                            listenable: AppSession().completedEjercicios,
+                            builder: (context, _) {
+                              final isCompleted = AppSession().completedEjercicios.value.contains(e.idEjercicio);
+                              final progressValue = isCompleted ? 1.0 : 0.0;
+                              final progressText = isCompleted ? '100%' : '0%';
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF6F6F6),
@@ -203,14 +210,14 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
                                            width: 44,
                                            height: 44,
                                            child: CircularProgressIndicator(
-                                             value: (e.idEjercicio * 20 % 100) / 100.0,
+                                             value: progressValue,
                                              backgroundColor: colorBase.withValues(alpha: 0.2),
                                              color: colorBase,
                                              strokeWidth: 4,
                                            ),
                                          ),
                                          Text(
-                                          '${(e.idEjercicio * 20 % 100)}%',
+                                          progressText,
                                           style: const TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.bold,
@@ -253,7 +260,9 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
                             ),
                           );
                         },
-                      ),
+                      );
+                    },
+                  ),
               ),
             ],
           );

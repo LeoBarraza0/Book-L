@@ -20,15 +20,32 @@ class EjerciciosController extends ChangeNotifier {
   int _selectedFilterIndex = 0;
   int get selectedFilterIndex => _selectedFilterIndex;
 
-  // Filtros: 0: Todos, y luego los valores del enum TipoEjercicio en orden
-  final List<String> filtros = [
-    'Todos',
-    TipoEjercicio.multipleChoice.displayName,
-    TipoEjercicio.trueFalse.displayName,
-    TipoEjercicio.ordenar.displayName,
-    TipoEjercicio.rellenar.displayName,
-    TipoEjercicio.respuestaCorta.displayName,
+  // Categorías
+  static const List<TipoEjercicio> tiposTeoricos = [
+    TipoEjercicio.multipleChoice,
+    TipoEjercicio.trueFalse,
+    TipoEjercicio.respuestaCorta,
   ];
+
+  static const List<TipoEjercicio> tiposPracticos = [
+    TipoEjercicio.ordenar,
+    TipoEjercicio.rellenar,
+  ];
+
+  String? _categoriaActual;
+  String? get categoriaActual => _categoriaActual;
+
+  List<String> get filtrosActivos {
+    final base = ['Todos'];
+    if (_categoriaActual == 'Teórico') {
+      base.addAll(tiposTeoricos.map((t) => t.displayName));
+    } else if (_categoriaActual == 'Práctico') {
+      base.addAll(tiposPracticos.map((t) => t.displayName));
+    } else {
+      base.addAll(TipoEjercicio.values.map((t) => t.displayName));
+    }
+    return base;
+  }
 
   // ── READ ───────────────────────────────────────────────────────────────────
 
@@ -66,16 +83,40 @@ class EjerciciosController extends ChangeNotifier {
     return tipos;
   }
 
-  /// Retorna ejercicios de una lección filtrados por tipo.
-  List<Ejercicio> ejerciciosPorTipo(int idLeccion, TipoEjercicio tipo) {
+  /// Verifica si una lección tiene ejercicios de cierta categoría
+  bool tieneCategoria(int idLeccion, String categoria) {
     final capitulosLeccion = _service.capitulos
         .where((c) => c.idLeccion == idLeccion)
         .map((c) => c.idCapitulo)
         .toSet();
 
-    return _service.ejercicios
-        .where((e) => capitulosLeccion.contains(e.idCapitulo) && e.tipo == tipo)
-        .toList();
+    final ejercicios = _service.ejercicios.where((e) => capitulosLeccion.contains(e.idCapitulo));
+
+    if (categoria == 'Teórico') {
+      return ejercicios.any((e) => tiposTeoricos.contains(e.tipo));
+    } else {
+      return ejercicios.any((e) => tiposPracticos.contains(e.tipo));
+    }
+  }
+
+  int getCountByCategoria(int idLeccion, String categoria) {
+    final capitulosLeccion = _service.capitulos
+        .where((c) => c.idLeccion == idLeccion)
+        .map((c) => c.idCapitulo)
+        .toSet();
+
+    final ejercicios = _service.ejercicios.where((e) => capitulosLeccion.contains(e.idCapitulo));
+
+    if (categoria == 'Teórico') {
+      return ejercicios.where((e) => tiposTeoricos.contains(e.tipo)).length;
+    } else {
+      return ejercicios.where((e) => tiposPracticos.contains(e.tipo)).length;
+    }
+  }
+
+  void setCategoriaFiltro(String? categoria) {
+    _categoriaActual = categoria;
+    _selectedFilterIndex = 0;
   }
 
   // ── CREATE ─────────────────────────────────────────────────────────────────
@@ -162,9 +203,23 @@ class EjerciciosController extends ChangeNotifier {
   List<Ejercicio> _getFiltered() {
     List<Ejercicio> current = _allEjercicios;
 
-    // Filtro por tipo
+    // Filtro por categoría general
+    if (_categoriaActual == 'Teórico') {
+      current = current.where((e) => tiposTeoricos.contains(e.tipo)).toList();
+    } else if (_categoriaActual == 'Práctico') {
+      current = current.where((e) => tiposPracticos.contains(e.tipo)).toList();
+    }
+
+    // Filtro por tipo específico (dropdown)
     if (_selectedFilterIndex > 0) {
-      final selectedTipo = TipoEjercicio.values[_selectedFilterIndex - 1];
+      TipoEjercicio selectedTipo;
+      if (_categoriaActual == 'Teórico') {
+        selectedTipo = tiposTeoricos[_selectedFilterIndex - 1];
+      } else if (_categoriaActual == 'Práctico') {
+        selectedTipo = tiposPracticos[_selectedFilterIndex - 1];
+      } else {
+        selectedTipo = TipoEjercicio.values[_selectedFilterIndex - 1];
+      }
       current = current.where((e) => e.tipo == selectedTipo).toList();
     }
 
