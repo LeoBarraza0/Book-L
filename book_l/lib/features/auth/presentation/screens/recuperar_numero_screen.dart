@@ -79,10 +79,10 @@ class RecuperarNumeroScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF94D684).withOpacity(0.1),
+                            color: const Color(0xFF94D684).withOpacity(0.2),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.phone_android, color: Colors.black),
+                          child: Icon(Icons.phone_android, color: const Color(0xFF94D684)),
                         ),
                         const SizedBox(width: 15),
                         Expanded(
