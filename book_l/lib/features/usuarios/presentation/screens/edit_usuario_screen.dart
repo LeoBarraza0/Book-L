@@ -37,6 +37,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
 
   bool? _temaOscuroOriginal;
   late final List<String> _programas;
+  late bool _activo;
 
   @override
   void initState() {
@@ -55,6 +56,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
     _temaOscuroOriginal = _extractTemaOscuro(widget.usuario.preferencias);
     _avatarNetworkUrl = widget.usuario.avatarUrl;
     _selectedDate = widget.usuario.nacimiento;
+    _activo = widget.usuario.activo;
 
     final programa = widget.usuario.programa;
     _selectedPrograma =
@@ -466,6 +468,34 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                         setState(() => _selectedRol = val);
                       }),
                       const SizedBox(height: 20),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: SwitchListTile(
+                          title: const Text(
+                            'Estado Activo',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          subtitle: Text(
+                            _activo ? 'El usuario puede iniciar sesión' : 'El usuario no tiene acceso',
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          value: _activo,
+                          activeColor: const Color(0xFF44BD32),
+                          onChanged: (val) {
+                            setState(() {
+                              _activo = val;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                       _buildTextField('Preferencias', _preferenciasController,
                           maxLines: 4),
                       const SizedBox(height: 30),
@@ -500,7 +530,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                                 semestre: _selectedSemestre,
                                 preferencias: _rebuildPreferencias(
                                     _preferenciasController.text),
-                                activo: widget.usuario.activo,
+                                activo: _activo,
                                 rol: _selectedRol,
                                 avatarUrl: widget.usuario.avatarUrl,
                               );
