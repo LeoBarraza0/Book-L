@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../notificacion/presentation/screens/notificaciones_screen.dart';
-import 'package:book_l/shared/widgets/create_menu_modal.dart' as lib_modal;
 import 'editar_perfil.dart';
 import 'seguidores_screen.dart';
 import '../widgets/mis_cursos_section.dart';
@@ -208,7 +207,8 @@ class _PerfilScreenState extends State<PerfilScreen>
                                     child: CustomAvatar(
                                       radius: 45,
                                       url: _user?.avatarUrl,
-                                      nombre: _user?.nombreCompleto ?? 'Usuario',
+                                      nombre:
+                                          _user?.nombreCompleto ?? 'Usuario',
                                       backgroundColor: Colors.white,
                                     ),
                                   ),

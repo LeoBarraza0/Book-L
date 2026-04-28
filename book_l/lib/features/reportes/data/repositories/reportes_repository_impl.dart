@@ -93,4 +93,19 @@ class ReportesRepositoryImpl implements ReporteRepository {
       return rTipo == normalizedSearchType && r.entidadId == id;
     }).toList();
   }
+
+  @override
+  Future<void> addReporte({
+    required int idUsuarioFk,
+    required String entidadTipo,
+    required int entidadId,
+    required String motivo,
+  }) async {
+    BooklService().addReporte(
+      idUsuarioFk: idUsuarioFk,
+      entidadTipo: entidadTipo,
+      entidadId: entidadId,
+      motivo: motivo,
+    );
+  }
 }

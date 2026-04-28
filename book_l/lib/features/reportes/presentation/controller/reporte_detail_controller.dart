@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/services/bookl_service.dart';
 import '../../domain/entities/reporte.dart';
 import '../../domain/usecases/get_reportes_por_entidad_usecase.dart';
-import '../../../usuarios/domain/entities/usuarios.dart';
 
 class ReporteCompletoInfo {
   final Reporte reporte;
@@ -45,9 +44,10 @@ class ReporteDetailController extends ChangeNotifier {
       // Cruzar con los usuarios reales para tener los avatares y nombres reales
       // Debido a que BooklService actúa como backend mock, le pediremos la info de usuarios aquí (como si fuese un JOIN o Included en backend)
       final usuarios = BooklService().usuarios;
-      
+
       _allComentarios = reportesRaw.map((r) {
-        final user = usuarios.where((u) => u.idUsuario == r.idUsuarioFk).firstOrNull;
+        final user =
+            usuarios.where((u) => u.idUsuario == r.idUsuarioFk).firstOrNull;
         return ReporteCompletoInfo(
           reporte: r,
           nombreUsuario: user?.nombreCompleto ?? 'Usuario (${r.idUsuarioFk})',
@@ -74,9 +74,11 @@ class ReporteDetailController extends ChangeNotifier {
   void _applySort() {
     _displayedComentarios = List.from(_allComentarios);
     if (_selectedSort == 'Más Recientes') {
-      _displayedComentarios.sort((a, b) => b.reporte.createdAt.compareTo(a.reporte.createdAt));
+      _displayedComentarios
+          .sort((a, b) => b.reporte.createdAt.compareTo(a.reporte.createdAt));
     } else if (_selectedSort == 'Más Antiguos') {
-      _displayedComentarios.sort((a, b) => a.reporte.createdAt.compareTo(b.reporte.createdAt));
+      _displayedComentarios
+          .sort((a, b) => a.reporte.createdAt.compareTo(b.reporte.createdAt));
     }
   }
 }

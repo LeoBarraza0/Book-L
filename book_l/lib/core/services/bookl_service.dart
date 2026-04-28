@@ -771,9 +771,35 @@ class BooklService extends ChangeNotifier {
   int nextOpcionId() =>
       _nextId(opciones, (o) => (o as Opcion).idOpcion);
 
+  int nextReporteId() {
+    if (reportes.isEmpty) return 1;
+    return reportes
+        .map<int>((r) => (r['id_reporte'] as int?) ?? 0)
+        .reduce((a, b) => a > b ? a : b) + 1;
+  }
+
   // Generador de IDs único para nuevos registros locales
   // Se usa microsegundos para minimizar riesgo de colisión en ráfagas.
   int generateId() => DateTime.now().microsecondsSinceEpoch;
+
+  // ── Operaciones de Reportes ────────────────────────────────────────────────
+  void addReporte({
+    required int idUsuarioFk,
+    required String entidadTipo,
+    required int entidadId,
+    required String motivo,
+  }) {
+    final nuevoReporte = {
+      'id_reporte': nextReporteId(),
+      'id_usuario_fk': idUsuarioFk,
+      'entidad_tipo': entidadTipo,
+      'entidad_id': entidadId,
+      'motivo': motivo,
+      'created_at': DateTime.now().toIso8601String(),
+    };
+    reportes.add(nuevoReporte);
+    _save();
+  }
 
   // ── Operaciones Material Educativo ──────────────────────────────────────────
   void addMaterial(MaterialEducativo m) {

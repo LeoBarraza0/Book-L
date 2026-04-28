@@ -11,6 +11,7 @@ import '../../../ejercicio/presentation/controller/ejercicios_controller.dart';
 class CapituloEditarScreen extends StatefulWidget {
   /// ID del capítulo a editar. Si es null se crea uno nuevo.
   final int? idCapitulo;
+
   /// ID de la lección padre (requerido si se crea un capítulo nuevo).
   final int? idLeccion;
 
@@ -387,8 +388,7 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
           ...BooklService()
               .ejercicios
               .where((e) => e.idCapitulo == _capituloActual!.idCapitulo)
-              .map((ex) => _buildEjercicioItem(ex))
-              .toList(),
+              .map((ex) => _buildEjercicioItem(ex)),
         ],
         const SizedBox(height: 8),
         _buildAgregarPruebaButton(),
@@ -449,12 +449,33 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
     final idCapitulo = _capituloActual?.idCapitulo ?? 0;
 
     // Configuración visual por tipo
-    const tipoConfigs = <TipoEjercicio, ({IconData icon, Color color, String subtitle})>{
-      TipoEjercicio.multipleChoice: (icon: Icons.quiz_outlined, color: Color(0xFF4DC130), subtitle: 'Seleccionar una respuesta entre varias'),
-      TipoEjercicio.trueFalse: (icon: Icons.check_circle_outline, color: Color(0xFFF6B55C), subtitle: 'Determinar si un enunciado es V o F'),
-      TipoEjercicio.ordenar: (icon: Icons.swap_vert_rounded, color: Color(0xFF4DB0FF), subtitle: 'Organizar elementos en el orden correcto'),
-      TipoEjercicio.rellenar: (icon: Icons.text_fields_rounded, color: Color(0xFFFF606F), subtitle: 'Completar espacios vacíos en un texto'),
-      TipoEjercicio.respuestaCorta: (icon: Icons.short_text_rounded, color: Color(0xFF9B51E0), subtitle: 'Escribir la respuesta en texto libre'),
+    const tipoConfigs =
+        <TipoEjercicio, ({IconData icon, Color color, String subtitle})>{
+      TipoEjercicio.multipleChoice: (
+        icon: Icons.quiz_outlined,
+        color: Color(0xFF4DC130),
+        subtitle: 'Seleccionar una respuesta entre varias'
+      ),
+      TipoEjercicio.trueFalse: (
+        icon: Icons.check_circle_outline,
+        color: Color(0xFFF6B55C),
+        subtitle: 'Determinar si un enunciado es V o F'
+      ),
+      TipoEjercicio.ordenar: (
+        icon: Icons.swap_vert_rounded,
+        color: Color(0xFF4DB0FF),
+        subtitle: 'Organizar elementos en el orden correcto'
+      ),
+      TipoEjercicio.rellenar: (
+        icon: Icons.text_fields_rounded,
+        color: Color(0xFFFF606F),
+        subtitle: 'Completar espacios vacíos en un texto'
+      ),
+      TipoEjercicio.respuestaCorta: (
+        icon: Icons.short_text_rounded,
+        color: Color(0xFF9B51E0),
+        subtitle: 'Escribir la respuesta en texto libre'
+      ),
     };
 
     showModalBottomSheet(
@@ -475,15 +496,25 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 48, height: 5,
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+                width: 48,
+                height: 5,
+                decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10)),
               ),
               const SizedBox(height: 24),
               const Text('Agregar Prueba',
-                style: TextStyle(fontFamily: 'Inter', fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87)),
               const SizedBox(height: 8),
               const Text('¿Qué tipo de ejercicio deseas agregar?',
-                style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: Color(0xFF676767))),
+                  style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: Color(0xFF676767))),
               const SizedBox(height: 24),
               ...TipoEjercicio.values.map((tipo) {
                 final config = tipoConfigs[tipo]!;
@@ -670,11 +701,6 @@ class _GuardarButtonState extends State<_GuardarButton>
     _scale = Tween<double>(begin: 1.0, end: 0.96).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
     );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override

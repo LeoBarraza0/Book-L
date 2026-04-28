@@ -589,7 +589,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
     _mostrarModal(
       title: 'Editar Programa',
       content: DropdownButtonFormField<String>(
-        value: _programas.contains(_programa) ? _programa : _programas.first,
+        initialValue: _programas.contains(_programa) ? _programa : _programas.first,
         decoration: InputDecoration(
           filled: true,
           fillColor: const Color(0xFFF4F5F7),
@@ -618,7 +618,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
     _mostrarModal(
       title: 'Editar Semestre',
       content: DropdownButtonFormField<String>(
-        value: _semestres.contains(_semestre) ? _semestre : _semestres.first,
+        initialValue: _semestres.contains(_semestre) ? _semestre : _semestres.first,
         decoration: InputDecoration(
           filled: true,
           fillColor: const Color(0xFFF4F5F7),

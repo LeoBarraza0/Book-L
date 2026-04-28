@@ -37,7 +37,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
   late AnimationController _guardarAnimCtrl;
   late Animation<double> _guardarScaleAnim;
 
-  List<Map<String, int>> _leccionesCursosData = [];
+  final List<Map<String, int>> _leccionesCursosData = [];
   List<Leccion> _leccionesDelCurso = [];
   Curso? _cursoOriginal;
 
@@ -47,17 +47,17 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
 
     if (widget.idCurso != null) {
       _cursoOriginal = BooklService().cursos.firstWhere(
-        (c) => c.idCurso == widget.idCurso,
-        orElse: () => Curso(
-          idCurso: -1, 
-          idUsuarioFk: AppSession().usuarioId ?? 1, 
-          nombre: '', 
-          estado: 'Borrador',
-        ),
-      );
+            (c) => c.idCurso == widget.idCurso,
+            orElse: () => Curso(
+              idCurso: -1,
+              idUsuarioFk: AppSession().usuarioId ?? 1,
+              nombre: '',
+              estado: 'Borrador',
+            ),
+          );
       _tituloCtrl.text = _cursoOriginal!.nombre;
     }
-    
+
     _refreshLeccionesLocales();
 
     // Header: fade + slide
@@ -148,9 +148,11 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
 
   void _eliminarLeccion(Leccion leccion) {
     if (widget.idCurso == null) return;
-    
+
     setState(() {
-      BooklService().leccionesCursos.removeWhere((lc) => lc['id_curso'] == widget.idCurso && lc['id_leccion'] == leccion.idLeccion);
+      BooklService().leccionesCursos.removeWhere((lc) =>
+          lc['id_curso'] == widget.idCurso &&
+          lc['id_leccion'] == leccion.idLeccion);
       _refreshLeccionesLocales();
     });
     // Notificamos para que la UI compartida o Home Screen recargue sus dependencias
@@ -180,9 +182,15 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
   }
 
   void _showAssignLessonModal() {
-    final myUserLessons = BooklService().lecciones.where((l) => l.idUsuarioFk == AppSession().usuarioId).toList();
+    final myUserLessons = BooklService()
+        .lecciones
+        .where((l) => l.idUsuarioFk == AppSession().usuarioId)
+        .toList();
     // Excluimos las que ya están en el curso
-    final unassigned = myUserLessons.where((l) => !_leccionesDelCurso.any((c) => c.idLeccion == l.idLeccion)).toList();
+    final unassigned = myUserLessons
+        .where(
+            (l) => !_leccionesDelCurso.any((c) => c.idLeccion == l.idLeccion))
+        .toList();
 
     showModalBottomSheet(
       context: context,
@@ -197,7 +205,8 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
             child: Text(
               'No tienes lecciones disponibles para asignar.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'Inter', fontSize: 16, color: Colors.black54),
+              style: TextStyle(
+                  fontFamily: 'Inter', fontSize: 16, color: Colors.black54),
             ),
           );
         }
@@ -207,7 +216,10 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
               padding: EdgeInsets.all(16.0),
               child: Text(
                 'Selecciona una lección para asignar',
-                style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold, fontSize: 18),
+                style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18),
               ),
             ),
             Expanded(
@@ -216,9 +228,12 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
                 itemBuilder: (context, i) {
                   final l = unassigned[i];
                   return ListTile(
-                    leading: const Icon(Icons.menu_book, color: Color(0xFF4DC130)),
-                    title: Text(l.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(l.estado ?? '', style: const TextStyle(fontSize: 12)),
+                    leading:
+                        const Icon(Icons.menu_book, color: Color(0xFF4DC130)),
+                    title: Text(l.nombre,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(l.estado ?? '',
+                        style: const TextStyle(fontSize: 12)),
                     onTap: () {
                       if (widget.idCurso != null) {
                         setState(() {
@@ -301,7 +316,6 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
               ),
             ],
           ),
-
           const Positioned(
             bottom: 24,
             left: 20,
@@ -672,7 +686,8 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
             leccion: _leccionesDelCurso[i],
             onEditar: () => Navigator.push(
               context,
-              _slideRoute(LeccionEditarScreen(idLeccion: _leccionesDelCurso[i].idLeccion)),
+              _slideRoute(LeccionEditarScreen(
+                  idLeccion: _leccionesDelCurso[i].idLeccion)),
             ),
             onEliminar: () => _eliminarLeccion(_leccionesDelCurso[i]),
           );
@@ -681,13 +696,16 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
         const SizedBox(height: 16),
         Center(
           child: ElevatedButton.icon(
-             onPressed: _showAssignLessonModal,
-             icon: const Icon(Icons.add_link_rounded, color: Colors.white),
-             label: const Text('Asignar lección existente', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-             style: ElevatedButton.styleFrom(
-               backgroundColor: const Color(0xFFFEB95C),
-               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-             ),
+            onPressed: _showAssignLessonModal,
+            icon: const Icon(Icons.add_link_rounded, color: Colors.white),
+            label: const Text('Asignar lección existente',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFEB95C),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+            ),
           ),
         ),
 
@@ -758,13 +776,12 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        final slide =
-            Tween<Offset>(
-              begin: const Offset(1.0, 0),
-              end: Offset.zero,
-            ).animate(
-              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-            );
+        final slide = Tween<Offset>(
+          begin: const Offset(1.0, 0),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+        );
         return SlideTransition(position: slide, child: child);
       },
       transitionDuration: const Duration(milliseconds: 380),
@@ -838,10 +855,11 @@ class _LeccionEditableCardState extends State<_LeccionEditableCard>
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                   width: 74,
-                   height: 74,
-                   color: const Color(0xFF4DC130),
-                   child: const Icon(Icons.menu_book, color: Colors.white, size: 36),
+                  width: 74,
+                  height: 74,
+                  color: const Color(0xFF4DC130),
+                  child: const Icon(Icons.menu_book,
+                      color: Colors.white, size: 36),
                 ),
               ),
               const SizedBox(width: 14),

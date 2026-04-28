@@ -57,7 +57,9 @@ class _CapituloScreenState extends State<CapituloScreen> {
                         listenable: _ctrl,
                         builder: (context, _) {
                           final cap = _ctrl.capituloSeleccionado;
-                          if (cap != null && cap.contenido != null && cap.contenido!.isNotEmpty) {
+                          if (cap != null &&
+                              cap.contenido != null &&
+                              cap.contenido!.isNotEmpty) {
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -71,17 +73,21 @@ class _CapituloScreenState extends State<CapituloScreen> {
                                 const SizedBox(height: 16),
                                 ...cap.contenido!.map((s) {
                                   final titulo = s['titulo'] as String? ?? '';
-                                  final deltaData = s['cuerpo_delta'] as List<dynamic>?;
+                                  final deltaData =
+                                      s['cuerpo_delta'] as List<dynamic>?;
 
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 24),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         if (titulo.isNotEmpty) ...[
                                           Text(
                                             titulo,
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18),
                                           ),
                                           const SizedBox(height: 8),
                                         ],
@@ -93,38 +99,79 @@ class _CapituloScreenState extends State<CapituloScreen> {
                                         if (s['tiene_imagen'] == true) ...[
                                           const SizedBox(height: 12),
                                           ClipRRect(
-                                            borderRadius: BorderRadius.circular(12),
-                                            child: (s['imagen_path'] != null && s['imagen_path'].toString().isNotEmpty)
-                                                ? (s['imagen_path'].toString().startsWith('http') || s['imagen_path'].toString().startsWith('assets/'))
-                                                    ? Image.network(s['imagen_path'], width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
-                                                    : Image.file(File(s['imagen_path']), width: double.infinity, height: 200, fit: BoxFit.cover, errorBuilder: (_,__,___)=> _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: (s['imagen_path'] != null &&
+                                                    s['imagen_path']
+                                                        .toString()
+                                                        .isNotEmpty)
+                                                ? (s['imagen_path'].toString().startsWith('http') ||
+                                                        s['imagen_path']
+                                                            .toString()
+                                                            .startsWith(
+                                                                'assets/'))
+                                                    ? Image.network(
+                                                        s['imagen_path'],
+                                                        width: double.infinity,
+                                                        height: 200,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder: (_, __, ___) =>
+                                                            _buildMediaItem(
+                                                                Icons.image,
+                                                                'Imagen adjunta',
+                                                                const Color(
+                                                                    0xFF4DC130)))
+                                                    : Image.file(
+                                                        File(s['imagen_path']),
+                                                        width: double.infinity,
+                                                        height: 200,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder:
+                                                            (_, __, ___) =>
+                                                                _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)))
                                                 : _buildMediaItem(Icons.image, 'Imagen adjunta', const Color(0xFF4DC130)),
                                           ),
                                         ],
                                         if (s['tiene_video'] == true) ...[
                                           const SizedBox(height: 12),
-                                          if (s['video_path'] != null && s['video_path'].toString().isNotEmpty)
-                                            VideoPlayerWidget(path: s['video_path'].toString())
+                                          if (s['video_path'] != null &&
+                                              s['video_path']
+                                                  .toString()
+                                                  .isNotEmpty)
+                                            VideoPlayerWidget(
+                                                path:
+                                                    s['video_path'].toString())
                                           else
                                             ClipRRect(
-                                              borderRadius: BorderRadius.circular(12),
-                                              child: _buildMediaItem(Icons.play_circle_filled, 'Video adjunto', const Color(0xFFFF606F)),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              child: _buildMediaItem(
+                                                  Icons.play_circle_filled,
+                                                  'Video adjunto',
+                                                  const Color(0xFFFF606F)),
                                             ),
                                         ],
                                         if (s['tiene_pdf'] == true) ...[
                                           const SizedBox(height: 12),
-                                          if (s['pdf_path'] != null && s['pdf_path'].toString().isNotEmpty)
+                                          if (s['pdf_path'] != null &&
+                                              s['pdf_path']
+                                                  .toString()
+                                                  .isNotEmpty)
                                             PdfViewerWidget(
                                               path: s['pdf_path'].toString(),
-                                              nombre: s['pdf_nombre'] as String?,
+                                              nombre:
+                                                  s['pdf_nombre'] as String?,
                                             )
                                           else
-                                            _buildMediaItem(Icons.picture_as_pdf, 'PDF adjunto', const Color(0xFF7B2FBE)),
+                                            _buildMediaItem(
+                                                Icons.picture_as_pdf,
+                                                'PDF adjunto',
+                                                const Color(0xFF7B2FBE)),
                                         ],
                                       ],
                                     ),
                                   );
-                                }).toList()
+                                })
                               ],
                             );
                           } else {
@@ -132,10 +179,14 @@ class _CapituloScreenState extends State<CapituloScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text('Introducción',
-                                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 12),
                                 Text(
-                                  cap == null ? 'Cargando contenido...' : 'Aún no hay contenido para este capítulo.',
+                                  cap == null
+                                      ? 'Cargando contenido...'
+                                      : 'Aún no hay contenido para este capítulo.',
                                   style: const TextStyle(
                                       fontSize: 14,
                                       color: Color(0xFF787878),
@@ -152,38 +203,42 @@ class _CapituloScreenState extends State<CapituloScreen> {
 
                       // Sección de Pruebas
                       ListenableBuilder(
-                        listenable: AppSession().completedEjercicios, // Escuchamos cambios en ejercicios completados
-                        builder: (context, _) {
-                          final ejercicios = BooklService().ejercicios.where((e) => e.idCapitulo == widget.idCapitulo).toList();
-                          
-                          if (ejercicios.isEmpty) return const SizedBox.shrink();
+                          listenable: AppSession()
+                              .completedEjercicios, // Escuchamos cambios en ejercicios completados
+                          builder: (context, _) {
+                            final ejercicios = BooklService()
+                                .ejercicios
+                                .where((e) => e.idCapitulo == widget.idCapitulo)
+                                .toList();
 
-                          return Column(
-                            children: [
-                              const Center(
-                                child: Text('¡Pon a prueba tus conocimientos!',
-                                    style: TextStyle(
-                                        fontSize: 20, fontWeight: FontWeight.bold)),
-                              ),
-                              const SizedBox(height: 32),
-                              Wrap(
-                                spacing: 20,
-                                runSpacing: 20,
-                                alignment: WrapAlignment.spaceEvenly,
-                                children: List.generate(ejercicios.length, (i) {
-                                  final ex = ejercicios[i];
-                                  return _buildPruebaButton(
-                                    (i + 1).toString(),
-                                    ex,
-                                    context
-                                  );
-                                }),
-                              ),
-                              const SizedBox(height: 48),
-                            ],
-                          );
-                        }
-                      ),
+                            if (ejercicios.isEmpty)
+                              return const SizedBox.shrink();
+
+                            return Column(
+                              children: [
+                                const Center(
+                                  child: Text(
+                                      '¡Pon a prueba tus conocimientos!',
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                                const SizedBox(height: 32),
+                                Wrap(
+                                  spacing: 20,
+                                  runSpacing: 20,
+                                  alignment: WrapAlignment.spaceEvenly,
+                                  children:
+                                      List.generate(ejercicios.length, (i) {
+                                    final ex = ejercicios[i];
+                                    return _buildPruebaButton(
+                                        (i + 1).toString(), ex, context);
+                                  }),
+                                ),
+                                const SizedBox(height: 48),
+                              ],
+                            );
+                          }),
 
                       // Botón de completar capítulo
                       ListenableBuilder(
@@ -293,7 +348,8 @@ class _CapituloScreenState extends State<CapituloScreen> {
                 child: Image.asset(
                   'assets/images/green_bg.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey[400]),
+                  errorBuilder: (context, error, stackTrace) =>
+                      Container(color: Colors.grey[400]),
                 ),
               ),
             ),
@@ -335,16 +391,22 @@ class _CapituloScreenState extends State<CapituloScreen> {
   Widget _buildPruebaButton(String number, Ejercicio ex, BuildContext context) {
     Color getAccentColor() {
       switch (ex.tipo) {
-        case TipoEjercicio.multipleChoice: return const Color(0xFF4DC130);
-        case TipoEjercicio.trueFalse: return const Color(0xFFF6B55C);
-        case TipoEjercicio.ordenar: return const Color(0xFF4DB0FF);
-        case TipoEjercicio.rellenar: return const Color(0xFFFF606F);
-        case TipoEjercicio.respuestaCorta: return const Color(0xFF9B51E0);
+        case TipoEjercicio.multipleChoice:
+          return const Color(0xFF4DC130);
+        case TipoEjercicio.trueFalse:
+          return const Color(0xFFF6B55C);
+        case TipoEjercicio.ordenar:
+          return const Color(0xFF4DB0FF);
+        case TipoEjercicio.rellenar:
+          return const Color(0xFFFF606F);
+        case TipoEjercicio.respuestaCorta:
+          return const Color(0xFF9B51E0);
       }
     }
-    
+
     final color = getAccentColor();
-    final isCompleted = AppSession().completedEjercicios.value.contains(ex.idEjercicio);
+    final isCompleted =
+        AppSession().completedEjercicios.value.contains(ex.idEjercicio);
 
     return GestureDetector(
       onTap: () {
@@ -376,7 +438,7 @@ class _CapituloScreenState extends State<CapituloScreen> {
               ],
             ),
             alignment: Alignment.center,
-            child: isCompleted 
+            child: isCompleted
                 ? const Icon(Icons.check, color: Colors.white, size: 54)
                 : Text(
                     number,
@@ -400,6 +462,7 @@ class _CapituloScreenState extends State<CapituloScreen> {
       ),
     );
   }
+
   Widget _buildMediaItem(IconData icon, String label, Color color) {
     return Container(
       height: 140,

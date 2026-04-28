@@ -293,9 +293,9 @@ class _ReportesScreenState extends State<ReportesScreen> {
       children: reportesAgrupados.map((item) {
         Color boxColor = const Color(0xFFD9D9D9);
         final tipoL = item.tipoEntidad.toLowerCase().replaceAll('ó', 'o');
-        if (tipoL == 'curso')
+        if (tipoL == 'curso') {
           boxColor = const Color(0xFFFF606F);
-        else if (tipoL == 'leccion')
+        } else if (tipoL == 'leccion')
           boxColor = const Color(0xFF5AB639);
         else if (tipoL == 'capitulo') boxColor = const Color(0xFFFFB800);
 

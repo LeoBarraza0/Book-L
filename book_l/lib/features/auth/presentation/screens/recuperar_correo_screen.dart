@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/auth_recovery_header.dart';
 import '../widgets/auth_pro_tip.dart';
 import '../controller/auth_controller.dart';
@@ -83,7 +82,8 @@ class RecuperarCorreoScreen extends StatelessWidget {
                             color: const Color(0xFF94D684).withOpacity(0.2),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.mail_outline, color: const Color(0xFF94D684)),
+                          child: Icon(Icons.mail_outline,
+                              color: const Color(0xFF94D684)),
                         ),
                         const SizedBox(width: 15),
                         Expanded(

@@ -15,7 +15,6 @@ import 'features/leccion/presentation/screens/capitulo_screen.dart';
 import 'features/busqueda/presentation/screens/busqueda_screen.dart';
 import 'features/busqueda/presentation/screens/resultado_screen.dart';
 import 'features/ejercicio/presentation/screens/teorico_screen.dart';
-import 'features/calificacion/presentation/screens/resultado_screen.dart';
 import 'features/curso/presentation/screens/publicar_curso_screen.dart';
 import 'features/leccion/presentation/screens/publicar_leccion_screen.dart';
 
@@ -97,8 +96,8 @@ class BookLApp extends StatelessWidget {
               },
               initialRoute: !AppSession().onboardingCompleted
                   ? '/bienvenida'
-                  : (AppSession().estaLogueado 
-                      ? (AppSession().esAdministrador ? '/admin_Home' : '/home') 
+                  : (AppSession().estaLogueado
+                      ? (AppSession().esAdministrador ? '/admin_Home' : '/home')
                       : '/login'),
               routes: {
                 '/bienvenida': (context) => const BienvenidaScreen(),
@@ -115,21 +114,26 @@ class BookLApp extends StatelessWidget {
                 '/sugerencia': (context) => const SugerenciaScreen(),
                 '/chatbot': (context) => const ChatbotScreen(),
                 '/curso_detail': (context) => CursoDetailScreen(
-                      idCurso: ModalRoute.of(context)?.settings.arguments as int?,
+                      idCurso:
+                          ModalRoute.of(context)?.settings.arguments as int?,
                     ),
                 '/leccion_detail': (context) => LeccionDetailScreen(
-                      idLeccion: ModalRoute.of(context)?.settings.arguments as int?,
+                      idLeccion:
+                          ModalRoute.of(context)?.settings.arguments as int?,
                     ),
                 '/editar_capitulo': (context) => CapituloEditarScreen(
-                      idCapitulo: ModalRoute.of(context)?.settings.arguments as int?,
+                      idCapitulo:
+                          ModalRoute.of(context)?.settings.arguments as int?,
                     ),
                 '/capitulo_detail': (context) => CapituloScreen(
-                      idCapitulo: ModalRoute.of(context)?.settings.arguments as int?,
+                      idCapitulo:
+                          ModalRoute.of(context)?.settings.arguments as int?,
                     ),
                 '/busqueda': (context) => const BusquedaScreen(),
                 '/resultado': (context) => const ResultadoScreen(),
                 '/teorico': (context) => TeoricoScreen(
-                      ejercicio: ModalRoute.of(context)?.settings.arguments as Ejercicio,
+                      ejercicio: ModalRoute.of(context)?.settings.arguments
+                          as Ejercicio,
                     ),
                 // '/calificacion': (context) => const EjercicioResultadoScreen(),
                 '/publicar_curso': (context) => const PublicarCursoScreen(),
@@ -139,13 +143,15 @@ class BookLApp extends StatelessWidget {
                 '/admin_leccion': (context) => const AdminLeccionScreen(),
                 '/editar_curso': (context) => const CursoEditarScreen(),
                 '/editar_leccion': (context) => LeccionEditarScreen(
-                      idLeccion: ModalRoute.of(context)?.settings.arguments as int?,
+                      idLeccion:
+                          ModalRoute.of(context)?.settings.arguments as int?,
                     ),
                 '/users_admin': (context) => const UsuariosScreen(),
                 '/crear_capitulo': (context) => const CrearCapituloScreen(),
                 '/reportes': (context) => const ReportesScreen(),
                 '/reporte_detail': (context) {
-                  final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+                  final args = ModalRoute.of(context)?.settings.arguments
+                      as Map<String, dynamic>?;
                   return ReporteDetailScreen(
                     idLeccion: args?['id_leccion'] as int? ?? 0,
                     leccionNombre: args?['nombre'] as String? ?? 'Desconocido',

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/auth_recovery_header.dart';
 import '../widgets/auth_pro_tip.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
@@ -86,7 +85,6 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
                   CustomTextField(
                     controller: _newPassController,
                     label: 'Nueva contraseña:',
@@ -98,19 +96,18 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
                         color: const Color(0xFF828282),
                         size: 20,
                       ),
-                      onPressed: () => setState(() => _obscureNew = !_obscureNew),
+                      onPressed: () =>
+                          setState(() => _obscureNew = !_obscureNew),
                     ),
                   ),
                   const SizedBox(height: 15),
                   _buildStrengthIndicator(),
-                  
                   const SizedBox(height: 25),
                   _buildLabel('Requisitos mínimos:'),
                   _buildCheckItem('Mínimo 8 caracteres', _hasEightChars),
                   _buildCheckItem('Al menos una mayúscula', _hasUppercase),
                   _buildCheckItem(
                       'Un carácter especial (!@#)', _hasSpecialChar),
-                      
                   const SizedBox(height: 30),
                   CustomTextField(
                     controller: _confirmPassController,
@@ -119,16 +116,18 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
                     obscureText: _obscureConfirm,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                        _obscureConfirm
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                         color: const Color(0xFF828282),
                         size: 20,
                       ),
-                      onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                      onPressed: () =>
+                          setState(() => _obscureConfirm = !_obscureConfirm),
                     ),
                   ),
                   const SizedBox(height: 10),
                   _buildCheckItem('Las contraseñas coinciden', _passwordsMatch),
-                  
                   const SizedBox(height: 45),
                   Center(
                     child: SizedBox(
@@ -192,8 +191,6 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
       ),
     );
   }
-
-
 
   Widget _buildCheckItem(String label, bool isChecked) {
     return Padding(

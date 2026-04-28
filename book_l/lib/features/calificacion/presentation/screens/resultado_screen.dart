@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:book_l/features/leccion/presentation/screens/leccion_detail_screen.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../widgets/stars_rating_widget.dart';
 
@@ -26,7 +25,6 @@ class EjercicioResultadoScreen extends StatefulWidget {
 }
 
 class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -103,7 +101,10 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
                                     width: 140,
                                     height: 140,
                                     child: CircularProgressIndicator(
-                                      value: widget.totalPreguntas > 0 ? widget.respuestasCorrectas / widget.totalPreguntas : 0,
+                                      value: widget.totalPreguntas > 0
+                                          ? widget.respuestasCorrectas /
+                                              widget.totalPreguntas
+                                          : 0,
                                       strokeWidth: 12,
                                       backgroundColor: const Color(
                                         0xFFFF4858,
@@ -221,14 +222,21 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
                             final session = AppSession();
                             final exerciseId = widget.ejercicio.idEjercicio;
                             final capituloId = widget.ejercicio.idCapitulo;
-                            
+
                             // Guardamos que se completó este ejercicio
-                            session.marcarEjercicioCompletado(exerciseId, capituloId);
+                            session.marcarEjercicioCompletado(
+                                exerciseId, capituloId);
 
                             // Verificar si todos los ejercicios del capítulo están completados
-                            final chapterExercises = BooklService().ejercicios.where((e) => e.idCapitulo == capituloId).map((e) => e.idEjercicio);
-                            if (chapterExercises.every((id) => session.completedEjercicios.value.contains(id))) {
-                              session.marcarCapituloCompletado(capituloId, true);
+                            final chapterExercises = BooklService()
+                                .ejercicios
+                                .where((e) => e.idCapitulo == capituloId)
+                                .map((e) => e.idEjercicio);
+                            if (chapterExercises.every((id) => session
+                                .completedEjercicios.value
+                                .contains(id))) {
+                              session.marcarCapituloCompletado(
+                                  capituloId, true);
                             }
 
                             // Volvemos a la pantalla de Capítulo
@@ -280,7 +288,6 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
               ),
             ],
           ),
-
           Positioned(
             bottom: 24,
             left: 20,

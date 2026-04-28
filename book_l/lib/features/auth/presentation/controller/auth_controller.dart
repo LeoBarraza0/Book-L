@@ -40,7 +40,7 @@ class AuthController extends ChangeNotifier {
 
   void setRecoveryData(String email, String phone) {
     recoveryEmail = email;
-    if (phone != null && phone.isNotEmpty) {
+    if (phone.isNotEmpty) {
       recoveryPhone = phone.startsWith('+') ? phone : '+57$phone';
     } else {
       recoveryPhone = null;

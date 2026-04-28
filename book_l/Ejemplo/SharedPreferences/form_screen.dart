@@ -4,7 +4,7 @@ import 'preferences_service.dart';
 class FormScreen extends StatefulWidget {
   final VoidCallback refreshApp;
 
-  const FormScreen({required this.refreshApp});
+  const FormScreen({super.key, required this.refreshApp});
 
   @override
   State<FormScreen> createState() => _FormScreenState();

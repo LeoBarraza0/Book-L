@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,8 +9,8 @@ class ResultadoBusqueda {
   final String titulo;
   final String? subtitulo;
   final String? imagenUrl;
-  final String? username;   // para Autores: su @username
-  final String? avatarUrl;  // para Autores: URL del avatar
+  final String? username; // para Autores: su @username
+  final String? avatarUrl; // para Autores: URL del avatar
   final String calificacion;
   final int inscripciones;
   final double progreso;
@@ -35,20 +34,35 @@ class ResultadoBusqueda {
 // ── Normalización: elimina tildes y pasa a minúsculas ────────────────────────
 String _normalizar(String texto) {
   const Map<String, String> reemplazos = {
-    'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
-    'Á': 'a', 'É': 'e', 'Í': 'i', 'Ó': 'o', 'Ú': 'u',
-    'ñ': 'n', 'Ñ': 'n', 'ü': 'u', 'Ü': 'u',
+    'á': 'a',
+    'é': 'e',
+    'í': 'i',
+    'ó': 'o',
+    'ú': 'u',
+    'Á': 'a',
+    'É': 'e',
+    'Í': 'i',
+    'Ó': 'o',
+    'Ú': 'u',
+    'ñ': 'n',
+    'Ñ': 'n',
+    'ü': 'u',
+    'Ü': 'u',
   };
   return texto.toLowerCase().replaceAllMapped(
-    RegExp('[áéíóúÁÉÍÓÚñÑüÜ]'),
-    (m) => reemplazos[m.group(0)!] ?? m.group(0)!,
-  );
+        RegExp('[áéíóúÁÉÍÓÚñÑüÜ]'),
+        (m) => reemplazos[m.group(0)!] ?? m.group(0)!,
+      );
 }
 
 // ── Paleta de colores para tarjetas ─────────────────────────────────────────
 const List<Color> _paleta = [
-  Color(0xFF9DE596), Color(0xFF96D4DB), Color(0xFF888BC6),
-  Color(0xFFFA8E9E), Color(0xFFF6CE74), Color(0xFFB5D3F2),
+  Color(0xFF9DE596),
+  Color(0xFF96D4DB),
+  Color(0xFF888BC6),
+  Color(0xFFFA8E9E),
+  Color(0xFFF6CE74),
+  Color(0xFFB5D3F2),
 ];
 Color _colorPorId(int id) => _paleta[id % _paleta.length];
 
@@ -96,7 +110,8 @@ class BusquedaRepository {
 
     // ── Lecciones ────────────────────────────────────────────────────────────
     if (filtro == 'Todos' || filtro == 'Lecciones') {
-      final lecciones = List<Map<String, dynamic>>.from(data['lecciones'] ?? []);
+      final lecciones =
+          List<Map<String, dynamic>>.from(data['lecciones'] ?? []);
       for (final l in lecciones) {
         if (_normalizar(l['nombre'] as String).contains(q)) {
           final contenido = l['contenido'] as List<dynamic>?;
@@ -192,7 +207,8 @@ class BusquedaRepository {
   // ── Helpers para enriquecer resultados ────────────────────────────────────
   String? _autorDeCurso(Map<String, dynamic> data, int idUsuario) {
     final usuarios = List<Map<String, dynamic>>.from(data['usuarios'] ?? []);
-    final autor = usuarios.where((u) => u['id_usuario'] == idUsuario).firstOrNull;
+    final autor =
+        usuarios.where((u) => u['id_usuario'] == idUsuario).firstOrNull;
     return autor?['nombre_completo'] as String?;
   }
 
@@ -201,7 +217,8 @@ class BusquedaRepository {
     final cursos = List<Map<String, dynamic>>.from(data['cursos'] ?? []);
     final link = rel.where((r) => r['id_leccion'] == idLeccion).firstOrNull;
     if (link == null) return null;
-    final curso = cursos.where((c) => c['id_curso'] == link['id_curso']).firstOrNull;
+    final curso =
+        cursos.where((c) => c['id_curso'] == link['id_curso']).firstOrNull;
     return curso?['nombre'] as String?;
   }
 
@@ -211,7 +228,8 @@ class BusquedaRepository {
     final curso = cursos.where((c) => c['id_curso'] == idCurso).firstOrNull;
     if (curso == null) return 0;
     final idAutor = curso['id_usuario_fk'] as int;
-    final seguidores = List<Map<String, dynamic>>.from(data['seguidores'] ?? []);
+    final seguidores =
+        List<Map<String, dynamic>>.from(data['seguidores'] ?? []);
     return seguidores.where((s) => s['id_seguido'] == idAutor).length;
   }
 }

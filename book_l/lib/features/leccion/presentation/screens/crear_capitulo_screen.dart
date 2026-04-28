@@ -154,8 +154,7 @@ class _CrearCapituloScreenState extends State<CrearCapituloScreen>
                       ...BooklService()
                           .ejercicios
                           .where((e) => e.idCapitulo == _idCapituloGenerado)
-                          .map((ex) => _buildEjercicioItem(ex))
-                          .toList(),
+                          .map((ex) => _buildEjercicioItem(ex)),
                       const SizedBox(height: 8),
                       Center(
                         child: AgregarSeccionButton(

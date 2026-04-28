@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../../shared/widgets/reporte_modal.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../discusion/presentation/controller/discusion_controller.dart';
@@ -279,6 +280,54 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                       ),
                       const SizedBox(width: 10),
                       _buildCircularIconButton(Icons.share, () {}),
+                      // ── Botón Reportar (solo vista usuario, no dueño) ──
+                      ListenableBuilder(
+                        listenable: _ctrl,
+                        builder: (context, _) {
+                          final leccion = _ctrl.state.selected;
+                          final isOwner = leccion != null && leccion.idUsuarioFk == AppSession().usuarioId;
+                          if (isOwner || leccion == null) return const SizedBox.shrink();
+                          return Row(
+                            children: [
+                              const SizedBox(width: 10),
+                              _buildCircularIconButton(
+                                Icons.flag_rounded,
+                                () async {
+                                  final result = await ReporteModal.show(
+                                    context,
+                                    entidadTipo: 'Lección',
+                                    entidadId: leccion.idLeccion,
+                                    entidadNombre: leccion.nombre,
+                                  );
+                                  if (result == true && mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: const Row(
+                                          children: [
+                                            Icon(Icons.check_circle, color: Colors.white),
+                                            SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                '¡Reporte enviado exitosamente!',
+                                                style: TextStyle(fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        backgroundColor: const Color(0xFF4DC130),
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                        margin: const EdgeInsets.all(20),
+                                      ),
+                                    );
+                                  }
+                                },
+                                color: const Color(0xFFFF606F).withOpacity(0.9),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ],

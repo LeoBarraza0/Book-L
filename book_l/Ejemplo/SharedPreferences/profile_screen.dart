@@ -4,6 +4,8 @@ import 'preferences_service.dart';
 class ProfileScreen extends StatelessWidget {
   final prefs = PreferencesService();
 
+  ProfileScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     String name = prefs.getName();

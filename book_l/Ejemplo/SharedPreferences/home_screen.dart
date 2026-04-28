@@ -4,7 +4,7 @@ import 'preferences_service.dart';
 class HomeScreen extends StatelessWidget {
   final VoidCallback refreshApp;
 
-  const HomeScreen({required this.refreshApp});
+  const HomeScreen({super.key, required this.refreshApp});
 
   @override
   Widget build(BuildContext context) {

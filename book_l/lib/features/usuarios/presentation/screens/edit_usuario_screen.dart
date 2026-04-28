@@ -487,7 +487,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                             style: const TextStyle(fontSize: 12, color: Colors.grey),
                           ),
                           value: _activo,
-                          activeColor: const Color(0xFF44BD32),
+                          activeThumbColor: const Color(0xFF44BD32),
                           onChanged: (val) {
                             setState(() {
                               _activo = val;
@@ -537,7 +537,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                               Navigator.pop(context, updatedUser);
                             },
                             borderRadius: BorderRadius.circular(24.50),
-                            child: Container(
+                            child: SizedBox(
                               width: 156,
                               height: 49,
                               child: const Center(
