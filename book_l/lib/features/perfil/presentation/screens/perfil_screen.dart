@@ -38,15 +38,21 @@ class _PerfilScreenState extends State<PerfilScreen>
     final session = AppSession();
     if (widget.idUsuario == null || widget.idUsuario == session.usuarioId) {
       _isOwnProfile = true;
-      // Convert current session to a temporary Usuario object for UI consistency
-      _user = Usuario(
-        idUsuario: session.usuarioId ?? 0,
-        nombreCompleto: session.nombreCompleto ?? 'Usuario',
-        correo: '',
-        rol: session.rol ?? 'Estudiante',
-        programa: session.programa,
-        activo: true,
-      );
+      try {
+        _user = BooklService().usuarios.firstWhere(
+              (u) => u.idUsuario == session.usuarioId,
+            );
+      } catch (e) {
+        // Convert current session to a temporary Usuario object for UI consistency
+        _user = Usuario(
+          idUsuario: session.usuarioId ?? 0,
+          nombreCompleto: session.nombreCompleto ?? 'Usuario',
+          correo: '',
+          rol: session.rol ?? 'Estudiante',
+          programa: session.programa,
+          activo: true,
+        );
+      }
     } else {
       _isOwnProfile = false;
       try {
@@ -248,9 +254,9 @@ class _PerfilScreenState extends State<PerfilScreen>
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      _isOwnProfile
-                                          ? '"Natty my love, Sharay my universe ✨ "\npsdt. Freddy mala paga'
-                                          : 'Bienvenido a mi perfil académico en Book-L.',
+                                      _user?.descripcion?.isNotEmpty == true
+                                          ? _user!.descripcion!
+                                          : 'Aún no hay una descripción añadida.',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey[600],
@@ -350,7 +356,11 @@ class _PerfilScreenState extends State<PerfilScreen>
                                 MaterialPageRoute(
                                   builder: (context) => const EditarPerfil(),
                                 ),
-                              );
+                              ).then((_) {
+                                setState(() {
+                                  _loadUserData();
+                                });
+                              });
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor:

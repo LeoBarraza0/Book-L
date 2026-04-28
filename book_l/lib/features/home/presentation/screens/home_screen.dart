@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/content_cards.dart';
 import '../../../../core/services/bookl_service.dart';
+import '../../../../core/storage/local_storage.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,9 +45,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '¡Bienvenido, Emanuel!',
-                        style: TextStyle(
+                      Text(
+                        '¡Bienvenido, ${AppSession().nombreCompleto?.split(' ').first ?? 'Usuario'}!',
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
