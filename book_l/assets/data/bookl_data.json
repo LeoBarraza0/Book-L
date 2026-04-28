@@ -1441,5 +1441,32 @@
         "Disculpa, no tengo una respuesta para eso todavía 😊. Pero puedo ayudarte con dudas sobre la aplicación, cursos, lecciones, ejercicios y mucho más. ¡Pregúntame! 🚀"
       ]
     }
+  ],
+  "rachas": [
+    {
+      "id_usuario": 1,
+      "dias_actividad": ["2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27"],
+      "racha_actual": 7
+    },
+    {
+      "id_usuario": 2,
+      "dias_actividad": ["2026-04-26", "2026-04-27"],
+      "racha_actual": 2
+    },
+    {
+      "id_usuario": 3,
+      "dias_actividad": ["2026-04-25", "2026-04-26", "2026-04-27"],
+      "racha_actual": 3
+    },
+    {
+      "id_usuario": 4,
+      "dias_actividad": ["2026-04-23", "2026-04-24", "2026-04-25"],
+      "racha_actual": 3
+    },
+    {
+      "id_usuario": 6,
+      "dias_actividad": ["2026-04-25", "2026-04-26", "2026-04-27"],
+      "racha_actual": 3
+    }
   ]
 }

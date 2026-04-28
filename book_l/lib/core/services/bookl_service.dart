@@ -98,6 +98,9 @@ class BooklService extends ChangeNotifier {
   List<Map<String, dynamic>> guardados = [];
   List<Map<String, dynamic>> guardadosCursos = [];
 
+  // Rachas (streak de actividad diaria por usuario)
+  List<Map<String, dynamic>> rachas = [];
+
   // ── Inicialización (llamar una sola vez desde main.dart) ───────────────────
   Future<void> init() async {
     if (_loaded) return;
@@ -315,6 +318,14 @@ class BooklService extends ChangeNotifier {
     if (data.containsKey('guardados_cursos')) {
       guardadosCursos = List<Map<String, dynamic>>.from(data['guardados_cursos']);
     }
+    if (data.containsKey('rachas')) {
+      rachas = (data['rachas'] as List).map((e) {
+        final map = Map<String, dynamic>.from(e as Map);
+        // Asegurar que dias_actividad sea List<String>
+        map['dias_actividad'] = List<String>.from(map['dias_actividad'] ?? []);
+        return map;
+      }).toList();
+    }
 
     // ── Semilla: cargar progreso inicial en AppSession ─────────────────────
     _seedAppSession();
@@ -412,12 +423,77 @@ class BooklService extends ChangeNotifier {
         'respuestas_usuario': respuestasUsuario,
         'guardados': guardados,
         'guardados_cursos': guardadosCursos,
+        'rachas': rachas,
       };
       await prefs.setString(_storageKey, json.encode(fullData));
       notifyListeners();
     } catch (e) {
       if (kDebugMode) print("Error saving central data: $e");
     }
+  }
+
+  // ── Racha (Streak) ──────────────────────────────────────────────────────────
+
+  /// Obtiene la racha de un usuario. Retorna null si no existe.
+  Map<String, dynamic>? getRacha(int idUsuario) {
+    try {
+      return rachas.firstWhere((r) => r['id_usuario'] == idUsuario);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Registra actividad diaria para un usuario.
+  /// Si hoy ya fue registrado, no hace nada.
+  /// Si no, agrega hoy a la lista y recalcula la racha consecutiva.
+  void registrarActividad(int idUsuario) {
+    if (idUsuario == 0) return;
+
+    final hoy = DateTime.now();
+    final hoyStr = '${hoy.year}-${hoy.month.toString().padLeft(2, '0')}-${hoy.day.toString().padLeft(2, '0')}';
+
+    // Buscar la racha existente o crear una nueva
+    var rachaIdx = rachas.indexWhere((r) => r['id_usuario'] == idUsuario);
+
+    if (rachaIdx == -1) {
+      rachas.add({
+        'id_usuario': idUsuario,
+        'dias_actividad': <String>[hoyStr],
+        'racha_actual': 1,
+      });
+    } else {
+      final dias = List<String>.from(rachas[rachaIdx]['dias_actividad'] ?? []);
+
+      // Si hoy ya está registrado, no hacer nada
+      if (dias.contains(hoyStr)) return;
+
+      dias.add(hoyStr);
+      dias.sort(); // Mantener ordenado
+
+      // Recalcular racha consecutiva (días consecutivos hacia atrás desde hoy)
+      int racha = 1;
+      DateTime current = hoy;
+      for (int i = dias.length - 2; i >= 0; i--) {
+        final diaAnterior = DateTime.parse(dias[i]);
+        final esperado = current.subtract(const Duration(days: 1));
+        if (diaAnterior.year == esperado.year &&
+            diaAnterior.month == esperado.month &&
+            diaAnterior.day == esperado.day) {
+          racha++;
+          current = diaAnterior;
+        } else {
+          break;
+        }
+      }
+
+      rachas[rachaIdx] = {
+        'id_usuario': idUsuario,
+        'dias_actividad': dias,
+        'racha_actual': racha,
+      };
+    }
+
+    _save();
   }
 
   // ── Operaciones de Escritura ───────────────────────────────────────────────
@@ -451,6 +527,7 @@ class BooklService extends ChangeNotifier {
 
   void addCurso(Curso curso) {
     cursos.add(curso);
+    registrarActividad(AppSession().usuarioId ?? 0);
     _save();
   }
 
@@ -462,6 +539,7 @@ class BooklService extends ChangeNotifier {
         'id_curso': idCurso,
       });
     }
+    registrarActividad(AppSession().usuarioId ?? 0);
     _save();
   }
 

@@ -4,6 +4,7 @@ import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/content_cards.dart';
 import '../../../../core/services/bookl_service.dart';
 import '../../../../core/storage/local_storage.dart';
+import 'widgets/racha_buky_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -65,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 24),
 
                       // Racha Buky
-                      _buildRachaCard(),
+                      const RachaBukyWidget(),
                       const SizedBox(height: 24),
 
                       // Lecciones y Cursos desde el servicio JSON (Mixto)
@@ -194,104 +195,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       border: Border.all(color: Colors.white, width: 2),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Tarjeta de "Racha Buky"
-  // ─────────────────────────────────────────────────────────────────────────
-  Widget _buildRachaCard() {
-    final dias = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-    // Marcamos los primeros 6 días como logrados (por ejemplo)
-    final logrados = [true, true, true, true, true, true, false];
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFD9D9D9),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          // Avatar Buky (Búho verde)
-          Container(
-            width: 80,
-            height: 80,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFF96D786),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Image.asset(
-                  'assets/images/racha.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.pets, color: Colors.green, size: 40),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-
-          // Textos y Racha
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '¡Saluda a tu Racha Buky!',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  '¡Completa una lección cada día para que tu racha crezca como tu conocimiento!',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF555555),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Círculos de días
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(7, (index) {
-                    return Column(
-                      children: [
-                        Text(
-                          dias[index],
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF5A5757),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: logrados[index]
-                                ? const Color(0xFF96D786)
-                                : const Color(0xFFB0B0B0),
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
                 ),
               ],
             ),

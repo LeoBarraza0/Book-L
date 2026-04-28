@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/bookl_service.dart';
 
 // Singleton de sesión activa — ÚNICA clase del proyecto que usa SharedPreferences.
 //
@@ -180,6 +181,8 @@ class AppSession {
     final current = Set<int>.from(completedCapitulos.value);
     if (completado) {
       current.add(idCapitulo);
+      // Registrar actividad para la racha
+      BooklService().registrarActividad(usuarioId ?? 0);
     } else {
       current.remove(idCapitulo);
     }
@@ -194,6 +197,8 @@ class AppSession {
     completedEjercicios.value = current;
     _prefs.setStringList(
         _kCompletedEjercicios, current.map((e) => e.toString()).toList());
+    // Registrar actividad para la racha
+    BooklService().registrarActividad(usuarioId ?? 0);
   }
 
   // ── Cerrar sesión ──────────────────────────────────────────────────────────
