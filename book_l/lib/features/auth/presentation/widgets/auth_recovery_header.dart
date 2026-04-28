@@ -31,8 +31,6 @@ class AuthRecoveryHeader extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 10),
-
-            // Top Row: Botón Volver y Logo
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -54,9 +52,9 @@ class AuthRecoveryHeader extends StatelessWidget {
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
-                  Image.asset(
-                    'assets/images/Book-L.png',
-                    height: 35,
+                  SvgPicture.asset(
+                    'assets/images/logo.svg',
+                    height: 60,
                     fit: BoxFit.contain,
                   ),
                 ],
@@ -64,10 +62,10 @@ class AuthRecoveryHeader extends StatelessWidget {
             ),
 
             const SizedBox(height: 20),
-            
+
             // Icono Central
-            SvgPicture.asset(
-              'assets/images/padlock_icon.svg',
+            Image.asset(
+              'assets/images/padlock_icon.png',
               height: 90,
               width: 90,
               fit: BoxFit.contain,

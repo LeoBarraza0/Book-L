@@ -75,8 +75,8 @@ class _BienvenidaScreenState extends State<BienvenidaScreen> {
                             SizedBox(
                               height: MediaQuery.of(context).size.height * 0.35,
                               width: MediaQuery.of(context).size.width * 0.8,
-                              child: SvgPicture.asset(
-                                'assets/images/picstart_1.svg',
+                              child: Image.asset(
+                                'assets/images/picstart_1.png',
                                 fit: BoxFit.contain,
                               ),
                             ),
@@ -117,8 +117,8 @@ class _BienvenidaScreenState extends State<BienvenidaScreen> {
                             SizedBox(
                               height: MediaQuery.of(context).size.height * 0.35,
                               width: MediaQuery.of(context).size.width * 0.8,
-                              child: SvgPicture.asset(
-                                'assets/images/picstart_2.svg',
+                              child: Image.asset(
+                                'assets/images/picstart_2.png',
                                 fit: BoxFit.contain,
                               ),
                             ),

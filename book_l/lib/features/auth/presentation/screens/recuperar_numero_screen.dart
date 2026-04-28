@@ -29,7 +29,7 @@ class RecuperarNumeroScreen extends StatelessWidget {
             const AuthRecoveryHeader(
               title: 'Recuperar contraseña',
             ),
-            
+
             // Content
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -60,7 +60,8 @@ class RecuperarNumeroScreen extends StatelessWidget {
                   const SizedBox(height: 25),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 20, horizontal: 15),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
@@ -78,17 +79,10 @@ class RecuperarNumeroScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF4DC130).withOpacity(0.1),
+                            color: const Color(0xFF94D684).withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: SvgPicture.asset(
-                            'assets/images/padlock_icon.svg',
-                            height: 24,
-                            colorFilter: const ColorFilter.mode(
-                              Color(0xFF4DC130),
-                              BlendMode.srcIn,
-                            ),
-                          ),
+                          child: Icon(Icons.phone_android, color: Colors.black),
                         ),
                         const SizedBox(width: 15),
                         Expanded(
@@ -122,7 +116,8 @@ class RecuperarNumeroScreen extends StatelessWidget {
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(e.toString().replaceAll('Exception: ', '')),
+                                content: Text(
+                                    e.toString().replaceAll('Exception: ', '')),
                                 backgroundColor: const Color(0xFFFF5252),
                               ),
                             );
@@ -162,7 +157,8 @@ class RecuperarNumeroScreen extends StatelessWidget {
                           ),
                         ),
                         TextButton(
-                          onPressed: () => Navigator.pushReplacementNamed(context, '/recuperar_correo'),
+                          onPressed: () => Navigator.pushReplacementNamed(
+                              context, '/recuperar_correo'),
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                           ),
