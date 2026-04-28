@@ -22,7 +22,7 @@ class ReportesScreen extends StatefulWidget {
 class _ReportesScreenState extends State<ReportesScreen> {
   final TextEditingController _searchController = TextEditingController();
   late final ReportesController _controller;
-  
+
   final List<String> _filters = ['Todos', 'Cursos', 'Lecciones', 'Capítulos'];
 
   @override
@@ -41,102 +41,137 @@ class _ReportesScreenState extends State<ReportesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return Scaffold(
-      extendBody: true,
-      backgroundColor: const Color(0xFFECEBEB),
-      body: CustomScrollView(
-        slivers: [
-          // Header
-          SliverToBoxAdapter(
-            child: _buildHeader(context),
-          ),
-          // Content
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const SizedBox(height: 20),
-                // Search Bar
-                _buildSearchBar(),
-                const SizedBox(height: 16),
-                // Filters
-                _buildFilters(),
-                const SizedBox(height: 24),
-                // Report List
-                ListenableBuilder(
-                  listenable: _controller,
-                  builder: (context, _) => _buildReportList(),
+      backgroundColor: const Color(0xFFFFF9E1), // Crema claro
+      body: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
                 ),
-                const SizedBox(height: 120), // Espacio para el navbar flotante
-              ]),
-            ),
+                child: SizedBox(
+                  height: 200,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Image.asset(
+                          'assets/images/red_bg.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: topPadding + 8,
+                        left: 20,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Icono campana (esquina superior derecha)
+                      Positioned(
+                        top: topPadding + 8,
+                        right: 20,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.notifications_none,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                      // Título "Reportes"
+                      const Positioned(
+                        left: 0,
+                        right: 0,
+                        top: 80,
+                        child: Center(
+                          child: Text(
+                            'Reportes',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 40,
+                              fontFamily: 'Baloo',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ── CONTENIDO ──────────────
+              Expanded(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildSearchBar(),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildFilters(),
+                    ),
+                    const SizedBox(height: 24),
+                    Expanded(
+                      child: ListenableBuilder(
+                        listenable: _controller,
+                        builder: (context, _) => SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            children: [
+                              _buildReportList(),
+                              const SizedBox(
+                                  height:
+                                      120), // Espacio para el navbar flotante
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // ── BOTTOM NAV BAR ─────────────────────────────────────────────
+          const Positioned(
+            left: 20,
+            right: 20,
+            bottom: 24,
+            child: SharedBottomNavBar(selectedIndex: 3, role: 'admin'),
           ),
         ],
-      ),
-      bottomNavigationBar: const Padding(
-        padding: EdgeInsets.fromLTRB(16, 0, 16, 20),
-        child: SharedBottomNavBar(selectedIndex: 3, role: 'admin'),
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    return Transform.scale(
-      scaleX: 1.02, // Evita lineas blancas laterales de antialiasing
-      child: Container(
-        width: screenWidth,
-        height: 230,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/red_bg.png'),
-            fit: BoxFit.cover,
-            alignment: Alignment.center,
-          ),
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(35),
-            bottomRight: Radius.circular(35),
-          ),
-        ),
-        child: Stack(
-          children: [
-            // Back Button
-            Positioned(
-              top: 50,
-              left: 20,
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_back_rounded,
-                      color: Colors.white, size: 30),
-                ),
-              ),
-            ),
-            // Title
-            const Positioned(
-              bottom: 40,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Text(
-                  'Reportes',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 48,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -188,58 +223,59 @@ class _ReportesScreenState extends State<ReportesScreen> {
 
   Widget _buildFilters() {
     return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, _) {
-        return SizedBox(
-          height: 40,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _filters.length,
-            itemBuilder: (context, index) {
-              final filter = _filters[index];
-              final isSelected = _controller.selectedFilter == filter;
-              return GestureDetector(
-                onTap: () => _controller.onFilterChanged(filter),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.only(right: 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFF5AB639)
-                        : const Color(0xFFD9D9D9),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    filter,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+        listenable: _controller,
+        builder: (context, _) {
+          return SizedBox(
+            height: 40,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _filters.length,
+              itemBuilder: (context, index) {
+                final filter = _filters[index];
+                final isSelected = _controller.selectedFilter == filter;
+                return GestureDetector(
+                  onTap: () => _controller.onFilterChanged(filter),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.only(right: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF5AB639)
+                          : const Color(0xFFD9D9D9),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      filter,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          ),
-        );
-      }
-    );
+                );
+              },
+            ),
+          );
+        });
   }
 
   Widget _buildReportList() {
     if (_controller.isLoading) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 50.0),
-        child: Center(child: CircularProgressIndicator(color: Color(0xFF5AB639))),
+        child:
+            Center(child: CircularProgressIndicator(color: Color(0xFF5AB639))),
       );
     }
 
     if (_controller.errorMessage.isNotEmpty) {
       return Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Text('Error: ${_controller.errorMessage}', style: const TextStyle(color: Colors.red)),
+        child: Text('Error: ${_controller.errorMessage}',
+            style: const TextStyle(color: Colors.red)),
       );
     }
 
@@ -248,7 +284,8 @@ class _ReportesScreenState extends State<ReportesScreen> {
     if (reportesAgrupados.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(20.0),
-        child: Text('No se encontraron reportes con estos criterios.', style: TextStyle(color: Colors.black54)),
+        child: Text('No se encontraron reportes con estos criterios.',
+            style: TextStyle(color: Colors.black54)),
       );
     }
 
@@ -256,8 +293,10 @@ class _ReportesScreenState extends State<ReportesScreen> {
       children: reportesAgrupados.map((item) {
         Color boxColor = const Color(0xFFD9D9D9);
         final tipoL = item.tipoEntidad.toLowerCase().replaceAll('ó', 'o');
-        if (tipoL == 'curso') boxColor = const Color(0xFFFF606F);
-        else if (tipoL == 'leccion') boxColor = const Color(0xFF5AB639);
+        if (tipoL == 'curso')
+          boxColor = const Color(0xFFFF606F);
+        else if (tipoL == 'leccion')
+          boxColor = const Color(0xFF5AB639);
         else if (tipoL == 'capitulo') boxColor = const Color(0xFFFFB800);
 
         return ReporteCard(
@@ -269,7 +308,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
           boxColor: boxColor,
           onTap: () {
             Navigator.pushNamed(
-              context, 
+              context,
               '/reporte_detail',
               arguments: {
                 'id_leccion': item.idEntidad,

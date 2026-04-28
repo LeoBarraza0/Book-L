@@ -18,9 +18,9 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
   final BusquedaController _ctrl = BusquedaController();
 
   // ── Colores del Figma ─────────────────────────────────────────────────────
-  static const _bgColor     = Color(0xFFECEBEB);
+  static const _bgColor = Color(0xFFECEBEB);
   static const _headerGreen = Color(0xFF4DC130);
-  static const _cardBg      = Color(0xFFD9D9D9);
+  static const _cardBg = Color(0xFFD9D9D9);
 
   @override
   void initState() {
@@ -59,7 +59,7 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
           context,
           '/usuario_perfil',
           arguments: <String, String>{
-            'name':     item.titulo,
+            'name': item.titulo,
             'username': item.username ?? item.titulo,
             'imageUrl': item.avatarUrl ?? '',
           },
@@ -133,9 +133,11 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                         context, '/notificaciones'),
                   ),
                   Positioned(
-                    top: 4, right: 4,
+                    top: 4,
+                    right: 4,
                     child: Container(
-                      width: 11, height: 11,
+                      width: 11,
+                      height: 11,
                       decoration: BoxDecoration(
                         color: const Color(0xFFFF949F),
                         shape: BoxShape.circle,
@@ -165,7 +167,7 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                     cursorColor: _headerGreen,
                     textInputAction: TextInputAction.search,
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: Color(0xFF333333),
                     ),
@@ -174,8 +176,11 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                       hintText: 'Buscar cursos, lecciones...',
                       hintStyle: const TextStyle(
                           color: Color(0xFFAAAAAA), fontSize: 13),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 9),
+                      contentPadding: const EdgeInsets.only(
+                        left: 20,
+                        top: 14,
+                        bottom: 14,
+                      ),
                       isDense: true,
                       suffixIcon: _searchController.text.isNotEmpty
                           ? GestureDetector(
@@ -207,7 +212,8 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                     color: const Color(0xFF3DA520),
                     borderRadius: BorderRadius.circular(50),
                   ),
-                  child: const Icon(Icons.search, color: Colors.white, size: 20),
+                  child:
+                      const Icon(Icons.search, color: Colors.white, size: 20),
                 ),
               ),
             ],
@@ -225,7 +231,8 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 42, height: 42,
+        width: 42,
+        height: 42,
         decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
         child: Icon(icon, color: Colors.white, size: 22),
       ),
@@ -325,8 +332,8 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
           children: [
             // ── Imagen izquierda ─────────────────────────────────────────
             ClipRRect(
-              borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.horizontal(left: Radius.circular(12)),
               child: SizedBox(
                 width: 82,
                 child: item.imagenUrl != null
@@ -450,7 +457,7 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
   // ── Botón favorito — mismo patrón que content_cards.dart ────────────────
   Widget _buildFavoriteButton(ResultadoBusqueda item) {
     final isLeccion = item.tipo == 'Lección';
-    final isCurso   = item.tipo == 'Curso';
+    final isCurso = item.tipo == 'Curso';
 
     if (!isLeccion && !isCurso) {
       // Para Autores: solo muestra el ícono sin toggle
@@ -490,8 +497,8 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
   Widget _buildBadge(ResultadoBusqueda item) {
     final (color, label) = switch (item.tipo) {
       'Lección' => (const Color(0xFF3DA520), 'Lección'),
-      'Autor'   => (const Color(0xFF5A5A8A), 'Autor'),   // morado oscuro
-      _         => (const Color(0xFF3DA520), 'Curso'),
+      'Autor' => (const Color(0xFF5A5A8A), 'Autor'), // morado oscuro
+      _ => (const Color(0xFF3DA520), 'Curso'),
     };
 
     return Container(

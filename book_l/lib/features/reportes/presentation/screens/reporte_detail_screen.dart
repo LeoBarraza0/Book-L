@@ -47,103 +47,130 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return Scaffold(
-      extendBody: true,
-      backgroundColor: const Color(0xFFECEBEB),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: _buildHeader(context),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const SizedBox(height: 20),
-                _buildCourseInfo(),
-                const SizedBox(height: 20),
-                _buildStatsCards(),
-                const SizedBox(height: 24),
-                _buildFilters(),
-                const SizedBox(height: 24),
-                ListenableBuilder(
-                  listenable: _controller,
-                  builder: (context, _) => _buildCommentsList(),
+      backgroundColor: const Color(0xFFFFF9E1), // Crema claro
+      body: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
                 ),
-                const SizedBox(height: 120),
-              ]),
-            ),
+                child: SizedBox(
+                  height: 200,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Image.asset(
+                          'assets/images/red_bg.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: topPadding + 8,
+                        left: 20,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: topPadding + 8,
+                        right: 20,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.notifications_none,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        top: 80,
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Text(
+                              widget.tipo,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 40,
+                                fontFamily: 'Baloo',
+                                fontWeight: FontWeight.w400,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ── CONTENIDO ──────────────
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 20),
+                      _buildCourseInfo(),
+                      const SizedBox(height: 20),
+                      _buildStatsCards(),
+                      const SizedBox(height: 24),
+                      _buildFilters(),
+                      const SizedBox(height: 24),
+                      ListenableBuilder(
+                        listenable: _controller,
+                        builder: (context, _) => _buildCommentsList(),
+                      ),
+                      const SizedBox(height: 120),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // ── BOTTOM NAV BAR ─────────────────────────────────────────────
+          const Positioned(
+            left: 20,
+            right: 20,
+            bottom: 24,
+            child: SharedBottomNavBar(selectedIndex: 3),
           ),
         ],
-      ),
-      bottomNavigationBar: const Padding(
-        padding: EdgeInsets.fromLTRB(16, 0, 16, 20),
-        child: SharedBottomNavBar(selectedIndex: 3),
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    // Para asegurar que cubra todo, usamos un Transform.scale ligero o simplemente width infinito
-    return Transform.scale(
-      scaleX: 1.02, // Evita lineas blancas laterales
-      child: Container(
-        width: double.infinity,
-        height: 240,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/red_bg.png'),
-            fit: BoxFit.cover,
-            alignment: Alignment.center,
-          ),
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(35),
-            bottomRight: Radius.circular(35),
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: 50,
-              left: 20,
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_back_rounded,
-                      color: Colors.white, size: 30),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 40,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    widget.tipo,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.0,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -157,29 +184,43 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
     String authorRole = 'N/A';
 
     if (widget.tipo == 'Curso') {
-      final curso = service.cursos.where((c) => c.idCurso == widget.idLeccion).firstOrNull;
+      final curso = service.cursos
+          .where((c) => c.idCurso == widget.idLeccion)
+          .firstOrNull;
       if (curso != null) {
-        final author = service.usuarios.where((u) => u.idUsuario == curso.idUsuarioFk).firstOrNull;
+        final author = service.usuarios
+            .where((u) => u.idUsuario == curso.idUsuarioFk)
+            .firstOrNull;
         if (author != null) {
           authorName = author.nombreCompleto;
           authorRole = author.rol;
         }
       }
     } else if (widget.tipo == 'Lección') {
-      final leccion = service.lecciones.where((l) => l.idLeccion == widget.idLeccion).firstOrNull;
+      final leccion = service.lecciones
+          .where((l) => l.idLeccion == widget.idLeccion)
+          .firstOrNull;
       if (leccion != null) {
-        final author = service.usuarios.where((u) => u.idUsuario == leccion.idUsuarioFk).firstOrNull;
+        final author = service.usuarios
+            .where((u) => u.idUsuario == leccion.idUsuarioFk)
+            .firstOrNull;
         if (author != null) {
           authorName = author.nombreCompleto;
           authorRole = author.rol;
         }
       }
     } else if (widget.tipo == 'Capítulo') {
-      final capitulo = service.capitulos.where((c) => c.idCapitulo == widget.idLeccion).firstOrNull;
+      final capitulo = service.capitulos
+          .where((c) => c.idCapitulo == widget.idLeccion)
+          .firstOrNull;
       if (capitulo != null) {
-        final leccion = service.lecciones.where((l) => l.idLeccion == capitulo.idLeccion).firstOrNull;
+        final leccion = service.lecciones
+            .where((l) => l.idLeccion == capitulo.idLeccion)
+            .firstOrNull;
         if (leccion != null) {
-          final author = service.usuarios.where((u) => u.idUsuario == leccion.idUsuarioFk).firstOrNull;
+          final author = service.usuarios
+              .where((u) => u.idUsuario == leccion.idUsuarioFk)
+              .firstOrNull;
           if (author != null) {
             authorName = author.nombreCompleto;
             authorRole = author.rol;
@@ -212,7 +253,8 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
               child: Center(
                 child: Text(
                   authorName.isNotEmpty ? authorName[0] : '?',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -251,22 +293,32 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
 
   Widget _buildStatsCards() {
     final service = bookl.BooklService();
-    final reports = service.reportes.where((r) => 
-      r['entidad_tipo']?.toString().toLowerCase() == widget.tipo.toLowerCase() && r['entidad_id'] == widget.idLeccion).toList();
-    
+    final reports = service.reportes
+        .where((r) =>
+            r['entidad_tipo']?.toString().toLowerCase() ==
+                widget.tipo.toLowerCase() &&
+            r['entidad_id'] == widget.idLeccion)
+        .toList();
+
     String fechaCreacion = 'N/A';
     if (widget.tipo == 'Curso') {
-      final curso = service.cursos.where((c) => c.idCurso == widget.idLeccion).firstOrNull;
+      final curso = service.cursos
+          .where((c) => c.idCurso == widget.idLeccion)
+          .firstOrNull;
       if (curso != null && curso.createdAt != null) {
         fechaCreacion = curso.createdAt!.toString().split(' ')[0];
       }
     } else if (widget.tipo == 'Lección') {
-      final leccion = service.lecciones.where((l) => l.idLeccion == widget.idLeccion).firstOrNull;
+      final leccion = service.lecciones
+          .where((l) => l.idLeccion == widget.idLeccion)
+          .firstOrNull;
       if (leccion != null && leccion.createdAt != null) {
         fechaCreacion = leccion.createdAt!.toString().split(' ')[0];
       }
     } else if (widget.tipo == 'Capítulo') {
-      final capitulo = service.capitulos.where((c) => c.idCapitulo == widget.idLeccion).firstOrNull;
+      final capitulo = service.capitulos
+          .where((c) => c.idCapitulo == widget.idLeccion)
+          .firstOrNull;
       if (capitulo != null && capitulo.createdAt != null) {
         fechaCreacion = capitulo.createdAt!.toString().split(' ')[0];
       }
@@ -359,56 +411,58 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
 
   Widget _buildFilters() {
     return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, _) {
-        return SizedBox(
-          height: 40,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _filters.length,
-            itemBuilder: (context, index) {
-              final filter = _filters[index];
-              final isSelected = _controller.selectedSort == filter;
-              return GestureDetector(
-                onTap: () => _controller.onChangeSort(filter),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.only(right: 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFF5AB639)
-                        : const Color(0xFFD9D9D9),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    filter,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+        listenable: _controller,
+        builder: (context, _) {
+          return SizedBox(
+            height: 40,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _filters.length,
+              itemBuilder: (context, index) {
+                final filter = _filters[index];
+                final isSelected = _controller.selectedSort == filter;
+                return GestureDetector(
+                  onTap: () => _controller.onChangeSort(filter),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.only(right: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF5AB639)
+                          : const Color(0xFFD9D9D9),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      filter,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          ),
-        );
-      }
-    );
+                );
+              },
+            ),
+          );
+        });
   }
 
   Widget _buildCommentsList() {
     if (_controller.isLoading) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 40),
-        child: Center(child: CircularProgressIndicator(color: Color(0xFF5AB639))),
+        child:
+            Center(child: CircularProgressIndicator(color: Color(0xFF5AB639))),
       );
     }
-    
+
     if (_controller.errorMessage.isNotEmpty) {
-      return Center(child: Text('Error: ${_controller.errorMessage}', style: const TextStyle(color: Colors.red)));
+      return Center(
+          child: Text('Error: ${_controller.errorMessage}',
+              style: const TextStyle(color: Colors.red)));
     }
 
     final comentarios = _controller.comentarios;
@@ -416,7 +470,8 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
     if (comentarios.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(20),
-        child: Text('Extrañamente no se encontraron motivos para este reporte.', style: TextStyle(color: Colors.black54)),
+        child: Text('Extrañamente no se encontraron motivos para este reporte.',
+            style: TextStyle(color: Colors.black54)),
       );
     }
 
@@ -424,16 +479,13 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
       children: comentarios.map((item) {
         final date = item.reporte.createdAt.toString().split(' ')[0];
         return _buildCommentItem(
-          item.nombreUsuario, 
-          item.reporte.motivo, 
-          date,
-          item.avatarUrl
-        );
+            item.nombreUsuario, item.reporte.motivo, date, item.avatarUrl);
       }).toList(),
     );
   }
 
-  Widget _buildCommentItem(String name, String message, String date, String? avatarUrl) {
+  Widget _buildCommentItem(
+      String name, String message, String date, String? avatarUrl) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -453,10 +505,12 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
                     CircleAvatar(
                       radius: 16,
                       backgroundColor: const Color(0xFF5AB639),
-                      backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                      child: avatarUrl == null 
-                        ? const Icon(Icons.person, size: 20, color: Colors.white)
-                        : null,
+                      backgroundImage:
+                          avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                      child: avatarUrl == null
+                          ? const Icon(Icons.person,
+                              size: 20, color: Colors.white)
+                          : null,
                     ),
                     const SizedBox(width: 10),
                     Text(
@@ -492,13 +546,6 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
                   style: const TextStyle(
                       fontSize: 12,
                       color: Colors.black87,
-                      fontWeight: FontWeight.bold),
-                ),
-                const Text(
-                  'Responder',
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.black54,
                       fontWeight: FontWeight.bold),
                 ),
               ],
