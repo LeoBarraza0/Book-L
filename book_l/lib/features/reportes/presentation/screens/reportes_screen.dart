@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/nav_bar.dart';
-import '../widgets/reporte_card.dart';
+import '../../../../shared/widgets/search_filter_bar.dart';
 import '../controller/reportes_controller.dart';
 import '../../domain/usecases/get_reportes_agrupados_usecase.dart';
 import '../../data/repositories/reportes_repository_impl.dart';
+import '../../domain/entities/reporte_agrupado.dart';
 
 ReportesController _buildController() {
   final repo = ReportesRepositoryImpl();
@@ -23,7 +25,15 @@ class _ReportesScreenState extends State<ReportesScreen> {
   final TextEditingController _searchController = TextEditingController();
   late final ReportesController _controller;
 
-  final List<String> _filters = ['Todos', 'Cursos', 'Lecciones', 'Capítulos'];
+  final List<String> _filtros = [
+    'Todos',
+    'Recientes',
+    'Más reportados',
+    'Cursos',
+    'Lecciones',
+    'Capítulos'
+  ];
+  int _filtroSeleccionado = 0;
 
   @override
   void initState() {
@@ -44,12 +54,14 @@ class _ReportesScreenState extends State<ReportesScreen> {
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF9E1), // Crema claro
+      backgroundColor: const Color(0xFFECEBEB),
       body: Stack(
         children: [
+          // ── COLUMNA PRINCIPAL ──────────────────────────────────────────
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // ── HEADER: SVG completo como fondo con overlay de contenido
               ClipRRect(
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(20),
@@ -59,12 +71,14 @@ class _ReportesScreenState extends State<ReportesScreen> {
                   height: 200,
                   child: Stack(
                     children: [
-                      Positioned.fill(
-                        child: Image.asset(
-                          'assets/images/red_bg.png',
-                          fit: BoxFit.cover,
-                        ),
+                      // Fondo de imagen roja replicando estructura visual de Lecciones
+                      Image.asset(
+                        'assets/images/red_bg.png',
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
                       ),
+                      // Botón atrás (esquina superior izquierda)
                       Positioned(
                         top: topPadding + 8,
                         left: 20,
@@ -87,30 +101,12 @@ class _ReportesScreenState extends State<ReportesScreen> {
                           ),
                         ),
                       ),
-                      // Icono campana (esquina superior derecha)
-                      Positioned(
-                        top: topPadding + 8,
-                        right: 20,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.notifications_none,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      ),
                       // Título "Reportes"
-                      const Positioned(
+                      Positioned(
                         left: 0,
                         right: 0,
                         top: 80,
-                        child: Center(
+                        child: const Center(
                           child: Text(
                             'Reportes',
                             style: TextStyle(
@@ -127,35 +123,66 @@ class _ReportesScreenState extends State<ReportesScreen> {
                 ),
               ),
 
-              // ── CONTENIDO ──────────────
+              // ── ZONA GRIS con búsqueda, filtros y listado ──────────────
               Expanded(
                 child: Column(
                   children: [
-                    const SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: _buildSearchBar(),
+                    SearchFilterBar(
+                      activeColor: const Color(0xFFFF606F),
+                      searchController: _searchController,
+                      query: _searchController.text,
+                      onQueryChanged: (v) => _controller.onSearchChanged(v),
+                      onClear: () {
+                        _searchController.clear();
+                        _controller.onSearchChanged('');
+                      },
+                      filtros: _filtros,
+                      filtroSeleccionado: _filtroSeleccionado,
+                      onFiltroChanged: (index) {
+                        setState(() => _filtroSeleccionado = index);
+                        _controller.onFilterChanged(_filtros[index]);
+                      },
                     ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: _buildFilters(),
-                    ),
-                    const SizedBox(height: 24),
                     Expanded(
                       child: ListenableBuilder(
                         listenable: _controller,
-                        builder: (context, _) => SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
-                            children: [
-                              _buildReportList(),
-                              const SizedBox(
-                                  height:
-                                      120), // Espacio para el navbar flotante
-                            ],
-                          ),
-                        ),
+                        builder: (context, _) {
+                          if (_controller.isLoading) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                  color: Color(0xFFFF606F)),
+                            );
+                          }
+
+                          if (_controller.errorMessage.isNotEmpty) {
+                            return Center(
+                                child: Text(
+                                    'Error: ${_controller.errorMessage}',
+                                    style: const TextStyle(color: Colors.red)));
+                          }
+
+                          final reportes = _controller.reportes;
+
+                          if (reportes.isEmpty) {
+                            return const Center(
+                                child: Text('No hay reportes disponibles',
+                                    style:
+                                        TextStyle(color: Color(0xFF888888))));
+                          }
+                          return ListView.builder(
+                            padding: const EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              top: 8,
+                              bottom: 100,
+                            ),
+                            itemCount: reportes.length,
+                            itemBuilder: (context, index) {
+                              return _buildReporteCard(
+                                  context, reportes[index]);
+                            },
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -176,136 +203,33 @@ class _ReportesScreenState extends State<ReportesScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFD9D9D9),
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) => _controller.onSearchChanged(val),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                hintText: 'Buscar por nombre...',
-                hintStyle: const TextStyle(color: Colors.black54),
-                suffixIcon: IconButton(
-                  icon:
-                      const Icon(Icons.close, size: 20, color: Colors.black54),
-                  onPressed: () {
-                    _searchController.clear();
-                    _controller.onSearchChanged('');
-                  },
-                ),
-              ),
-            ),
+  Widget _buildReporteCard(BuildContext context, ReporteAgrupado item) {
+    Color boxColor = const Color(0xFFD9D9D9);
+    final tipoL = item.tipoEntidad.toLowerCase().replaceAll('ó', 'o');
+    if (tipoL == 'curso')
+      boxColor = const Color(0xFFFF606F);
+    else if (tipoL == 'leccion')
+      boxColor = const Color(0xFF5AB639);
+    else if (tipoL == 'capitulo') boxColor = const Color(0xFFFFB800);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFD9D9D9),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-        ),
-        const SizedBox(width: 12),
-        Container(
-          height: 44,
-          width: 44,
-          decoration: const BoxDecoration(
-            color: Color(0xFF5AB639),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.search, color: Colors.white, size: 24),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFilters() {
-    return ListenableBuilder(
-        listenable: _controller,
-        builder: (context, _) {
-          return SizedBox(
-            height: 40,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _filters.length,
-              itemBuilder: (context, index) {
-                final filter = _filters[index];
-                final isSelected = _controller.selectedFilter == filter;
-                return GestureDetector(
-                  onTap: () => _controller.onFilterChanged(filter),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.only(right: 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFF5AB639)
-                          : const Color(0xFFD9D9D9),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      filter,
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black87,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          );
-        });
-  }
-
-  Widget _buildReportList() {
-    if (_controller.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 50.0),
-        child:
-            Center(child: CircularProgressIndicator(color: Color(0xFF5AB639))),
-      );
-    }
-
-    if (_controller.errorMessage.isNotEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Text('Error: ${_controller.errorMessage}',
-            style: const TextStyle(color: Colors.red)),
-      );
-    }
-
-    final reportesAgrupados = _controller.reportes;
-
-    if (reportesAgrupados.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(20.0),
-        child: Text('No se encontraron reportes con estos criterios.',
-            style: TextStyle(color: Colors.black54)),
-      );
-    }
-
-    return Column(
-      children: reportesAgrupados.map((item) {
-        Color boxColor = const Color(0xFFD9D9D9);
-        final tipoL = item.tipoEntidad.toLowerCase().replaceAll('ó', 'o');
-        if (tipoL == 'curso') {
-          boxColor = const Color(0xFFFF606F);
-        } else if (tipoL == 'leccion')
-          boxColor = const Color(0xFF5AB639);
-        else if (tipoL == 'capitulo') boxColor = const Color(0xFFFFB800);
-
-        return ReporteCard(
-          title: item.nombreEntidad,
-          subtitle: item.tipoEntidad,
-          rating: 4.9, // Podría parametrizarse
-          reportCount: item.cantidadReportes,
-          tags: [item.tipoEntidad],
-          boxColor: boxColor,
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
           onTap: () {
             Navigator.pushNamed(
               context,
@@ -317,8 +241,88 @@ class _ReportesScreenState extends State<ReportesScreen> {
               },
             );
           },
-        );
-      }).toList(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Thumbnail
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: boxColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.report_problem_rounded,
+                      color: Colors.white, size: 32),
+                ),
+                const SizedBox(width: 12),
+
+                // Info central
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Estado badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: boxColor,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          item.tipoEntidad,
+                          style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+
+                      // Título
+                      Text(
+                        item.nombreEntidad,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF111111),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        item.cantidadReportes == 1
+                            ? '1 reporte'
+                            : '${item.cantidadReportes} reportes',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF888888),
+                            fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 3),
+                      const Row(
+                        children: [
+                          Icon(Icons.star, size: 13, color: Color(0xFFF6B55C)),
+                          SizedBox(width: 3),
+                          Text('4.9',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF111111))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

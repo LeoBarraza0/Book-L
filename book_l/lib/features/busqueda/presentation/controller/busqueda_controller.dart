@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/repositories/busqueda_repository.dart';
+import '../../../auth/presentation/controller/auth_controller.dart';
 
 class BusquedaController extends ChangeNotifier {
   // ── Singleton ──────────────────────────────────────────────────────────────
@@ -25,12 +26,18 @@ class BusquedaController extends ChangeNotifier {
 
   // ── Historial (SharedPreferences) ─────────────────────────────────────────
   Future<void> _cargarHistorial() async {
-    historial = await _repository.cargarHistorial();
+    final userId = AuthController().usuarioActual?.idUsuario ?? 0;
+    historial = await _repository.cargarHistorial(userId);
     notifyListeners();
   }
 
   Future<void> _guardarHistorial() async {
-    await _repository.guardarHistorial(historial);
+    final userId = AuthController().usuarioActual?.idUsuario ?? 0;
+    await _repository.guardarHistorial(userId, historial);
+  }
+
+  Future<void> recargarHistorial() async {
+    await _cargarHistorial();
   }
 
   void _agregarAlHistorial(String query) {

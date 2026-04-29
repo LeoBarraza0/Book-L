@@ -8,6 +8,7 @@ class SearchFilterBar extends StatefulWidget {
   final List<String> filtros;
   final int filtroSeleccionado;
   final Function(int) onFiltroChanged;
+  final Color activeColor;
 
   const SearchFilterBar({
     super.key,
@@ -18,6 +19,7 @@ class SearchFilterBar extends StatefulWidget {
     required this.filtros,
     required this.filtroSeleccionado,
     required this.onFiltroChanged,
+    this.activeColor = const Color(0xFF5AB639),
   });
 
   @override
@@ -44,7 +46,7 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
                   ),
                   child: TextField(
                     controller: widget.searchController,
-                    cursorColor: const Color(0xFF5AB639),
+                    cursorColor: widget.activeColor,
                     style: const TextStyle(fontSize: 15),
                     decoration: InputDecoration(
                       border: InputBorder.none,
@@ -72,9 +74,9 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF5AB639),
+                  color: widget.activeColor,
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF5AB639), width: 2),
+                  border: Border.all(color: widget.activeColor, width: 2),
                 ),
                 child: const Icon(Icons.search, color: Colors.white, size: 22),
               ),
@@ -99,7 +101,7 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? const Color(0xFF5AB639)
+                        ? widget.activeColor
                         : const Color(0xFFECEBEB),
                     borderRadius: BorderRadius.circular(20),
                     border: isSelected

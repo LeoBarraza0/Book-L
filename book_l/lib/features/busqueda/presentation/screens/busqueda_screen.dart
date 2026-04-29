@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../controller/busqueda_controller.dart';
+import '../../../../core/services/bookl_service.dart';
 
 class BusquedaScreen extends StatefulWidget {
   const BusquedaScreen({super.key});
@@ -18,6 +19,7 @@ class _BusquedaScreenState extends State<BusquedaScreen> {
   void initState() {
     super.initState();
     _ctrl.addListener(_rebuild);
+    _ctrl.recargarHistorial();
     // Abrir teclado automáticamente al entrar a la pantalla
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
@@ -120,8 +122,18 @@ class _BusquedaScreenState extends State<BusquedaScreen> {
               size: 28,
             ),
             onPressed: () {
-              Navigator.pushNamedAndRemoveUntil(
-                context, '/home', (route) => false);
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                final role = BooklService().currentRole.toLowerCase();
+                if (role == 'administrador' || role == 'admin') {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context, '/admin_Home', (route) => false);
+                } else {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context, '/home', (route) => false);
+                }
+              }
             },
           ),
           const SizedBox(width: 12),

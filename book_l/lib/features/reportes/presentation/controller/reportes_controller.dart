@@ -50,29 +50,33 @@ class ReportesController extends ChangeNotifier {
   }
 
   void _applyFilters() {
-    _filteredReportes = _allReportes.where((reporte) {
-      // 1. Filtrar por Tipo
-      bool matchesType = true;
-      if (_selectedFilter != 'Todos') {
+    var result = _allReportes.toList();
+
+    // 1. Filtrar por Búsqueda (Texto)
+    if (_searchQuery.isNotEmpty) {
+      result = result
+          .where((reporte) =>
+              reporte.nombreEntidad.toLowerCase().contains(_searchQuery))
+          .toList();
+    }
+
+    // 2. Filtrar o Ordenar por el filtro seleccionado
+    if (_selectedFilter == 'Recientes') {
+      result.sort((a, b) => (b.ultimaFechaReporte ?? DateTime(0))
+          .compareTo(a.ultimaFechaReporte ?? DateTime(0)));
+    } else if (_selectedFilter == 'Más reportados') {
+      result.sort((a, b) => b.cantidadReportes.compareTo(a.cantidadReportes));
+    } else if (_selectedFilter != 'Todos') {
+      // Filtrar por tipo (Cursos, Lecciones, Capítulos)
+      result = result.where((reporte) {
         final tipoLower = reporte.tipoEntidad.toLowerCase().replaceAll('ó', 'o');
-        final filterLower = _selectedFilter.toLowerCase()
-            .replaceAll('s', '') // 'Cursos' -> 'Curso', 'Lecciones' -> 'Leccion'
-            .replaceAll('e', '') // Manejo simple, ej. Leccion(es), Capitul(os)
-            .replaceAll('ó', 'o');
-        
-        // Manejo específico rápido
-        if (_selectedFilter == 'Cursos' && tipoLower != 'curso') matchesType = false;
-        if (_selectedFilter == 'Lecciones' && tipoLower != 'leccion') matchesType = false;
-        if (_selectedFilter == 'Capítulos' && tipoLower != 'capitulo') matchesType = false;
-      }
+        if (_selectedFilter == 'Cursos' && tipoLower != 'curso') return false;
+        if (_selectedFilter == 'Lecciones' && tipoLower != 'leccion') return false;
+        if (_selectedFilter == 'Capítulos' && tipoLower != 'capitulo') return false;
+        return true;
+      }).toList();
+    }
 
-      // 2. Filtrar por Búsqueda (Texto)
-      bool matchesSearch = true;
-      if (_searchQuery.isNotEmpty) {
-        matchesSearch = reporte.nombreEntidad.toLowerCase().contains(_searchQuery);
-      }
-
-      return matchesType && matchesSearch;
-    }).toList();
+    _filteredReportes = result;
   }
 }

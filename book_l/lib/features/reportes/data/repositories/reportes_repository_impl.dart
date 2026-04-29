@@ -34,6 +34,7 @@ class ReportesRepositoryImpl implements ReporteRepository {
 
     final reportCounts = <String, int>{};
     final reportTypeMap = <String, String>{};
+    final reportDateMap = <String, DateTime>{};
 
     for (var r in reportesReales) {
       final String tipo = r['entidad_tipo']?.toString() ?? 'Desconocido';
@@ -41,9 +42,18 @@ class ReportesRepositoryImpl implements ReporteRepository {
           ? r['entidad_id']
           : int.tryParse(r['entidad_id']?.toString() ?? '0') ?? 0;
 
+      DateTime rDate = DateTime.now();
+      if (r['created_at'] != null) {
+        rDate = DateTime.tryParse(r['created_at'].toString()) ?? rDate;
+      }
+
       final key = '${tipo.toLowerCase().replaceAll('ó', 'o')}-$id';
       reportCounts[key] = (reportCounts[key] ?? 0) + 1;
       reportTypeMap[key] = tipo;
+
+      if (!reportDateMap.containsKey(key) || rDate.isAfter(reportDateMap[key]!)) {
+        reportDateMap[key] = rDate;
+      }
     }
 
     final List<ReporteAgrupado> resultado = [];
@@ -54,6 +64,7 @@ class ReportesRepositoryImpl implements ReporteRepository {
       final int id = int.tryParse(parts[1]) ?? 0;
       final int count = reportCounts[key]!;
       final String originalTipo = reportTypeMap[key]!;
+      final DateTime? ultimaFecha = reportDateMap[key];
 
       String nombre = 'Elemento Desconocido';
 
@@ -75,6 +86,7 @@ class ReportesRepositoryImpl implements ReporteRepository {
         nombreEntidad: nombre,
         tipoEntidad: originalTipo,
         cantidadReportes: count,
+        ultimaFechaReporte: ultimaFecha,
       ));
     }
 

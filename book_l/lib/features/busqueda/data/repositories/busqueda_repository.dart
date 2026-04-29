@@ -192,16 +192,16 @@ class BusquedaRepository {
   }
 
   // ── Historial persistido con SharedPreferences ───────────────────────────
-  static const _historialKey = 'busqueda_historial';
+  String _getHistorialKey(int userId) => 'busqueda_historial_$userId';
 
-  Future<List<String>> cargarHistorial() async {
+  Future<List<String>> cargarHistorial(int userId) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_historialKey) ?? [];
+    return prefs.getStringList(_getHistorialKey(userId)) ?? [];
   }
 
-  Future<void> guardarHistorial(List<String> historial) async {
+  Future<void> guardarHistorial(int userId, List<String> historial) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_historialKey, historial);
+    await prefs.setStringList(_getHistorialKey(userId), historial);
   }
 
   // ── Helpers para enriquecer resultados ────────────────────────────────────
