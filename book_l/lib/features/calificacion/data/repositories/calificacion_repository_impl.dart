@@ -9,9 +9,13 @@ class CalificacionRepositoryImpl implements CalificacionRepository {
   Future<(double, bool)> enviarCalificacion(int idObjeto, String tipoObjeto, int valor) async {
     // Simulamos una demora de red (200ms) para dar tiempo a que se vea el spinner si se desea
     await Future.delayed(const Duration(milliseconds: 200));
-    final idUsuarioSession = AppSession().usuarioId ?? 1;
+    final idUsuarioSession = AppSession().usuarioId;
+    if (idUsuarioSession == null) {
+      throw Exception('Usuario no autenticado.');
+    }
 
-    // Delegate a BooklService persistencia y recálculo
+    // Delega a BooklService (la base de datos en memoria) la persistencia de la nueva calificación
+    // y el recálculo del promedio total del objeto (curso o lección).
     return await _service.agregarOActualizarCalificacion(
       idObjeto,
       tipoObjeto,

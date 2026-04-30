@@ -12,6 +12,7 @@ class CalificacionController extends ChangeNotifier {
   CalificacionState _state = CalificacionState();
   CalificacionState get state => _state;
 
+  // Casos de uso inyectados con la implementación del repositorio (conectado a BooklService)
   final _calificarLeccion = CalificarLeccionUseCase(CalificacionRepositoryImpl());
   final _calificarCurso = CalificarCursoUseCase(CalificacionRepositoryImpl());
 
