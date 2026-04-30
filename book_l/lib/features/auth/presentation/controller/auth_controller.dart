@@ -1,9 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'dart:math' as dart_math;
 import 'dart:convert';
-import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server.dart';
-import 'package:http/http.dart' as http;
 
 import '../../../../core/services/bookl_service.dart';
 import '../../../../core/storage/local_storage.dart';
@@ -59,70 +56,45 @@ class AuthController extends ChangeNotifier {
           throw Exception(
               'No tienes un correo registrado asociado a esta cuenta.');
         }
-        await _sendRealEmail(recoveryEmail!, recoveryCode!);
+        print('=====================================================');
+        print('CÓDIGO DE RECUPERACIÓN (CORREO): $recoveryCode');
+        print('=====================================================');
       } else if (medium == 'Numero') {
         if (recoveryPhone == null || recoveryPhone!.isEmpty) {
           throw Exception(
               'No tienes un número de celular asociado a esta cuenta.');
         }
-        await _sendRealSMS(recoveryPhone!, recoveryCode!);
+        print('=====================================================');
+        print('CÓDIGO DE RECUPERACIÓN (SMS): $recoveryCode');
+        print('=====================================================');
       }
     } catch (e) {
-      print('Error al enviar el código de recuperación: $e');
-      rethrow; // Propagate error so the UI can catch it and show a SnackBar
+      print('Error al generar el código de recuperación: $e');
+      rethrow;
     }
   }
 
-  Future<void> _sendRealEmail(String destEmail, String code) async {
-    // IMPORTANTE: Reemplaza con tus credenciales reales
-    String username = 'tu_correo@gmail.com';
-    // Debes generar una "App Password" (Contraseña de aplicación) en tu cuenta de Google
-    String password = 'tu_app_password_generada';
+  Future<bool> restablecerPassword(String nuevaPassword) async {
+    final svc = BooklService();
+    try {
+      int index = -1;
+      if (recoveryEmail != null && recoveryEmail!.isNotEmpty) {
+        index = svc.usuariosDto.indexWhere((u) => u.correo == recoveryEmail);
+      } else if (recoveryPhone != null && recoveryPhone!.isNotEmpty) {
+        index = svc.usuariosDto.indexWhere((u) =>
+            u.celular?.toString() == recoveryPhone ||
+            '+57${u.celular}' == recoveryPhone);
+      }
 
-    final smtpServer = gmail(username, password);
-
-    final message = Message()
-      ..from = Address(username, 'Book-L Soporte')
-      ..recipients.add(destEmail)
-      ..subject = 'Código de recuperación de contraseña'
-      ..text =
-          'Hola,\n\nTu código de recuperación para Book-L es: $code\n\nSi no solicitaste esto, ignora este mensaje.'
-      ..html =
-          '<h3>Recuperación de contraseña</h3><p>Tu código de recuperación para Book-L es: <strong>$code</strong></p>';
-
-    final sendReport = await send(message, smtpServer);
-    print('Correo enviado exitosamente: ${sendReport.toString()}');
-  }
-
-  Future<void> _sendRealSMS(String destPhone, String code) async {
-    // IMPORTANTE: Reemplaza con tus credenciales de Twilio
-    String accountSid = 'TU_ACCOUNT_SID_DE_TWILIO';
-    String authToken = 'TU_AUTH_TOKEN_DE_TWILIO';
-    String twilioNumber = 'TU_NUMERO_DE_TWILIO';
-
-    var bytes = utf8.encode('$accountSid:$authToken');
-    var base64Str = base64.encode(bytes);
-
-    var url = Uri.parse(
-        'https://api.twilio.com/2010-04-01/Accounts/$accountSid/Messages.json');
-    var response = await http.post(
-      url,
-      headers: {
-        'Authorization': 'Basic $base64Str',
-      },
-      body: {
-        'From': twilioNumber,
-        'To':
-            destPhone, // El número debe incluir código de país, ej: +573041234567
-        'Body': 'Tu código de recuperación para Book-L es: $code'
-      },
-    );
-
-    if (response.statusCode == 201) {
-      print('SMS enviado exitosamente: ${response.body}');
-    } else {
-      print('Error al enviar SMS: ${response.body}');
-      throw Exception('Fallo al enviar SMS');
+      if (index != -1) {
+        final usuario = svc.usuariosDto[index];
+        svc.usuariosDto[index] = usuario.copyWith(contrasena: nuevaPassword);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Error al restablecer contraseña: $e');
+      return false;
     }
   }
 
@@ -130,7 +102,6 @@ class AuthController extends ChangeNotifier {
     return recoveryCode != null && recoveryCode == code;
   }
 
-  // Temporary list for testing
   List<Map<String, dynamic>> recoveryAttempts = [];
 
   void saveRecoveryAttempt(String type) {

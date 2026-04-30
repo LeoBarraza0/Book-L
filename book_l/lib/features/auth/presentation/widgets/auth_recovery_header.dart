@@ -12,8 +12,8 @@ class AuthRecoveryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 280,
       width: double.infinity,
+      padding: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(
