@@ -8,6 +8,7 @@ import '../controller/chatbot_state.dart';
 import '../widgets/chat_message_bubble.dart';
 import '../widgets/chatbot_action_card.dart';
 import '../widgets/typing_indicator.dart';
+import '../../../../core/storage/local_storage.dart';
 
 
 class ChatbotScreen extends StatefulWidget {
@@ -159,10 +160,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Saludo centrado
-          const Text(
-            'Hola, Emanuel',
-            style: TextStyle(
+          // Saludo centrado dinámico (obtenido de la sesión actual)
+          Text(
+            'Hola, ${AppSession().nombreCompleto?.split(' ').first ?? 'Usuario'}',
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Color(0xFF96D786),

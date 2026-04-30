@@ -8,8 +8,11 @@ import '../dto/chatbot_respuesta_dto.dart';
 
 /// Implementación concreta del repositorio del chatbot.
 ///
-/// Lee las intenciones desde el JSON de assets y realiza el matching
-/// de palabras clave contra el mensaje del usuario.
+/// Flujo de datos:
+/// Al ser datos estáticos de configuración (intenciones del bot), el repositorio
+/// lee directamente del archivo JSON local sin pasar por BooklService (que está
+/// reservado para datos transaccionales en memoria). Las respuestas se parsean
+/// a través de DTOs y se mapean a Entidades de Dominio puras.
 class ChatbotRepositoryImpl implements ChatbotRepository {
   // Cache en memoria para no leer el JSON en cada mensaje
   List<ChatbotRespuesta>? _cache;
