@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../data/repositories/busqueda_repository.dart';
+import '../../domain/entities/resultado_busqueda.dart';
+import '../../domain/repositories/busqueda_repository.dart';
+import '../../data/repositories/busqueda_repository_impl.dart';
 import '../../../auth/presentation/controller/auth_controller.dart';
 
 class BusquedaController extends ChangeNotifier {
@@ -10,7 +12,8 @@ class BusquedaController extends ChangeNotifier {
     _cargarHistorial();
   }
 
-  final BusquedaRepository _repository = BusquedaRepository();
+  // Interfaz del repositorio
+  final BusquedaRepository _repository = BusquedaRepositoryImpl();
 
   // ── Estado ─────────────────────────────────────────────────────────────────
   List<ResultadoBusqueda> resultados = [];
@@ -99,6 +102,7 @@ class BusquedaController extends ChangeNotifier {
     _agregarAlHistorial(q);
     notifyListeners();
 
+    // Delega la operación de búsqueda al repositorio, que consulta el BooklService (JSON en memoria)
     resultados = await _repository.buscar(q, filtro: filtroActivo);
 
     isLoading = false;

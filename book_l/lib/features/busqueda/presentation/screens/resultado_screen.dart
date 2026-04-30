@@ -3,7 +3,7 @@ import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../core/services/bookl_service.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../controller/busqueda_controller.dart';
-import '../../data/repositories/busqueda_repository.dart';
+import '../../domain/entities/resultado_busqueda.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
 import '../../../leccion/presentation/controller/leccion_controller.dart';
 import '../../../curso/presentation/controller/curso_controller.dart';
