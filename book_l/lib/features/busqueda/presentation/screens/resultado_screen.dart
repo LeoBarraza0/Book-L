@@ -4,6 +4,7 @@ import '../../../../core/services/bookl_service.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../controller/busqueda_controller.dart';
 import '../../data/repositories/busqueda_repository.dart';
+import '../../../notificacion/presentation/widgets/notification_icon_button.dart';
 
 class ResultadoScreen extends StatefulWidget {
   const ResultadoScreen({super.key});
@@ -124,28 +125,16 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                   }
                 },
               ),
-              Stack(
-                children: [
-                  _circleBtn(
-                    icon: Icons.notifications_none_rounded,
-                    bg: const Color(0xFF3DA520),
-                    onTap: () => Navigator.pushReplacementNamed(
-                        context, '/notificaciones'),
-                  ),
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: Container(
-                      width: 11,
-                      height: 11,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFF949F),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
-                      ),
-                    ),
-                  ),
-                ],
+              Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF3DA520),
+                  shape: BoxShape.circle,
+                ),
+                child: const NotificationIconButton(
+                  iconColor: Colors.white,
+                ),
               ),
             ],
           ),

@@ -10,6 +10,7 @@ import '../../../reportes/domain/usecases/get_estadisticas_reportes_usecase.dart
 import '../../../reportes/data/repositories/reportes_repository_impl.dart';
 import '../../domain/entities/novedad.dart';
 import '../../domain/usecases/get_novedades_usecase.dart';
+import '../../../notificacion/presentation/widgets/notification_icon_button.dart';
 
 AdminHomeController _buildController() {
   final repo = ReportesRepositoryImpl();
@@ -102,38 +103,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           fit: BoxFit.contain,
         ),
         // Notification bell
-        GestureDetector(
-          onTap: () {},
-          child: Stack(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF96D786),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.notifications_none,
-                  color: Colors.white,
-                ),
-              ),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF949F),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        const NotificationIconButton(isGreenCircle: true),
       ],
     );
   }

@@ -101,6 +101,9 @@ class BooklService extends ChangeNotifier {
   // Rachas (streak de actividad diaria por usuario)
   List<Map<String, dynamic>> rachas = [];
 
+  // Notificaciones
+  List<Map<String, dynamic>> notificaciones = [];
+
   // ── Inicialización (llamar una sola vez desde main.dart) ───────────────────
   Future<void> init() async {
     if (_loaded) return;
@@ -326,6 +329,9 @@ class BooklService extends ChangeNotifier {
         return map;
       }).toList();
     }
+    if (data.containsKey('notificaciones')) {
+      notificaciones = List<Map<String, dynamic>>.from(data['notificaciones']);
+    }
 
     // ── Semilla: cargar progreso inicial en AppSession ─────────────────────
     _seedAppSession();
@@ -424,6 +430,7 @@ class BooklService extends ChangeNotifier {
         'guardados': guardados,
         'guardados_cursos': guardadosCursos,
         'rachas': rachas,
+        'notificaciones': notificaciones,
       };
       await prefs.setString(_storageKey, json.encode(fullData));
       notifyListeners();
@@ -719,11 +726,14 @@ class BooklService extends ChangeNotifier {
   void toggleSeguir(int idSeguidor, int idSeguido) {
     final idx = seguidores.indexWhere(
         (s) => s['id_seguidor'] == idSeguidor && s['id_seguido'] == idSeguido);
+    
+    bool isNewFollow = false;
     if (idx != -1) {
       if (seguidores[idx]['estado'] == 'activo') {
         seguidores[idx]['estado'] = 'bloqueado';
       } else {
         seguidores[idx]['estado'] = 'activo';
+        isNewFollow = true;
       }
     } else {
       seguidores.add({
@@ -732,7 +742,27 @@ class BooklService extends ChangeNotifier {
         'estado': 'activo',
         'created_at': DateTime.now().toIso8601String(),
       });
+      isNewFollow = true;
     }
+
+    if (isNewFollow) {
+      String nombreSeguidor = 'Un usuario';
+      final u = usuarios.where((u) => u.idUsuario == idSeguidor).firstOrNull;
+      if (u != null) {
+        nombreSeguidor = u.nombreCompleto;
+      }
+      
+      notificaciones.insert(0, {
+        'id': generateId(),
+        'id_usuario_fk': idSeguido,
+        'tipo': 'follow',
+        'id_referencia': idSeguidor,
+        'mensaje': '$nombreSeguidor ha comenzado a seguirte.',
+        'leida': false,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    }
+
     _save();
   }
 
@@ -742,6 +772,18 @@ class BooklService extends ChangeNotifier {
 
   int getFollowingCount(int idUsuario) {
     return seguidores.where((s) => s['id_seguidor'] == idUsuario && s['estado'] == 'activo').length;
+  }
+
+  // ── Notificaciones ────────────────────────────────────────────────────────
+  void marcarNotificacionesComoLeidas(int idUsuario) {
+    bool changed = false;
+    for (var n in notificaciones) {
+      if (n['id_usuario_fk'] == idUsuario && n['leida'] == false) {
+        n['leida'] = true;
+        changed = true;
+      }
+    }
+    if (changed) _save();
   }
 
   void clearAllData() async {

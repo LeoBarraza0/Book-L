@@ -4,6 +4,7 @@ import '../../../../core/services/bookl_service.dart' as bookl;
 import '../controller/reporte_detail_controller.dart';
 import '../../domain/usecases/get_reportes_por_entidad_usecase.dart';
 import '../../data/repositories/reportes_repository_impl.dart';
+import '../../../notificacion/presentation/widgets/notification_icon_button.dart';
 
 ReporteDetailController _buildDetailController() {
   final repo = ReportesRepositoryImpl();
@@ -96,19 +97,7 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
                       Positioned(
                         top: topPadding + 8,
                         right: 20,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.notifications_none,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
+                        child: const NotificationIconButton(isWhiteCircle: true),
                       ),
                       Positioned(
                         left: 0,
