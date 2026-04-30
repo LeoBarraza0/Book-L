@@ -24,7 +24,7 @@ class ResultadoBusqueda {
     this.imagenUrl,
     this.username,
     this.avatarUrl,
-    this.calificacion = '4.9',
+    this.calificacion = '0.0',
     this.inscripciones = 0,
     this.progreso = 0.0,
     required this.colorTarjeta,
@@ -90,7 +90,7 @@ class BusquedaRepository {
             titulo: c.nombre,
             subtitulo: _autorDeCurso(svc, c.idUsuarioFk),
             imagenUrl: imagenUrl,
-            calificacion: c.rating > 0 ? c.rating.toStringAsFixed(1) : '4.9',
+            calificacion: c.rating > 0 ? c.rating.toStringAsFixed(1) : '0.0',
             colorTarjeta: _colorPorId(c.idCurso),
             inscripciones: c.estudiantes,
           ));
