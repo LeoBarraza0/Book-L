@@ -48,17 +48,19 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
         Navigator.pushNamed(context, '/leccion_detail', arguments: item.id);
         break;
       default:
-        // Autor → PerfilScreen con idUsuario (mismo patrón que leccion_detail)
+        // PerfilScreen con idUsuario
         Navigator.push(
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 PerfilScreen(idUsuario: item.id),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
               final slide = Tween<Offset>(
                 begin: const Offset(1.0, 0),
                 end: Offset.zero,
-              ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+              ).animate(CurvedAnimation(
+                  parent: animation, curve: Curves.easeOutCubic));
               return SlideTransition(position: slide, child: child);
             },
             transitionDuration: const Duration(milliseconds: 380),
@@ -117,9 +119,11 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
               } else {
                 final role = BooklService().currentRole.toLowerCase();
                 if (role == 'administrador' || role == 'admin') {
-                  Navigator.pushNamedAndRemoveUntil(context, '/admin_Home', (route) => false);
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/admin_Home', (route) => false);
                 } else {
-                  Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/home', (route) => false);
                 }
               }
             },
@@ -149,7 +153,8 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                 ),
                 child: TextField(
                   controller: _searchController,
-                  enabled: false, // Read only, tap is handled by GestureDetector
+                  enabled:
+                      false, // Read only, tap is handled by GestureDetector
                   style: const TextStyle(
                     fontSize: 15,
                     color: Color(0xFF1A1A1A),
@@ -161,7 +166,8 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                       fontSize: 14,
                     ),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   ),
                 ),
               ),
@@ -207,7 +213,9 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                 color: isSelected ? const Color(0xFF5AB639) : Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isSelected ? const Color(0xFF5AB639) : const Color(0xFFE0E0E0),
+                  color: isSelected
+                      ? const Color(0xFF5AB639)
+                      : const Color(0xFFE0E0E0),
                 ),
               ),
               alignment: Alignment.center,
@@ -230,7 +238,8 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
   Widget _buildCuerpo() {
     if (_ctrl.isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF5AB639), strokeWidth: 2),
+        child:
+            CircularProgressIndicator(color: Color(0xFF5AB639), strokeWidth: 2),
       );
     }
     if (_ctrl.currentQuery.isEmpty) {
@@ -268,20 +277,47 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
   // ── Tarjeta unificada con badge de tipo + autor ──────────────────────────
   Widget _buildTarjeta(ResultadoBusqueda item) {
     // Determinar badge color y label
-    final (Color badgeColor, String badgeLabel, Color iconBoxColor, Color iconColor, IconData iconData) =
-        switch (item.tipo) {
-      'Curso' => (const Color(0xFFFF606F), 'Curso', const Color(0xFFFF606F).withValues(alpha: 0.2), const Color(0xFFFF606F), Icons.school_rounded),
-      'Lección' => (const Color(0xFF4DC130), 'Lección', const Color(0xFF4DC130), Colors.white, Icons.menu_book_rounded),
-      _ => (const Color(0xFF5A5A8A), 'Autor', const Color(0xFF5A5A8A).withValues(alpha: 0.2), const Color(0xFF5A5A8A), Icons.person_rounded),
+    final (
+      Color badgeColor,
+      String badgeLabel,
+      Color iconBoxColor,
+      Color iconColor,
+      IconData iconData
+    ) = switch (item.tipo) {
+      'Curso' => (
+          const Color(0xFFFF606F),
+          'Curso',
+          const Color(0xFFFF606F).withValues(alpha: 0.2),
+          const Color(0xFFFF606F),
+          Icons.school_rounded
+        ),
+      'Lección' => (
+          const Color(0xFF4DC130),
+          'Lección',
+          const Color(0xFF4DC130),
+          Colors.white,
+          Icons.menu_book_rounded
+        ),
+      _ => (
+          const Color(0xFF5A5A8A),
+          'Autor',
+          const Color(0xFF5A5A8A).withValues(alpha: 0.2),
+          const Color(0xFF5A5A8A),
+          Icons.person_rounded
+        ),
     };
 
     // Obtener imagen
     String? imageUrl;
     if (item.tipo == 'Curso') {
-      final curso = BooklService().cursos.where((c) => c.idCurso == item.id).firstOrNull;
+      final curso =
+          BooklService().cursos.where((c) => c.idCurso == item.id).firstOrNull;
       imageUrl = _extractImageUrl(curso?.contenido);
     } else if (item.tipo == 'Lección') {
-      final leccion = BooklService().lecciones.where((l) => l.idLeccion == item.id).firstOrNull;
+      final leccion = BooklService()
+          .lecciones
+          .where((l) => l.idLeccion == item.id)
+          .firstOrNull;
       imageUrl = _extractImageUrl(leccion?.contenido);
     } else {
       imageUrl = item.avatarUrl;
@@ -337,14 +373,16 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                 // Contenido
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 50, top: 10, bottom: 10),
+                    padding:
+                        const EdgeInsets.only(right: 50, top: 10, bottom: 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // Badge de tipo
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: badgeColor,
                             borderRadius: BorderRadius.circular(12),
@@ -376,7 +414,9 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                           Row(
                             children: [
                               Icon(
-                                item.tipo == 'Autor' ? Icons.badge_outlined : Icons.person_outline_rounded,
+                                item.tipo == 'Autor'
+                                    ? Icons.badge_outlined
+                                    : Icons.person_outline_rounded,
                                 size: 13,
                                 color: const Color(0xFF888888),
                               ),
@@ -401,7 +441,8 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
                           const SizedBox(height: 3),
                           Row(
                             children: [
-                              const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 14),
+                              const Icon(Icons.star_rounded,
+                                  color: Color(0xFFFFB800), size: 14),
                               const SizedBox(width: 3),
                               Text(
                                 item.calificacion,
@@ -448,9 +489,15 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
       return item.subtitulo;
     } else if (item.tipo == 'Lección') {
       // Buscar el autor de la lección por idUsuarioFk
-      final leccion = BooklService().lecciones.where((l) => l.idLeccion == item.id).firstOrNull;
+      final leccion = BooklService()
+          .lecciones
+          .where((l) => l.idLeccion == item.id)
+          .firstOrNull;
       if (leccion != null) {
-        final autor = BooklService().usuarios.where((u) => u.idUsuario == leccion.idUsuarioFk).firstOrNull;
+        final autor = BooklService()
+            .usuarios
+            .where((u) => u.idUsuario == leccion.idUsuarioFk)
+            .firstOrNull;
         if (autor != null) return autor.nombreCompleto;
       }
       // Fallback al subtitulo (nombre del curso padre)
@@ -463,7 +510,8 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
 
   Widget _buildFavoriteButton(ResultadoBusqueda item) {
     final isLeccion = item.tipo == 'Lección';
-    final listenable = isLeccion ? AppSession().savedLecciones : AppSession().savedCursos;
+    final listenable =
+        isLeccion ? AppSession().savedLecciones : AppSession().savedCursos;
 
     return ListenableBuilder(
       listenable: listenable,
@@ -521,7 +569,8 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
               Center(
                 child: Text(
                   '$percent%',
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 10, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -540,4 +589,3 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
     return null;
   }
 }
-
