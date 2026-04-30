@@ -54,4 +54,19 @@ class ConfiguracionController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> enviarSugerencia(String asunto, String problema) async {
+    final userId = AppSession().usuarioId;
+    if (userId == null) throw Exception('Usuario no autenticado');
+
+    final sugerencia = {
+      'id_usuario': userId,
+      'asunto': asunto,
+      'problema': problema,
+      'fecha': DateTime.now().toIso8601String(),
+    };
+
+    // Delega al repositorio para persistir (cumple Clean Architecture)
+    await _repository.enviarSugerencia(sugerencia);
+  }
 }

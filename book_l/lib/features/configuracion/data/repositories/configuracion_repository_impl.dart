@@ -29,4 +29,11 @@ class ConfiguracionRepositoryImpl implements ConfiguracionRepository {
   Future<void> saveConfiguracion(Configuracion config) async {
     _service.saveConfiguracion(config);
   }
+
+  @override
+  Future<void> enviarSugerencia(Map<String, dynamic> sugerencia) async {
+    // Agregamos el ID generado aquí para mantener la lógica de persistencia encapsulada
+    sugerencia['id_sugerencia'] = _service.generateId();
+    _service.saveSugerencia(sugerencia);
+  }
 }

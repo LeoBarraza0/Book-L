@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../../../core/services/bookl_service.dart';
-import '../../../../core/storage/local_storage.dart';
+import '../controller/configuracion_controller.dart';
 
 class SugerenciaScreen extends StatefulWidget {
   const SugerenciaScreen({super.key});
@@ -14,6 +13,9 @@ class _SugerenciaScreenState extends State<SugerenciaScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _asuntoController = TextEditingController();
   final TextEditingController _problemaController = TextEditingController();
+  
+  // Instancia del controller
+  final ConfiguracionController _controller = ConfiguracionController();
 
   bool _isSubmitting = false;
 
@@ -21,6 +23,7 @@ class _SugerenciaScreenState extends State<SugerenciaScreen> {
   void dispose() {
     _asuntoController.dispose();
     _problemaController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -31,42 +34,52 @@ class _SugerenciaScreenState extends State<SugerenciaScreen> {
       _isSubmitting = true;
     });
 
-    final data = {
-      'id_sugerencia': BooklService().generateId(),
-      'id_usuario': AppSession().usuarioId,
-      'asunto': _asuntoController.text,
-      'problema': _problemaController.text,
-      'fecha': DateTime.now().toIso8601String(),
-    };
-
-    BooklService().saveSugerencia(data);
-
-    await Future.delayed(const Duration(milliseconds: 600));
-
-    if (mounted) {
-      setState(() {
-        _isSubmitting = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 10),
-              Text('Sugerencia enviada con éxito',
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          backgroundColor: const Color(0xFF44C040),
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+    try {
+      // Delega el flujo de datos al controller, manteniendo la vista limpia
+      await _controller.enviarSugerencia(
+        _asuntoController.text,
+        _problemaController.text,
       );
 
-      Navigator.pop(context);
+      await Future.delayed(const Duration(milliseconds: 600));
+
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 10),
+                Text('Sugerencia enviada con éxito',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            backgroundColor: const Color(0xFF44C040),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -132,7 +145,7 @@ class _SugerenciaScreenState extends State<SugerenciaScreen> {
                   boxShadow: [
                     if (!isDark)
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, -5),
                       ),

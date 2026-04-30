@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/widgets/nav_bar.dart';
+
 import '../../../perfil/presentation/screens/perfil_screen.dart';
 import '../controller/configuracion_controller.dart';
 import '../../../../core/storage/local_storage.dart';
@@ -398,7 +398,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
             width: 45,
             height: 45,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.15),
+              color: iconColor.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: iconColor),
@@ -440,7 +440,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
             width: 45,
             height: 45,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.15),
+              color: iconColor.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: iconColor),
@@ -495,7 +495,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
               width: 45,
               height: 45,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.15),
+                color: iconColor.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconColor),
