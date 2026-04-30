@@ -8,9 +8,8 @@ import '../../../../shared/widgets/header_background_image.dart';
 import '../../../../core/storage/local_storage.dart';
 
 import '../controller/leccion_controller.dart';
-import '../../domain/entities/capitulo.dart';
-import 'package:flutter_quill/flutter_quill.dart' as quill;
-import 'package:book_l/core/services/bookl_service.dart';
+
+import 'package:book_l/features/ejercicio/presentation/controller/ejercicios_controller.dart';
 import 'package:book_l/features/ejercicio/domain/entities/ejercicio.dart';
 import 'package:book_l/features/ejercicio/presentation/screens/teorico_screen.dart';
 
@@ -212,13 +211,13 @@ class _CapituloScreenState extends State<CapituloScreen> {
                           listenable: AppSession()
                               .completedEjercicios, // Escuchamos cambios en ejercicios completados
                           builder: (context, _) {
-                            final ejercicios = BooklService()
-                                .ejercicios
-                                .where((e) => e.idCapitulo == widget.idCapitulo)
-                                .toList();
+                            // Obtener ejercicios del capítulo vía controlador
+                            final ejercicios = EjerciciosController()
+                                .ejerciciosDeCapitulo(widget.idCapitulo!);
 
-                            if (ejercicios.isEmpty)
+                            if (ejercicios.isEmpty) {
                               return const SizedBox.shrink();
+                            }
 
                             return Column(
                               children: [
@@ -277,8 +276,8 @@ class _CapituloScreenState extends State<CapituloScreen> {
                                     BoxShadow(
                                       color: isCompleted
                                           ? const Color(0xFF4DC130)
-                                              .withOpacity(0.3)
-                                          : Colors.black.withOpacity(0.05),
+                                              .withValues(alpha: 0.3)
+                                          : Colors.black.withValues(alpha: 0.05),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     )
@@ -354,10 +353,10 @@ class _CapituloScreenState extends State<CapituloScreen> {
                   final cap = _ctrl.capituloSeleccionado;
                   String? imagenUrl;
                   if (cap != null) {
-                    final leccion = BooklService().lecciones.cast<dynamic>().firstWhere(
-                      (l) => l.idLeccion == cap.idLeccion,
-                      orElse: () => null,
-                    );
+                    // Obtener imagen de la lección padre vía controlador
+                    final leccion = _ctrl.state.items
+                        .where((l) => l.idLeccion == cap.idLeccion)
+                        .firstOrNull;
                     imagenUrl = leccion?.imagenUrl;
                   }
                   return HeaderBackgroundImage(
@@ -395,7 +394,7 @@ class _CapituloScreenState extends State<CapituloScreen> {
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: const Color(0xFF6BCA54).withOpacity(0.9),
+          color: const Color(0xFF6BCA54).withValues(alpha: 0.9),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: Colors.white, size: 24),
@@ -440,7 +439,7 @@ class _CapituloScreenState extends State<CapituloScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [color, color.withOpacity(0.6)],
+                colors: [color, color.withValues(alpha: 0.6)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -485,20 +484,20 @@ class _CapituloScreenState extends State<CapituloScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFF0F0F0),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
       ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color.withOpacity(0.7), size: 36),
+            Icon(icon, color: color.withValues(alpha: 0.7), size: 36),
             const SizedBox(height: 8),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: color.withOpacity(0.7),
+                color: color.withValues(alpha: 0.7),
               ),
             ),
           ],

@@ -13,7 +13,7 @@ import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
 import '../../../../core/storage/local_storage.dart';
-import '../../../../core/services/bookl_service.dart';
+
 import '../../../curso/domain/entities/curso.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
 import '../../../../shared/widgets/video_player_widget.dart';
@@ -385,13 +385,12 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              ListenableBuilder(
-                listenable: BooklService(),
-                builder: (context, _) {
-                  final creator = BooklService().usuarios.cast<dynamic>().firstWhere(
-                        (u) => (u as dynamic).idUsuario == leccion?.idUsuarioFk,
-                        orElse: () => null,
-                      );
+              // Información del creador vía controlador
+              Builder(
+                builder: (context) {
+                  final creator = leccion != null
+                      ? _ctrl.getCreadorSync(leccion.idUsuarioFk)
+                      : null;
                   return GestureDetector(
                     onTap: () => Navigator.push(
                       context,
@@ -494,16 +493,10 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
         SizedBox(
           height: 60,
           child: ListenableBuilder(
-            listenable: BooklService(),
+            listenable: _ctrl,
             builder: (context, _) {
-              final asociadosIds = BooklService().leccionesCursos
-                  .where((e) => e['id_leccion'] == idLeccion)
-                  .map((e) => e['id_curso'])
-                  .toList();
-              
-              final asociados = BooklService().cursos
-                  .where((c) => asociadosIds.contains(c.idCurso))
-                  .toList();
+              // Cursos asociados vía controlador
+              final asociados = _ctrl.getCursosAsociados(idLeccion ?? 0);
 
               if (asociados.isEmpty) {
                 return const Text('Sin cursos asociados', style: TextStyle(fontSize: 13, color: Colors.black45));
@@ -742,12 +735,13 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 14),
         ListenableBuilder(
-          listenable: BooklService(),
+          listenable: _ctrl,
           builder: (context, _) {
+            // Materiales educativos vía controlador
             final leccionId = _ctrl.state.selected?.idLeccion;
-            final materiales = BooklService().materiales.where(
-              (m) => m.idLeccionFk == leccionId
-            ).toList();
+            final materiales = leccionId != null
+                ? _ctrl.materialesDeLeccion(leccionId)
+                : [];
 
             if (materiales.isEmpty) {
               return const Text('No hay material adicional disponible.', 
@@ -1011,13 +1005,12 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
 
   Widget _buildAutorCard() {
     final leccion = _ctrl.state.selected;
-    return ListenableBuilder(
-      listenable: BooklService(),
-      builder: (context, _) {
-        final creator = BooklService().usuarios.cast<dynamic>().firstWhere(
-              (u) => (u as dynamic).idUsuario == leccion?.idUsuarioFk,
-              orElse: () => null,
-            );
+    return Builder(
+      builder: (context) {
+        // Info del creador vía controlador
+        final creator = leccion != null
+            ? _ctrl.getCreadorSync(leccion.idUsuarioFk)
+            : null;
         return GestureDetector(
           onTap: () => Navigator.push(
             context,

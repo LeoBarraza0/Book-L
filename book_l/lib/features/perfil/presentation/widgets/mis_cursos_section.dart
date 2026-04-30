@@ -243,7 +243,7 @@ class _MisCursosSectionState extends State<MisCursosSection> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.05), blurRadius: 10),
+                      color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
                 ],
               ),
               child: const Icon(Icons.arrow_back,
@@ -294,7 +294,7 @@ class DiagonalStripesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black.withOpacity(0.12) // Slightly darker stripes
+      ..color = Colors.black.withValues(alpha: 0.12) // Slightly darker stripes
       ..strokeWidth = 35
       ..strokeCap = StrokeCap.round;
 

@@ -276,7 +276,7 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    item.estado ?? 'lección',
+                    item.estado,
                     style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,

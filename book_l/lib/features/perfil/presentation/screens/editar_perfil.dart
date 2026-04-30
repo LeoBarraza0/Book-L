@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../core/services/bookl_service.dart';
+import '../controller/perfil_controller.dart';
 import '../../../../core/storage/local_storage.dart';
 
 class EditarPerfil extends StatefulWidget {
@@ -35,7 +35,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
   void _loadUserData() {
     _userId = AppSession().usuarioId ?? 0;
     try {
-      final user = BooklService().usuarios.firstWhere((u) => u.idUsuario == _userId);
+      final user = PerfilController().getUsuarioById(_userId)!;
       _nombre = user.nombreCompleto;
       _usuario = user.username ?? '';
       _descripcion = user.descripcion ?? '';
@@ -60,7 +60,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
 
   void _saveUserData() {
     try {
-      final user = BooklService().usuarios.firstWhere((u) => u.idUsuario == _userId);
+      final user = PerfilController().getUsuarioById(_userId)!;
       final updatedUser = user.copyWith(
         nombreCompleto: _nombre,
         username: _usuario,
@@ -70,7 +70,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
         celular: int.tryParse(_celular),
         avatarUrl: _avatarNetworkUrl, // This could be updated if an image is uploaded
       );
-      BooklService().updateUsuario(updatedUser);
+      PerfilController().updateUsuario(updatedUser);
     } catch (e) {
       // Ignorar si el usuario no se encuentra
     }
@@ -306,7 +306,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.01),
+            color: Colors.black.withValues(alpha: 0.01),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -458,7 +458,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
+            color: Colors.grey.withValues(alpha: 0.3),
             spreadRadius: 0,
             blurRadius: 6,
             offset: const Offset(0, 6), // Sombra inferior
@@ -512,51 +512,6 @@ class _EditarPerfilState extends State<EditarPerfil> {
         keyboardType: keyboardType,
       ),
       onSave: () => onSave(controller.text),
-    );
-  }
-
-  void _editarCampoDropdown({
-    required String title,
-    required String subtitle,
-    required String initialValue,
-    required List<String> opciones,
-    required ValueChanged<String> onSave,
-  }) {
-    String tempValue = initialValue;
-    _mostrarModal(
-      title: title,
-      subtitle: subtitle,
-      content: StatefulBuilder(
-        builder: (context, setStateModal) {
-          return DropdownButtonFormField<String>(
-            initialValue: opciones.contains(tempValue) ? tempValue : opciones.first,
-            icon: const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: Colors.grey,
-            ),
-            menuMaxHeight: 250,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: const Color(0xFFF4F5F7),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            items: opciones
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                .toList(),
-            onChanged: (val) {
-              if (val != null) setStateModal(() => tempValue = val);
-            },
-          );
-        },
-      ),
-      onSave: () => onSave(tempValue),
     );
   }
 

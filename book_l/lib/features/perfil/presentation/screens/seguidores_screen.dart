@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'perfil_screen.dart';
-import '../../../../core/services/bookl_service.dart';
+import '../controller/perfil_controller.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../auth/domain/entities/usuario.dart';
 
@@ -28,21 +28,12 @@ class _SeguidoresScreenState extends State<SeguidoresScreen> {
   }
 
   void _loadData() {
-    final bookl = BooklService();
     if (widget.isSeguidores) {
       // Seguidores del usuario focus (id_seguido = focus, buscando id_seguidor)
-      final refs = bookl.seguidores
-          .where((s) => s['id_seguido'] == widget.idUsuarioFocus && s['estado'] == 'activo')
-          .map((s) => s['id_seguidor'] as int)
-          .toList();
-      usuariosList = bookl.usuarios.where((u) => refs.contains(u.idUsuario)).toList();
+      usuariosList = PerfilController().getSeguidores(widget.idUsuarioFocus);
     } else {
       // Usuarios a los que sigue el focus (id_seguidor = focus, buscando id_seguido)
-      final refs = bookl.seguidores
-          .where((s) => s['id_seguidor'] == widget.idUsuarioFocus && s['estado'] == 'activo')
-          .map((s) => s['id_seguido'] as int)
-          .toList();
-      usuariosList = bookl.usuarios.where((u) => refs.contains(u.idUsuario)).toList();
+      usuariosList = PerfilController().getSeguidos(widget.idUsuarioFocus);
     }
   }
 
@@ -147,7 +138,7 @@ class _SeguidoresScreenState extends State<SeguidoresScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.08),
+              color: Colors.grey.withValues(alpha: 0.08),
               spreadRadius: 2,
               blurRadius: 10,
               offset: const Offset(0, 4),
@@ -196,17 +187,17 @@ class _SeguidoresScreenState extends State<SeguidoresScreen> {
 
             // Action Button reactivo
             ListenableBuilder(
-              listenable: BooklService(),
+              listenable: PerfilController(),
               builder: (context, _) {
                 final myId = AppSession().usuarioId ?? 0;
                 if (myId == usuario.idUsuario) {
                   return const SizedBox.shrink(); // Es el usuario mismo
                 }
-                final isFollowing = BooklService().isFollowing(myId, usuario.idUsuario);
+                final isFollowing = PerfilController().isFollowing(myId, usuario.idUsuario);
                 
                 return ElevatedButton(
                   onPressed: () {
-                    BooklService().toggleSeguir(myId, usuario.idUsuario);
+                    PerfilController().toggleSeguir(myId, usuario.idUsuario);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isFollowing

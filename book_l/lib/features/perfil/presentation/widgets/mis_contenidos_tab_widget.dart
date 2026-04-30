@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../../core/services/bookl_service.dart';
+import '../controller/perfil_controller.dart';
 import '../../../../shared/widgets/search_filter_bar.dart';
 import '../../../../shared/widgets/content_cards.dart';
 
 /// Tab de "Mis Contenidos" en el Perfil.
-/// Fuente única de datos: [BooklService]. Filtrado por userId activo.
+/// Fuente única de datos: [PerfilController]. Filtrado por userId activo.
 class MisContenidosTabWidget extends StatefulWidget {
   final int idUsuario;
   const MisContenidosTabWidget({super.key, required this.idUsuario});
@@ -34,19 +34,15 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: BooklService(),
+      listenable: PerfilController(),
       builder: (context, _) {
         final userId = widget.idUsuario;
 
-        // Fuente única: BooklService. Filtramos por usuario activo.
-        final misLecciones = BooklService()
-            .lecciones
-            .where((l) => l.idUsuarioFk == userId)
-            .toList();
-        final misCursos = BooklService()
-            .cursos
-            .where((c) => c.idUsuarioFk == userId)
-            .toList();
+        // Fuente única: PerfilController. Filtramos por usuario activo.
+        final misLecciones = PerfilController()
+            .getLeccionesDeUsuario(userId);
+        final misCursos = PerfilController()
+            .getCursosDeUsuario(userId);
 
         final filteredLecciones = _query.isEmpty
             ? misLecciones

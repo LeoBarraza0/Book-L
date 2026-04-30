@@ -256,9 +256,9 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.2),
+                      Colors.black.withValues(alpha: 0.2),
                       Colors.transparent,
-                      Colors.black.withOpacity(0.3),
+                      Colors.black.withValues(alpha: 0.3),
                     ],
                   ),
                 ),
@@ -276,11 +276,11 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.92),
+                  color: Colors.white.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 8,
                     ),
                   ],
@@ -339,11 +339,11 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: const Color(0xFF6BCA54).withOpacity(0.9),
+          color: const Color(0xFF6BCA54).withValues(alpha: 0.9),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -747,9 +747,9 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color : color.withOpacity(0.08),
+          color: isSelected ? color : color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(isSelected ? 1.0 : 0.3)),
+          border: Border.all(color: color.withValues(alpha: isSelected ? 1.0 : 0.3)),
         ),
         child: Text(
           label,
@@ -892,7 +892,7 @@ class _GuardarButtonState extends State<_GuardarButton>
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF4DC130).withOpacity(0.40),
+                color: const Color(0xFF4DC130).withValues(alpha: 0.40),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),

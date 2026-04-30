@@ -98,6 +98,11 @@ class EjerciciosController extends ChangeNotifier {
     return _repo.getExerciseIdsByCapitulo(idCapitulo);
   }
 
+  /// Retorna los ejercicios completos de un capítulo específico
+  List<Ejercicio> ejerciciosDeCapitulo(int idCapitulo) {
+    return _repo.getEjerciciosByCapitulos({idCapitulo});
+  }
+
   void setCategoriaFiltro(String? categoria) {
     _categoriaActual = categoria;
     _selectedFilterIndex = 0;

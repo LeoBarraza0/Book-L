@@ -6,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/header_background_image.dart';
 import '../../../../core/storage/local_storage.dart';
-import '../../../../core/services/bookl_service.dart';
+
 import '../../../../shared/widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
 import '../widgets/material_editor_tile.dart';
@@ -272,9 +272,9 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.15),
+                      Colors.black.withValues(alpha: 0.15),
                       Colors.transparent,
-                      Colors.black.withOpacity(0.25),
+                      Colors.black.withValues(alpha: 0.25),
                     ],
                   ),
                 ),
@@ -292,11 +292,11 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.92),
+                  color: Colors.white.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 8,
                     ),
                   ],
@@ -340,7 +340,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
                       _buildCircularIconButton(
                         Icons.delete_rounded,
                         _eliminarLeccion,
-                        bgColor: Colors.red.withOpacity(0.9),
+                        bgColor: Colors.red.withValues(alpha: 0.9),
                       ),
                     ],
                   ),
@@ -360,17 +360,17 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: bgColor ?? const Color(0xFF6BCA54).withOpacity(0.9),
+          color: bgColor ?? const Color(0xFF6BCA54).withValues(alpha: 0.9),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Icon(icon, color: Colors.white, size: 24),
+        child: Icon(icon, color: iconColor ?? Colors.white, size: 24),
       ),
     );
   }
@@ -424,10 +424,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
           builder: (context) {
             final idUsuario = _leccionActual?.idUsuarioFk ?? AppSession().usuarioId;
             final usuario = idUsuario != null
-                ? BooklService().usuarios.cast<dynamic>().firstWhere(
-                    (u) => u.idUsuario == idUsuario,
-                    orElse: () => null,
-                  )
+                ? _leccionCtrl.getCreadorSync(idUsuario)
                 : null;
             final nombreAutor = usuario?.nombreCompleto ?? AppSession().nombreCompleto ?? '---';
             final rolAutor = usuario?.rol ?? 'Estudiante';
@@ -598,7 +595,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
             ),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              backgroundColor: const Color(0xFF4DC130).withOpacity(0.1),
+              backgroundColor: const Color(0xFF4DC130).withValues(alpha: 0.1),
               shape:
                   RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
@@ -648,7 +645,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
             ),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              backgroundColor: const Color(0xFF4DC130).withOpacity(0.1),
+              backgroundColor: const Color(0xFF4DC130).withValues(alpha: 0.1),
               shape:
                   RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
@@ -725,7 +722,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
     );
 
     if (confirmar == true && _leccionActual != null) {
-      BooklService().removeLeccion(_leccionActual!.idLeccion);
+      _leccionCtrl.eliminarLeccion(_leccionActual!.idLeccion);
       if (mounted) {
         FeedbackUtils.showSuccessSnackBar(context, 'Lección eliminada correctamente.');
         Navigator.of(context).popUntil((route) => route.isFirst);
@@ -1166,9 +1163,9 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color : color.withOpacity(0.08),
+          color: isSelected ? color : color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(isSelected ? 1.0 : 0.3)),
+          border: Border.all(color: color.withValues(alpha: isSelected ? 1.0 : 0.3)),
         ),
         child: Text(
           label,
@@ -1242,7 +1239,7 @@ class _GuardarButtonState extends State<_GuardarButton>
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF4DC130).withOpacity(0.40),
+                color: const Color(0xFF4DC130).withValues(alpha: 0.40),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),

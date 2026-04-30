@@ -1,6 +1,7 @@
 import '../../../../core/services/bookl_service.dart';
 import '../../domain/entities/leccion.dart';
 import '../../domain/entities/capitulo.dart';
+import '../../domain/entities/material_educativo.dart';
 import '../../domain/repositories/leccion_repository.dart';
 
 class LeccionRepositoryImpl implements LeccionRepository {
@@ -31,6 +32,11 @@ class LeccionRepositoryImpl implements LeccionRepository {
         .toList();
   }
 
+  /// Devuelve capítulos de forma síncrona (ya cargados en memoria)
+  @override
+  List<Capitulo> capitulosDe(int idLeccion) =>
+      _service.capitulos.where((c) => c.idLeccion == idLeccion).toList();
+
   // ── CREATE ─────────────────────────────────────────────────────────────────
 
   @override
@@ -54,4 +60,54 @@ class LeccionRepositoryImpl implements LeccionRepository {
   Future<void> deleteLeccion(int id) async {
     _service.removeLeccion(id);
   }
+
+  // ── Material Educativo ─────────────────────────────────────────────────────
+
+  @override
+  List<MaterialEducativo> materialesDeLeccion(int idLeccion) =>
+      _service.materialesDeLeccion(idLeccion);
+
+  @override
+  int agregarMaterial(MaterialEducativo material) {
+    final id = _service.nextMaterialId();
+    final nuevo = material.copyWith(idMaterial: id);
+    _service.addMaterial(nuevo);
+    return id;
+  }
+
+  @override
+  void actualizarMaterial(MaterialEducativo material) {
+    _service.updateMaterial(material);
+  }
+
+  @override
+  void eliminarMaterial(int idMaterial) {
+    _service.removeMaterial(idMaterial);
+  }
+
+  // ── Utilidades ─────────────────────────────────────────────────────────────
+
+  @override
+  int generarId() => _service.generateId();
+
+  @override
+  dynamic getUsuarioById(int idUsuario) {
+    try {
+      return _service.usuarios.firstWhere((u) => u.idUsuario == idUsuario);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  List<dynamic> getCursosAsociados(int idLeccion) {
+    final asociadosIds = _service.leccionesCursos
+        .where((e) => e['id_leccion'] == idLeccion)
+        .map((e) => e['id_curso'])
+        .toList();
+    return _service.cursos
+        .where((c) => asociadosIds.contains(c.idCurso))
+        .toList();
+  }
 }
+

@@ -39,7 +39,7 @@ class _AgregarSeccionButtonState extends State<AgregarSeccionButton> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _isPressed
-                      ? Colors.grey.withOpacity(0.1)
+                      ? Colors.grey.withValues(alpha: 0.1)
                       : Colors.transparent,
                   border: Border.all(
                     color: _isPressed

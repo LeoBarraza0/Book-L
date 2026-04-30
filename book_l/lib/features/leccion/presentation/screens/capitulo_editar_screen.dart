@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/services/bookl_service.dart';
+
 import '../../../../shared/widgets/header_background_image.dart';
 import '../../../../shared/widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
@@ -97,7 +97,7 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
     // Secciones iniciales si es nuevo
     if (widget.idCapitulo == null) {
       _capituloActual = Capitulo(
-        idCapitulo: BooklService().generateId(),
+        idCapitulo: LeccionController().generarId(),
         idLeccion: widget.idLeccion ?? 0,
         nombre: '',
         contenido: [],
@@ -200,10 +200,12 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
                   final idLeccion = _capituloActual?.idLeccion ?? widget.idLeccion;
                   String? imagenUrl;
                   if (idLeccion != null) {
-                    final leccion = BooklService().lecciones.cast<dynamic>().firstWhere(
-                      (l) => l.idLeccion == idLeccion,
-                      orElse: () => null,
-                    );
+                    // Obtener imagen de la lección padre vía controlador
+                    final ctrl = LeccionController();
+                    final leccionState = ctrl.state;
+                    final leccion = leccionState.items
+                        .where((l) => l.idLeccion == idLeccion)
+                        .firstOrNull;
                     imagenUrl = leccion?.imagenUrl;
                   }
                   return HeaderBackgroundImage(
@@ -227,9 +229,9 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.15),
+                      Colors.black.withValues(alpha: 0.15),
                       Colors.transparent,
-                      Colors.black.withOpacity(0.25),
+                      Colors.black.withValues(alpha: 0.25),
                     ],
                   ),
                 ),
@@ -245,11 +247,11 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.92),
+                  color: Colors.white.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 8,
                     ),
                   ],
@@ -301,11 +303,11 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: const Color(0xFF6BCA54).withOpacity(0.9),
+          color: const Color(0xFF6BCA54).withValues(alpha: 0.9),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -324,7 +326,7 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -353,7 +355,7 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
             ),
             decoration: InputDecoration(
               hintText: 'Ej: Introducción a la algoritmia',
-              hintStyle: TextStyle(color: Colors.black.withOpacity(0.15)),
+              hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.15)),
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
@@ -395,9 +397,9 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
             ),
           ),
           const SizedBox(height: 12),
-          ...BooklService()
-              .ejercicios
-              .where((e) => e.idCapitulo == _capituloActual!.idCapitulo)
+          // Listar ejercicios del capítulo vía controlador de ejercicios
+          ...EjerciciosController()
+              .ejerciciosDeCapitulo(_capituloActual!.idCapitulo)
               .map((ex) => _buildEjercicioItem(ex)),
         ],
         const SizedBox(height: 8),
@@ -572,16 +574,16 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 24),
@@ -737,7 +739,7 @@ class _GuardarButtonState extends State<_GuardarButton>
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF4DC130).withOpacity(0.40),
+                color: const Color(0xFF4DC130).withValues(alpha: 0.40),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),

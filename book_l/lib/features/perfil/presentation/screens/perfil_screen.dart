@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
-import '../../../notificacion/presentation/screens/notificaciones_screen.dart';
+
 import 'editar_perfil.dart';
 import 'seguidores_screen.dart';
-import '../widgets/mis_cursos_section.dart';
-import '../../../../core/services/bookl_service.dart';
+
+import '../controller/perfil_controller.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../widgets/mis_contenidos_tab_widget.dart';
 import '../widgets/mis_favoritos_tab_widget.dart';
@@ -39,9 +39,7 @@ class _PerfilScreenState extends State<PerfilScreen>
     if (widget.idUsuario == null || widget.idUsuario == session.usuarioId) {
       _isOwnProfile = true;
       try {
-        _user = BooklService().usuarios.firstWhere(
-              (u) => u.idUsuario == session.usuarioId,
-            );
+        _user = PerfilController().getUsuarioById(session.usuarioId ?? 0);
       } catch (e) {
         // Convert current session to a temporary Usuario object for UI consistency
         _user = Usuario(
@@ -56,9 +54,7 @@ class _PerfilScreenState extends State<PerfilScreen>
     } else {
       _isOwnProfile = false;
       try {
-        _user = BooklService().usuarios.firstWhere(
-              (u) => u.idUsuario == widget.idUsuario,
-            );
+        _user = PerfilController().getUsuarioById(widget.idUsuario!);
       } catch (e) {
         _user = null;
       }
@@ -122,7 +118,7 @@ class _PerfilScreenState extends State<PerfilScreen>
                                     if (Navigator.canPop(context)) {
                                       Navigator.pop(context);
                                     } else {
-                                      final role = BooklService().currentRole;
+                                      final role = PerfilController().currentRole;
                                       Navigator.pushReplacementNamed(
                                           context,
                                           role == 'admin'
@@ -239,16 +235,13 @@ class _PerfilScreenState extends State<PerfilScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: ListenableBuilder(
-                              listenable: BooklService(),
+                              listenable: PerfilController(),
                               builder: (context, _) {
-                                final pubs = BooklService()
-                                    .cursos
-                                    .where((c) =>
-                                        c.idUsuarioFk == _user?.idUsuario)
-                                    .length;
-                                final followersCount = BooklService()
+                                final pubs = PerfilController()
+                                    .getPublicacionesCount(_user?.idUsuario ?? 0);
+                                final followersCount = PerfilController()
                                     .getFollowersCount(_user?.idUsuario ?? 0);
-                                final followingCount = BooklService()
+                                final followingCount = PerfilController()
                                     .getFollowingCount(_user?.idUsuario ?? 0);
                                 return Row(
                                   mainAxisAlignment:
@@ -342,16 +335,16 @@ class _PerfilScreenState extends State<PerfilScreen>
                           )
                         else
                           ListenableBuilder(
-                              listenable: BooklService(),
+                              listenable: PerfilController(),
                               builder: (context, _) {
-                                final isFollowing = BooklService().isFollowing(
+                                final isFollowing = PerfilController().isFollowing(
                                     AppSession().usuarioId ?? 0,
                                     _user?.idUsuario ?? 0);
                                 return ElevatedButton(
                                   onPressed: () {
                                     if (AppSession().usuarioId != null &&
                                         _user?.idUsuario != null) {
-                                      BooklService().toggleSeguir(
+                                      PerfilController().toggleSeguir(
                                           AppSession().usuarioId!,
                                           _user!.idUsuario);
                                     }
@@ -473,13 +466,7 @@ class _PerfilScreenState extends State<PerfilScreen>
     );
   }
 
-  Widget _buildCoursesAccess() {
-    return MisCursosSection(
-      onMisCursosTap: () {
-        Navigator.pushNamed(context, '/publicar_curso');
-      },
-    );
-  }
+
 
   Widget _buildStatItem(String label, String value) {
     return Column(
