@@ -29,14 +29,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _programaSeleccionado;
   String? _semestreSeleccionado;
 
-  final List<String> _programas = [
-    'Ingeniería de Sistemas',
-    'Ingeniería Industrial',
-    'Administración de Empresas',
-    'Contaduría Pública',
-    'Derecho',
-    'Medicina',
-  ];
+  late final List<String> _programas;
+
+  @override
+  void initState() {
+    super.initState();
+    // Obtiene los programas dinámicamente desde el BooklService (fuente de verdad JSON)
+    _programas = BooklService().programas;
+  }
 
   final List<String> _semestres = [
     '1',
