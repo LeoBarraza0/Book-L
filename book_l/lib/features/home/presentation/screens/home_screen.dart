@@ -4,6 +4,7 @@ import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/content_cards.dart';
 import '../../../../core/services/bookl_service.dart';
 import '../../../../core/storage/local_storage.dart';
+import '../../../notificacion/presentation/widgets/notification_icon_button.dart';
 import 'widgets/racha_buky_widget.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -165,40 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           // Botón Notificaciones
-          GestureDetector(
-            onTap: () {
-              Navigator.pushNamed(context, '/notificaciones');
-            },
-            child: Stack(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF96D786),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.notifications_none,
-                    color: Colors.white,
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF949F),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const NotificationIconButton(isGreenCircle: true),
         ],
       ),
     );

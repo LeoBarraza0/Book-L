@@ -10,6 +10,7 @@ import '../controller/usuarios_controller.dart';
 import '../controller/usuarios_state.dart';
 import 'edit_usuario_screen.dart';
 import 'add_usuario_screen.dart';
+import '../../../notificacion/presentation/widgets/notification_icon_button.dart';
 
 /// Crea y provee el [UsuariosController] con todas sus dependencias.
 ///
@@ -142,19 +143,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                           Positioned(
                             top: topPadding + 8,
                             right: 20,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.notifications_none,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
+                            child: const NotificationIconButton(isWhiteCircle: true),
                           ),
                           // Título "Usuarios"
                           const Positioned(

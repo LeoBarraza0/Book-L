@@ -11,6 +11,7 @@ import '../widgets/mis_favoritos_tab_widget.dart';
 
 import '../../../auth/domain/entities/usuario.dart';
 import '../../../../shared/widgets/custom_avatar.dart';
+import '../../../notificacion/presentation/widgets/notification_icon_button.dart';
 
 class PerfilScreen extends StatefulWidget {
   final int? idUsuario;
@@ -140,49 +141,7 @@ class _PerfilScreenState extends State<PerfilScreen>
                                 ),
                               ),
                               // Notification bell with badge
-                              Stack(
-                                children: [
-                                  Container(
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFF88D288),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: IconButton(
-                                      icon: const Icon(
-                                        Icons.notifications_none,
-                                        color: Colors.white,
-                                        size: 28,
-                                      ),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const NotificacionScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 4,
-                                    right: 4,
-                                    child: Container(
-                                      width: 14,
-                                      height: 14,
-                                      decoration: BoxDecoration(
-                                        color:
-                                            const Color(0xFFFA8E9E), // Pink dot
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: const Color(0xFFF4F7FB),
-                                          width: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              const NotificationIconButton(isGreenCircle: true),
                             ],
                           ),
                         ),
