@@ -1,6 +1,6 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/services/bookl_service.dart';
 
 // ── Modelo de Resultado de Búsqueda ──────────────────────────────────────────
 class ResultadoBusqueda {
@@ -34,20 +34,9 @@ class ResultadoBusqueda {
 // ── Normalización: elimina tildes y pasa a minúsculas ────────────────────────
 String _normalizar(String texto) {
   const Map<String, String> reemplazos = {
-    'á': 'a',
-    'é': 'e',
-    'í': 'i',
-    'ó': 'o',
-    'ú': 'u',
-    'Á': 'a',
-    'É': 'e',
-    'Í': 'i',
-    'Ó': 'o',
-    'Ú': 'u',
-    'ñ': 'n',
-    'Ñ': 'n',
-    'ü': 'u',
-    'Ü': 'u',
+    'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+    'Á': 'a', 'É': 'e', 'Í': 'i', 'Ó': 'o', 'Ú': 'u',
+    'ñ': 'n', 'Ñ': 'n', 'ü': 'u', 'Ü': 'u',
   };
   return texto.toLowerCase().replaceAllMapped(
         RegExp('[áéíóúÁÉÍÓÚñÑüÜ]'),
@@ -68,12 +57,7 @@ Color _colorPorId(int id) => _paleta[id % _paleta.length];
 
 // ── Repositorio ──────────────────────────────────────────────────────────────
 class BusquedaRepository {
-  // Carga y decodifica el JSON una sola vez
-  Future<Map<String, dynamic>> _cargarJson() async {
-    final raw = await rootBundle.loadString('assets/data/bookl_data.json');
-    return json.decode(raw) as Map<String, dynamic>;
-  }
-
+  
   // ── Búsqueda principal ────────────────────────────────────────────────────
   Future<List<ResultadoBusqueda>> buscar(
     String query, {
@@ -81,28 +65,23 @@ class BusquedaRepository {
   }) async {
     if (query.trim().isEmpty) return [];
 
-    final data = await _cargarJson();
     final q = _normalizar(query);
     final resultados = <ResultadoBusqueda>[];
+    final svc = BooklService();
 
     // ── Cursos ───────────────────────────────────────────────────────────────
     if (filtro == 'Todos' || filtro == 'Cursos') {
-      final cursos = List<Map<String, dynamic>>.from(data['cursos'] ?? []);
-      for (final c in cursos) {
-        if (_normalizar(c['nombre'] as String).contains(q)) {
-          // Extraer imagen del primer contenido del curso
-          final contenido = c['contenido'] as List<dynamic>?;
-          final imagenUrl = contenido != null && contenido.isNotEmpty
-              ? contenido.first['imagen_url'] as String?
-              : null;
+      for (final c in svc.cursos) {
+        if (_normalizar(c.nombre).contains(q)) {
+          final imagenUrl = c.imagenUrl ?? _extraerImagenUrl(c.contenido);
           resultados.add(ResultadoBusqueda(
-            id: c['id_curso'] as int,
+            id: c.idCurso,
             tipo: 'Curso',
-            titulo: c['nombre'] as String,
-            subtitulo: _autorDeCurso(data, c['id_usuario_fk'] as int),
+            titulo: c.nombre,
+            subtitulo: _autorDeCurso(svc, c.idUsuarioFk),
             imagenUrl: imagenUrl,
-            colorTarjeta: _colorPorId(c['id_curso'] as int),
-            inscripciones: _inscripcionesCurso(data, c['id_curso'] as int),
+            colorTarjeta: _colorPorId(c.idCurso),
+            inscripciones: c.estudiantes,
           ));
         }
       }
@@ -110,21 +89,16 @@ class BusquedaRepository {
 
     // ── Lecciones ────────────────────────────────────────────────────────────
     if (filtro == 'Todos' || filtro == 'Lecciones') {
-      final lecciones =
-          List<Map<String, dynamic>>.from(data['lecciones'] ?? []);
-      for (final l in lecciones) {
-        if (_normalizar(l['nombre'] as String).contains(q)) {
-          final contenido = l['contenido'] as List<dynamic>?;
-          final imagenUrl = contenido != null && contenido.isNotEmpty
-              ? contenido.first['imagen_url'] as String?
-              : null;
+      for (final l in svc.lecciones) {
+        if (_normalizar(l.nombre).contains(q)) {
+          final imagenUrl = l.imagenUrl ?? _extraerImagenUrl(l.contenido);
           resultados.add(ResultadoBusqueda(
-            id: l['id_leccion'] as int,
+            id: l.idLeccion,
             tipo: 'Lección',
-            titulo: l['nombre'] as String,
-            subtitulo: _cursoDeLeccion(data, l['id_leccion'] as int),
+            titulo: l.nombre,
+            subtitulo: _cursoDeLeccion(svc, l.idLeccion),
             imagenUrl: imagenUrl,
-            colorTarjeta: _colorPorId((l['id_leccion'] as int) + 3),
+            colorTarjeta: _colorPorId(l.idLeccion + 3),
           ));
         }
       }
@@ -132,23 +106,20 @@ class BusquedaRepository {
 
     // ── Autores ──────────────────────────────────────────────────────────────
     if (filtro == 'Todos' || filtro == 'Autores') {
-      final usuarios = List<Map<String, dynamic>>.from(data['usuarios'] ?? []);
-      for (final u in usuarios) {
-        // Excluir administradores de los resultados
-        final rol = (u['rol'] as String? ?? '').toLowerCase();
+      for (final u in svc.usuarios) {
+        final rol = u.rol.toLowerCase();
         if (rol == 'administrador') continue;
 
-        final nombre = u['nombre_completo'] as String;
-        if (_normalizar(nombre).contains(q)) {
+        if (_normalizar(u.nombreCompleto).contains(q)) {
           resultados.add(ResultadoBusqueda(
-            id: u['id_usuario'] as int,
+            id: u.idUsuario,
             tipo: 'Autor',
-            titulo: nombre,
-            subtitulo: u['programa'] as String?,
-            imagenUrl: u['avatar_url'] as String?,
-            username: u['username'] as String?,
-            avatarUrl: u['avatar_url'] as String?,
-            colorTarjeta: _colorPorId((u['id_usuario'] as int) + 5),
+            titulo: u.nombreCompleto,
+            subtitulo: u.programa,
+            imagenUrl: u.avatarUrl,
+            username: u.username,
+            avatarUrl: u.avatarUrl,
+            colorTarjeta: _colorPorId(u.idUsuario + 5),
           ));
         }
       }
@@ -168,23 +139,23 @@ class BusquedaRepository {
   Future<List<String>> sugerencias(String query) async {
     if (query.trim().length < 2) return [];
 
-    final data = await _cargarJson();
     final q = _normalizar(query);
     final items = <String>{};
+    final svc = BooklService();
 
-    for (final c in List<Map<String, dynamic>>.from(data['cursos'] ?? [])) {
-      if (_normalizar(c['nombre'] as String).contains(q)) {
-        items.add(c['nombre'] as String);
+    for (final c in svc.cursos) {
+      if (_normalizar(c.nombre).contains(q)) {
+        items.add(c.nombre);
       }
     }
-    for (final l in List<Map<String, dynamic>>.from(data['lecciones'] ?? [])) {
-      if (_normalizar(l['nombre'] as String).contains(q)) {
-        items.add(l['nombre'] as String);
+    for (final l in svc.lecciones) {
+      if (_normalizar(l.nombre).contains(q)) {
+        items.add(l.nombre);
       }
     }
-    for (final u in List<Map<String, dynamic>>.from(data['usuarios'] ?? [])) {
-      if (_normalizar(u['nombre_completo'] as String).contains(q)) {
-        items.add(u['nombre_completo'] as String);
+    for (final u in svc.usuarios) {
+      if (_normalizar(u.nombreCompleto).contains(q)) {
+        items.add(u.nombreCompleto);
       }
     }
 
@@ -205,31 +176,32 @@ class BusquedaRepository {
   }
 
   // ── Helpers para enriquecer resultados ────────────────────────────────────
-  String? _autorDeCurso(Map<String, dynamic> data, int idUsuario) {
-    final usuarios = List<Map<String, dynamic>>.from(data['usuarios'] ?? []);
-    final autor =
-        usuarios.where((u) => u['id_usuario'] == idUsuario).firstOrNull;
-    return autor?['nombre_completo'] as String?;
+  String? _extraerImagenUrl(List<dynamic>? contenido) {
+    if (contenido == null || contenido.isEmpty) return null;
+    final first = contenido.first;
+    if (first is Map && first['tiene_imagen'] == true) {
+      return first['imagen_url']?.toString();
+    }
+    return null;
   }
 
-  String? _cursoDeLeccion(Map<String, dynamic> data, int idLeccion) {
-    final rel = List<Map<String, dynamic>>.from(data['lecciones_cursos'] ?? []);
-    final cursos = List<Map<String, dynamic>>.from(data['cursos'] ?? []);
-    final link = rel.where((r) => r['id_leccion'] == idLeccion).firstOrNull;
+  String? _autorDeCurso(BooklService svc, int idUsuario) {
+    final autor = svc.usuarios.where((u) => u.idUsuario == idUsuario).firstOrNull;
+    return autor?.nombreCompleto;
+  }
+
+  String? _cursoDeLeccion(BooklService svc, int idLeccion) {
+    final link = svc.leccionesCursos.where((r) => r['id_leccion'] == idLeccion).firstOrNull;
     if (link == null) return null;
-    final curso =
-        cursos.where((c) => c['id_curso'] == link['id_curso']).firstOrNull;
-    return curso?['nombre'] as String?;
+    final curso = svc.cursos.where((c) => c.idCurso == link['id_curso']).firstOrNull;
+    return curso?.nombre;
   }
 
-  int _inscripcionesCurso(Map<String, dynamic> data, int idCurso) {
+  int _inscripcionesCurso(BooklService svc, int idCurso) {
     // Por ahora usamos el número de usuarios que siguen al autor del curso
-    final cursos = List<Map<String, dynamic>>.from(data['cursos'] ?? []);
-    final curso = cursos.where((c) => c['id_curso'] == idCurso).firstOrNull;
+    final curso = svc.cursos.where((c) => c.idCurso == idCurso).firstOrNull;
     if (curso == null) return 0;
-    final idAutor = curso['id_usuario_fk'] as int;
-    final seguidores =
-        List<Map<String, dynamic>>.from(data['seguidores'] ?? []);
-    return seguidores.where((s) => s['id_seguido'] == idAutor).length;
+    final idAutor = curso.idUsuarioFk;
+    return svc.seguidores.where((s) => s['id_seguido'] == idAutor).length;
   }
 }
