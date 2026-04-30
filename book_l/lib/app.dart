@@ -29,7 +29,7 @@ import 'features/usuarios/presentation/screens/usuarios_screen.dart';
 import 'features/reportes/presentation/screens/reportes_screen.dart';
 import 'features/reportes/presentation/screens/reporte_detail_screen.dart';
 
-import 'features/perfil/presentation/screens/usuario_perfil_screen.dart';
+
 import 'features/onboarding/presentation/screens/bienvenida_screen.dart';
 import 'features/auth/presentation/screens/recuperar_correo_screen.dart';
 import 'features/auth/presentation/screens/recuperar_numero_screen.dart';
@@ -158,15 +158,7 @@ class BookLApp extends StatelessWidget {
                     tipo: args?['tipo'] as String? ?? 'Lección',
                   );
                 },
-                '/usuario_perfil': (context) {
-                  final args = ModalRoute.of(context)?.settings.arguments
-                      as Map<String, String>?;
-                  return UsuarioPerfilScreen(
-                    name: args?['name'] ?? '',
-                    username: args?['username'] ?? '',
-                    imageUrl: args?['imageUrl'] ?? '',
-                  );
-                },
+
               },
             );
           },
