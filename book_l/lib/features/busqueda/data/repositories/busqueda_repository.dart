@@ -34,9 +34,20 @@ class ResultadoBusqueda {
 // ── Normalización: elimina tildes y pasa a minúsculas ────────────────────────
 String _normalizar(String texto) {
   const Map<String, String> reemplazos = {
-    'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
-    'Á': 'a', 'É': 'e', 'Í': 'i', 'Ó': 'o', 'Ú': 'u',
-    'ñ': 'n', 'Ñ': 'n', 'ü': 'u', 'Ü': 'u',
+    'á': 'a',
+    'é': 'e',
+    'í': 'i',
+    'ó': 'o',
+    'ú': 'u',
+    'Á': 'a',
+    'É': 'e',
+    'Í': 'i',
+    'Ó': 'o',
+    'Ú': 'u',
+    'ñ': 'n',
+    'Ñ': 'n',
+    'ü': 'u',
+    'Ü': 'u',
   };
   return texto.toLowerCase().replaceAllMapped(
         RegExp('[áéíóúÁÉÍÓÚñÑüÜ]'),
@@ -57,7 +68,6 @@ Color _colorPorId(int id) => _paleta[id % _paleta.length];
 
 // ── Repositorio ──────────────────────────────────────────────────────────────
 class BusquedaRepository {
-  
   // ── Búsqueda principal ────────────────────────────────────────────────────
   Future<List<ResultadoBusqueda>> buscar(
     String query, {
@@ -80,6 +90,7 @@ class BusquedaRepository {
             titulo: c.nombre,
             subtitulo: _autorDeCurso(svc, c.idUsuarioFk),
             imagenUrl: imagenUrl,
+            calificacion: c.rating > 0 ? c.rating.toStringAsFixed(1) : '4.9',
             colorTarjeta: _colorPorId(c.idCurso),
             inscripciones: c.estudiantes,
           ));
@@ -98,6 +109,7 @@ class BusquedaRepository {
             titulo: l.nombre,
             subtitulo: _cursoDeLeccion(svc, l.idLeccion),
             imagenUrl: imagenUrl,
+            calificacion: l.rating > 0 ? l.rating.toStringAsFixed(1) : '0.0',
             colorTarjeta: _colorPorId(l.idLeccion + 3),
           ));
         }
@@ -186,14 +198,18 @@ class BusquedaRepository {
   }
 
   String? _autorDeCurso(BooklService svc, int idUsuario) {
-    final autor = svc.usuarios.where((u) => u.idUsuario == idUsuario).firstOrNull;
+    final autor =
+        svc.usuarios.where((u) => u.idUsuario == idUsuario).firstOrNull;
     return autor?.nombreCompleto;
   }
 
   String? _cursoDeLeccion(BooklService svc, int idLeccion) {
-    final link = svc.leccionesCursos.where((r) => r['id_leccion'] == idLeccion).firstOrNull;
+    final link = svc.leccionesCursos
+        .where((r) => r['id_leccion'] == idLeccion)
+        .firstOrNull;
     if (link == null) return null;
-    final curso = svc.cursos.where((c) => c.idCurso == link['id_curso']).firstOrNull;
+    final curso =
+        svc.cursos.where((c) => c.idCurso == link['id_curso']).firstOrNull;
     return curso?.nombre;
   }
 
