@@ -39,12 +39,31 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
   // Instancia del plugin image_picker — se crea una sola vez como campo de clase
   final ImagePicker _picker = ImagePicker();
 
+  String? _usernameError;
+
+  void _validateUsername() {
+    final username = _usernameController.text.trim();
+    if (username.isEmpty) {
+      if (_usernameError != null) setState(() => _usernameError = null);
+      return;
+    }
+    
+    final exists = BooklService().usuarios.any(
+      (u) => u.username?.toLowerCase() == username.toLowerCase()
+    );
+
+    setState(() {
+      _usernameError = exists ? 'Este usuario ya está en uso' : null;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _programas = BooklService().programas;
     _nombreController = TextEditingController();
     _usernameController = TextEditingController();
+    _usernameController.addListener(_validateUsername);
     _correoController = TextEditingController();
     _passwordController = TextEditingController();
     _celularController = TextEditingController();
@@ -54,6 +73,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
 
   @override
   void dispose() {
+    _usernameController.removeListener(_validateUsername);
     _nombreController.dispose();
     _usernameController.dispose();
     _correoController.dispose();
@@ -347,7 +367,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                                     'Nombre completo: *', _nombreController),
                                 const SizedBox(height: 10),
                                 _buildTextField(
-                                    'Usuario:', _usernameController),
+                                    'Usuario:', _usernameController, errorText: _usernameError),
                               ],
                             ),
                           ),
@@ -480,6 +500,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
+                              if (_usernameError != null) return;
                               final newUser = Usuario(
                                 idUsuario:
                                     DateTime.now().millisecondsSinceEpoch,
@@ -544,7 +565,8 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
       {bool obscureText = false,
       IconData? suffixIcon,
       TextInputType? keyboardType,
-      int maxLines = 1}) {
+      int maxLines = 1,
+      String? errorText}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -561,12 +583,21 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
             isDense: true,
             filled: true,
             fillColor: Colors.white,
+            errorText: errorText,
             suffixIcon: suffixIcon != null
                 ? Icon(suffixIcon, color: Colors.grey, size: 20)
                 : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Colors.red),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
             ),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 12),

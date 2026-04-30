@@ -39,6 +39,25 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
   late final List<String> _programas;
   late bool _activo;
 
+  String? _usernameError;
+
+  void _validateUsername() {
+    final username = _usernameController.text.trim();
+    if (username.isEmpty) {
+      if (_usernameError != null) setState(() => _usernameError = null);
+      return;
+    }
+    
+    final exists = BooklService().usuarios.any(
+      (u) => u.idUsuario != widget.usuario.idUsuario &&
+             u.username?.toLowerCase() == username.toLowerCase()
+    );
+
+    setState(() {
+      _usernameError = exists ? 'Este usuario ya está en uso' : null;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +65,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
     _nombreController =
         TextEditingController(text: widget.usuario.nombreCompleto);
     _usernameController = TextEditingController(text: widget.usuario.username);
+    _usernameController.addListener(_validateUsername);
     _correoController = TextEditingController(text: widget.usuario.correo);
     _passwordController = TextEditingController(text: widget.usuario.password);
     _celularController =
@@ -73,6 +93,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
 
   @override
   void dispose() {
+    _usernameController.removeListener(_validateUsername);
     _nombreController.dispose();
     _usernameController.dispose();
     _correoController.dispose();
@@ -355,7 +376,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                                     'Nombre completo: *', _nombreController),
                                 const SizedBox(height: 10),
                                 _buildTextField(
-                                    'Usuario:', _usernameController),
+                                    'Usuario:', _usernameController, errorText: _usernameError),
                               ],
                             ),
                           ),
@@ -500,6 +521,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
+                              if (_usernameError != null) return;
                               final updatedUser = Usuario(
                                 idUsuario: widget.usuario.idUsuario,
                                 nombreCompleto: _nombreController.text,
@@ -557,7 +579,8 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
       {bool obscureText = false,
       IconData? suffixIcon,
       TextInputType? keyboardType,
-      int maxLines = 1}) {
+      int maxLines = 1,
+      String? errorText}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -574,12 +597,21 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
             isDense: true,
             filled: true,
             fillColor: Colors.white,
+            errorText: errorText,
             suffixIcon: suffixIcon != null
                 ? Icon(suffixIcon, color: Colors.grey, size: 20)
                 : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Colors.red),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
             ),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
