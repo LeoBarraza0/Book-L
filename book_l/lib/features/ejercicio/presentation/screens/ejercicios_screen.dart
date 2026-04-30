@@ -138,7 +138,7 @@ class _EjerciciosScreenState extends State<EjerciciosScreen>
           Container(
             width: 72, height: 72,
             decoration: BoxDecoration(
-              color: const Color(0xFF4DC130).withOpacity(0.1),
+              color: const Color(0xFF4DC130).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.quiz_outlined, size: 36, color: Color(0xFF4DC130)),
@@ -217,7 +217,7 @@ class _EjercicioTipoCardState extends State<_EjercicioTipoCard> {
       curve: Curves.easeOut,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        transform: Matrix4.identity()..scale(_isPressed ? 0.96 : 1.0),
+        transform: Matrix4.identity()..scaleByDouble(_isPressed ? 0.96 : 1.0, _isPressed ? 0.96 : 1.0, 1.0, 1.0),
         transformAlignment: Alignment.center,
         child: GestureDetector(
           onTapDown: (_) => setState(() => _isPressed = true),
@@ -233,7 +233,7 @@ class _EjercicioTipoCardState extends State<_EjercicioTipoCard> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.black.withValues(alpha: 0.12),
                   blurRadius: 14,
                   offset: const Offset(0, 6),
                 ),
@@ -262,8 +262,8 @@ class _EjercicioTipoCardState extends State<_EjercicioTipoCard> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.black.withOpacity(0.0),
-                            Colors.black.withOpacity(0.65),
+                            Colors.black.withValues(alpha: 0.0),
+                            Colors.black.withValues(alpha: 0.65),
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -288,7 +288,7 @@ class _EjercicioTipoCardState extends State<_EjercicioTipoCard> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(

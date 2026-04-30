@@ -1,15 +1,18 @@
 import 'package:flutter/foundation.dart';
-import '../../../../core/services/bookl_service.dart';
 import '../../domain/entities/ejercicio.dart';
 import '../../domain/entities/pregunta.dart';
 import '../../domain/entities/opcion.dart';
+import '../../data/repositories/ejercicio_repository_impl.dart';
 
+/// Controlador singleton para la gestión de ejercicios.
+/// Orquesta las operaciones CRUD delegando al repositorio.
 class EjerciciosController extends ChangeNotifier {
   static final EjerciciosController _instance = EjerciciosController._internal();
   factory EjerciciosController() => _instance;
   EjerciciosController._internal();
 
-  final BooklService _service = BooklService();
+  /// Repositorio que encapsula el acceso a datos
+  final _repo = EjercicioRepositoryImpl();
 
   List<Ejercicio> _allEjercicios = [];
   List<Ejercicio> get filteredEjercicios => _getFiltered();
@@ -20,7 +23,7 @@ class EjerciciosController extends ChangeNotifier {
   int _selectedFilterIndex = 0;
   int get selectedFilterIndex => _selectedFilterIndex;
 
-  // Categorías
+  // Categorías de ejercicios
   static const List<TipoEjercicio> tiposTeoricos = [
     TipoEjercicio.multipleChoice,
     TipoEjercicio.trueFalse,
@@ -35,6 +38,7 @@ class EjerciciosController extends ChangeNotifier {
   String? _categoriaActual;
   String? get categoriaActual => _categoriaActual;
 
+  /// Retorna los filtros activos según la categoría seleccionada
   List<String> get filtrosActivos {
     final base = ['Todos'];
     if (_categoriaActual == 'Teórico') {
@@ -49,49 +53,28 @@ class EjerciciosController extends ChangeNotifier {
 
   // ── READ ───────────────────────────────────────────────────────────────────
 
+  /// Carga los ejercicios de una lección obteniendo sus capítulos
   void loadEjercicios(int idLeccion) {
-    // 1. Obtener capitulos de la lección
-    final capitulosLeccion = _service.capitulos
-        .where((c) => c.idLeccion == idLeccion)
-        .map((c) => c.idCapitulo)
-        .toSet();
-
-    // 2. Obtener ejercicios de esos capítulos
-    _allEjercicios = _service.ejercicios
-        .where((e) => capitulosLeccion.contains(e.idCapitulo))
-        .toList();
-    
+    final capitulosIds = _repo.getCapituloIdsByLeccion(idLeccion);
+    _allEjercicios = _repo.getEjerciciosByCapitulos(capitulosIds);
     _searchQuery = '';
     _selectedFilterIndex = 0;
     notifyListeners();
   }
 
-  /// Retorna los tipos de ejercicio que existen para una lección.
+  /// Retorna los tipos de ejercicio que existen para una lección
   List<TipoEjercicio> tiposDisponibles(int idLeccion) {
-    final capitulosLeccion = _service.capitulos
-        .where((c) => c.idLeccion == idLeccion)
-        .map((c) => c.idCapitulo)
-        .toSet();
-
-    final ejerciciosLeccion = _service.ejercicios
-        .where((e) => capitulosLeccion.contains(e.idCapitulo))
-        .toList();
-
+    final capitulosIds = _repo.getCapituloIdsByLeccion(idLeccion);
+    final ejerciciosLeccion = _repo.getEjerciciosByCapitulos(capitulosIds);
     final tipos = ejerciciosLeccion.map((e) => e.tipo).toSet().toList();
-    // Ordenar según el enum
     tipos.sort((a, b) => a.index.compareTo(b.index));
     return tipos;
   }
 
   /// Verifica si una lección tiene ejercicios de cierta categoría
   bool tieneCategoria(int idLeccion, String categoria) {
-    final capitulosLeccion = _service.capitulos
-        .where((c) => c.idLeccion == idLeccion)
-        .map((c) => c.idCapitulo)
-        .toSet();
-
-    final ejercicios = _service.ejercicios.where((e) => capitulosLeccion.contains(e.idCapitulo));
-
+    final capitulosIds = _repo.getCapituloIdsByLeccion(idLeccion);
+    final ejercicios = _repo.getEjerciciosByCapitulos(capitulosIds);
     if (categoria == 'Teórico') {
       return ejercicios.any((e) => tiposTeoricos.contains(e.tipo));
     } else {
@@ -99,19 +82,20 @@ class EjerciciosController extends ChangeNotifier {
     }
   }
 
+  /// Retorna la cantidad de ejercicios de una categoría para una lección
   int getCountByCategoria(int idLeccion, String categoria) {
-    final capitulosLeccion = _service.capitulos
-        .where((c) => c.idLeccion == idLeccion)
-        .map((c) => c.idCapitulo)
-        .toSet();
-
-    final ejercicios = _service.ejercicios.where((e) => capitulosLeccion.contains(e.idCapitulo));
-
+    final capitulosIds = _repo.getCapituloIdsByLeccion(idLeccion);
+    final ejercicios = _repo.getEjerciciosByCapitulos(capitulosIds);
     if (categoria == 'Teórico') {
       return ejercicios.where((e) => tiposTeoricos.contains(e.tipo)).length;
     } else {
       return ejercicios.where((e) => tiposPracticos.contains(e.tipo)).length;
     }
+  }
+
+  /// Retorna IDs de ejercicios de un capítulo específico
+  List<int> getExerciseIdsByCapitulo(int idCapitulo) {
+    return _repo.getExerciseIdsByCapitulo(idCapitulo);
   }
 
   void setCategoriaFiltro(String? categoria) {
@@ -130,24 +114,24 @@ class EjerciciosController extends ChangeNotifier {
     required String descripcion,
     required List<PreguntaInput> preguntasInput,
   }) {
-    final idEjercicio = _service.nextEjercicioId();
-
-    // Crear preguntas y opciones
+    final idEjercicio = _repo.nextEjercicioId();
     final List<Pregunta> preguntasFinales = [];
+    final List<Opcion> opcionesFinales = [];
+
     for (final pi in preguntasInput) {
-      final idPregunta = _service.nextPreguntaId();
-      
-      final List<Opcion> opcionesFinales = [];
+      final idPregunta = _repo.nextPreguntaId();
+      final List<Opcion> opcionesPregunta = [];
+
       for (final oi in pi.opciones) {
-        final idOpcion = _service.nextOpcionId();
+        final idOpcion = _repo.nextOpcionId();
         final opcion = Opcion(
           idOpcion: idOpcion,
           idPreguntaFk: idPregunta,
           contenido: oi.contenido,
           correcta: oi.correcta,
         );
+        opcionesPregunta.add(opcion);
         opcionesFinales.add(opcion);
-        _service.opciones.add(opcion);
       }
 
       final pregunta = Pregunta(
@@ -155,10 +139,9 @@ class EjerciciosController extends ChangeNotifier {
         idEjercicioFk: idEjercicio,
         contenido: pi.contenido,
         explicacion: pi.explicacion,
-        opciones: opcionesFinales,
+        opciones: opcionesPregunta,
       );
       preguntasFinales.add(pregunta);
-      _service.preguntas.add(pregunta);
     }
 
     final ejercicio = Ejercicio(
@@ -170,15 +153,17 @@ class EjerciciosController extends ChangeNotifier {
       preguntas: preguntasFinales,
     );
 
-    _service.addEjercicio(ejercicio);
+    // Delegar persistencia al repositorio
+    _repo.addEjercicio(ejercicio, preguntasFinales, opcionesFinales);
     notifyListeners();
     return idEjercicio;
   }
 
   // ── DELETE ─────────────────────────────────────────────────────────────────
 
+  /// Elimina un ejercicio y lo remueve de la lista local
   void eliminarEjercicio(int idEjercicio) {
-    _service.removeEjercicio(idEjercicio);
+    _repo.removeEjercicio(idEjercicio);
     _allEjercicios.removeWhere((e) => e.idEjercicio == idEjercicio);
     notifyListeners();
   }
@@ -200,6 +185,7 @@ class EjerciciosController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Aplica filtros de categoría, tipo y búsqueda textual
   List<Ejercicio> _getFiltered() {
     List<Ejercicio> current = _allEjercicios;
 
@@ -210,7 +196,7 @@ class EjerciciosController extends ChangeNotifier {
       current = current.where((e) => tiposPracticos.contains(e.tipo)).toList();
     }
 
-    // Filtro por tipo específico (dropdown)
+    // Filtro por tipo específico
     if (_selectedFilterIndex > 0) {
       TipoEjercicio selectedTipo;
       if (_categoriaActual == 'Teórico') {
@@ -237,12 +223,13 @@ class EjerciciosController extends ChangeNotifier {
   }
 
   @override
+  // ignore: must_call_super
   void dispose() {
-    // Singleton — no destruir
+    // Singleton — no destruir para mantener el estado durante la navegación
   }
 }
 
-/// Modelo auxiliar para input de preguntas durante la creación.
+/// Modelo auxiliar para input de preguntas durante la creación
 class PreguntaInput {
   final String contenido;
   final String? explicacion;
@@ -255,7 +242,7 @@ class PreguntaInput {
   });
 }
 
-/// Modelo auxiliar para input de opciones durante la creación.
+/// Modelo auxiliar para input de opciones durante la creación
 class OpcionInput {
   final String contenido;
   final bool correcta;

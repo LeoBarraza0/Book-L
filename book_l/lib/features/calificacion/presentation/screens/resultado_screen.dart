@@ -4,8 +4,8 @@ import '../../../../shared/widgets/nav_bar.dart';
 import '../widgets/stars_rating_widget.dart';
 
 import 'package:book_l/core/storage/local_storage.dart';
-import 'package:book_l/core/services/bookl_service.dart';
 import 'package:book_l/features/ejercicio/domain/entities/ejercicio.dart';
+import 'package:book_l/features/ejercicio/presentation/controller/ejercicios_controller.dart';
 
 class EjercicioResultadoScreen extends StatefulWidget {
   final int totalPreguntas;
@@ -228,11 +228,9 @@ class _EjercicioResultadoScreenState extends State<EjercicioResultadoScreen> {
                                 exerciseId, capituloId);
 
                             // Verificar si todos los ejercicios del capítulo están completados
-                            final chapterExercises = BooklService()
-                                .ejercicios
-                                .where((e) => e.idCapitulo == capituloId)
-                                .map((e) => e.idEjercicio);
-                            if (chapterExercises.every((id) => session
+                            final ctrl = EjerciciosController();
+                            final allChapterExerciseIds = ctrl.getExerciseIdsByCapitulo(capituloId);
+                            if (allChapterExerciseIds.every((id) => session
                                 .completedEjercicios.value
                                 .contains(id))) {
                               session.marcarCapituloCompletado(

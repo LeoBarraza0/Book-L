@@ -3,6 +3,10 @@ import '../../../../shared/widgets/search_filter_bar.dart';
 import '../controller/ejercicios_controller.dart';
 import '../../domain/entities/ejercicio.dart';
 import 'teorico_screen.dart';
+import 'verdadero_falso_screen.dart';
+import 'ordenar_screen.dart';
+import 'rellenar_screen.dart';
+import 'respuesta_corta_screen.dart';
 import 'package:book_l/core/storage/local_storage.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -51,9 +55,30 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
         return const Color(0xFFFF606F);
       case TipoEjercicio.respuestaCorta:
         return const Color(0xFF9B51E0);
-      default:
-        return Colors.grey;
     }
+  }
+
+  /// Navega a la pantalla correcta según el tipo de ejercicio
+  void _navigateToExercise(BuildContext context, Ejercicio e) {
+    Widget screen;
+    switch (e.tipo) {
+      case TipoEjercicio.multipleChoice:
+        screen = TeoricoScreen(ejercicio: e);
+        break;
+      case TipoEjercicio.trueFalse:
+        screen = VerdaderoFalsoScreen(ejercicio: e);
+        break;
+      case TipoEjercicio.ordenar:
+        screen = OrdenarScreen(ejercicio: e);
+        break;
+      case TipoEjercicio.rellenar:
+        screen = RellenarScreen(ejercicio: e);
+        break;
+      case TipoEjercicio.respuestaCorta:
+        screen = RespuestaCortaScreen(ejercicio: e);
+        break;
+    }
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 
   // ── Header Customizado ─────────────────────────────────────────────────────
@@ -68,7 +93,7 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -85,11 +110,11 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
                 child: Container(
                   width: 45, height: 45,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF6BCA54).withOpacity(0.9),
+                    color: const Color(0xFF6BCA54).withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -265,12 +290,7 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
                                      ),
                                      const SizedBox(height: 16),
                                      GestureDetector(
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(builder: (_) => TeoricoScreen(ejercicio: e)),
-                                          );
-                                        },
+                                         onTap: () => _navigateToExercise(context, e),
                                         child: Container(
                                           width: 44,
                                           height: 44,

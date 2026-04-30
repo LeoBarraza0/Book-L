@@ -155,7 +155,7 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -171,11 +171,11 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
                 child: Container(
                   width: 45, height: 45,
                   decoration: BoxDecoration(
-                    color: _accentColor.withOpacity(0.9),
+                    color: _accentColor.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -191,7 +191,7 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: _accentColor.withOpacity(0.12),
+              color: _accentColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -234,7 +234,7 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -262,7 +262,7 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
           ],
         ),
         child: Column(
@@ -286,7 +286,7 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
                     child: Container(
                       width: 32, height: 32,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFF606F).withOpacity(0.1),
+                        color: const Color(0xFFFF606F).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.delete_outline_rounded, size: 18, color: Color(0xFFFF606F)),
@@ -348,7 +348,7 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
                     decoration: BoxDecoration(
                       color: o.correcta ? _accentColor : const Color(0xFFE8E8E8),
                       shape: BoxShape.circle,
-                      boxShadow: o.correcta ? [BoxShadow(color: _accentColor.withOpacity(0.3), blurRadius: 8)] : [],
+                      boxShadow: o.correcta ? [BoxShadow(color: _accentColor.withValues(alpha: 0.3), blurRadius: 8)] : [],
                     ),
                     child: Center(child: Text(
                       i < letters.length ? letters[i] : '${i + 1}',
@@ -364,7 +364,7 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFF7F7F7),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: o.correcta ? _accentColor.withOpacity(0.5) : const Color(0xFFEEEEEE)),
+                      border: Border.all(color: o.correcta ? _accentColor.withValues(alpha: 0.5) : const Color(0xFFEEEEEE)),
                     ),
                     child: TextField(
                       controller: o.ctrl,
@@ -409,7 +409,7 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
                     duration: const Duration(milliseconds: 200),
                     height: 52,
                     decoration: BoxDecoration(
-                      color: o.correcta ? _accentColor.withOpacity(0.12) : const Color(0xFFF7F7F7),
+                      color: o.correcta ? _accentColor.withValues(alpha: 0.12) : const Color(0xFFF7F7F7),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: o.correcta ? _accentColor : const Color(0xFFE0E0E0),
@@ -568,7 +568,7 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _accentColor.withOpacity(0.4), width: 1.5),
+          border: Border.all(color: _accentColor.withValues(alpha: 0.4), width: 1.5),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -592,9 +592,9 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
         width: double.infinity,
         height: 52,
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [_accentColor, _accentColor.withOpacity(0.85)]),
+          gradient: LinearGradient(colors: [_accentColor, _accentColor.withValues(alpha: 0.85)]),
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [BoxShadow(color: _accentColor.withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 6))],
+          boxShadow: [BoxShadow(color: _accentColor.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 6))],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
