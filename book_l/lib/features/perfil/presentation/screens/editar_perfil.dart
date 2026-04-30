@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/services/bookl_service.dart';
@@ -42,6 +43,11 @@ class _EditarPerfilState extends State<EditarPerfil> {
       _semestre = user.semestre?.toString() ?? '';
       _celular = user.celular?.toString() ?? '';
       _avatarNetworkUrl = user.avatarUrl;
+      if (_avatarNetworkUrl != null && _avatarNetworkUrl!.isNotEmpty && !_avatarNetworkUrl!.startsWith('http')) {
+        if (!kIsWeb) {
+          _selectedImage = File(_avatarNetworkUrl!);
+        }
+      }
     } catch (e) {
       _nombre = 'Usuario';
       _usuario = '';
@@ -75,8 +81,12 @@ class _EditarPerfilState extends State<EditarPerfil> {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
         setState(() {
-          _selectedImage = File(image.path);
+          if (!kIsWeb) {
+            _selectedImage = File(image.path);
+          }
+          _avatarNetworkUrl = image.path;
         });
+        _saveUserData();
       }
     } catch (e) {
       debugPrint("Error picking image: $e");
@@ -151,14 +161,21 @@ class _EditarPerfilState extends State<EditarPerfil> {
                     decoration: BoxDecoration(
                       color: const Color(0xFF4DC130), // Main Green
                       shape: BoxShape.circle,
-                      image: _selectedImage != null
+                      image: (!kIsWeb && _selectedImage != null)
                           ? DecorationImage(
                               image: FileImage(_selectedImage!),
                               fit: BoxFit.cover,
                             )
-                          : null,
+                          : (_avatarNetworkUrl != null && _avatarNetworkUrl!.isNotEmpty)
+                              ? DecorationImage(
+                                  image: (_avatarNetworkUrl!.startsWith('http') || kIsWeb)
+                                      ? NetworkImage(_avatarNetworkUrl!) as ImageProvider
+                                      : FileImage(File(_avatarNetworkUrl!)),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
                     ),
-                    child: _selectedImage == null
+                    child: (_selectedImage == null && (_avatarNetworkUrl == null || _avatarNetworkUrl!.isEmpty))
                         ? const Icon(
                             Icons.camera_alt_outlined,
                             color: Colors.white,

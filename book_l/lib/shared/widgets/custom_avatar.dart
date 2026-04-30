@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 class CustomAvatar extends StatelessWidget {
@@ -34,28 +36,40 @@ class CustomAvatar extends StatelessWidget {
     Widget avatarChild;
 
     if (url != null && url!.isNotEmpty) {
-      avatarChild = Image.network(
-        url!,
-        fit: BoxFit.cover,
-        width: radius * 2,
-        height: radius * 2,
-        errorBuilder: (context, error, stackTrace) {
-          return _buildFallback(iniciales);
-        },
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(
-            child: SizedBox(
-              width: radius,
-              height: radius,
-              child: const CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4DC130)),
+      if (kIsWeb || url!.startsWith('http') || url!.startsWith('https')) {
+        avatarChild = Image.network(
+          url!,
+          fit: BoxFit.cover,
+          width: radius * 2,
+          height: radius * 2,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildFallback(iniciales);
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(
+              child: SizedBox(
+                width: radius,
+                height: radius,
+                child: const CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4DC130)),
+                ),
               ),
-            ),
-          );
-        },
-      );
+            );
+          },
+        );
+      } else {
+        avatarChild = Image.file(
+          File(url!),
+          fit: BoxFit.cover,
+          width: radius * 2,
+          height: radius * 2,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildFallback(iniciales);
+          },
+        );
+      }
     } else {
       avatarChild = _buildFallback(iniciales);
     }

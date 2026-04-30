@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/feedback_utils.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../../shared/widgets/header_background_image.dart';
 import '../../../leccion/presentation/screens/leccion_editar_screen.dart';
 import '../../../../shared/widgets/seccion_editor_widget.dart';
 import '../../../leccion/presentation/widgets/agregar_seccion_button.dart';
@@ -99,6 +102,39 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
     );
   }
 
+  Future<void> _cambiarImagen() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null && _cursoOriginal != null) {
+      setState(() {
+        _cursoOriginal = _cursoOriginal!.copyWith(imagenUrl: picked.path);
+      });
+      // Persistir el cambio inmediatamente
+      final idx = BooklService().cursos.indexWhere((c) => c.idCurso == _cursoOriginal!.idCurso);
+      if (idx != -1) {
+        BooklService().cursos[idx] = _cursoOriginal!;
+        BooklService().guardarDatos();
+      }
+    }
+  }
+
+  Future<void> _eliminarCurso() async {
+    final confirmar = await FeedbackUtils.showConfirmDialog(
+      context: context,
+      title: 'Eliminar Curso',
+      content: '¿Estás seguro de que deseas eliminar este curso? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      isDestructive: true,
+    );
+
+    if (confirmar == true && _cursoOriginal != null) {
+      BooklService().removeCurso(_cursoOriginal!.idCurso);
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    }
+  }
+
   void _refreshLeccionesLocales() {
     if (widget.idCurso != null) {
       final idsLecciones = BooklService()
@@ -156,29 +192,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
       _refreshLeccionesLocales();
     });
     // Notificamos para que la UI compartida o Home Screen recargue sus dependencias
-    // En un escenario real esto consumiría la API y esperaría el refetch.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.delete_outline, color: Colors.white),
-            SizedBox(width: 10),
-            Text(
-              'Lección eliminada',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFFC13030),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    FeedbackUtils.showSuccessSnackBar(context, 'Lección eliminada');
   }
 
   void _showAssignLessonModal() {
@@ -342,14 +356,10 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
                 bottomLeft: Radius.circular(25),
                 bottomRight: Radius.circular(25),
               ),
-              child: Transform.scale(
-                scale: 1.15,
-                child: Image.asset(
-                  'assets/images/red_bg.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(color: const Color(0xFFFF606F)),
-                ),
+              child: HeaderBackgroundImage(
+                imagenUrl: _cursoOriginal?.imagenUrl,
+                fallbackAsset: 'assets/images/red_bg.png',
+                fallbackColor: const Color(0xFFFF606F),
               ),
             ),
           ),
@@ -433,7 +443,17 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
                     Icons.arrow_back_rounded,
                     () => Navigator.pop(context),
                   ),
-                  _buildCircularIconButton(Icons.share_rounded, () {}),
+                  Row(
+                    children: [
+                      _buildCircularIconButton(Icons.camera_alt_rounded, _cambiarImagen),
+                      const SizedBox(width: 10),
+                      _buildCircularIconButton(
+                        Icons.delete_rounded,
+                        _eliminarCurso,
+                        bgColor: Colors.red.withOpacity(0.9),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -443,14 +463,14 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
     );
   }
 
-  Widget _buildCircularIconButton(IconData icon, VoidCallback onTap) {
+  Widget _buildCircularIconButton(IconData icon, VoidCallback onTap, {Color? bgColor, Color? iconColor}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: const Color(0xFF6BCA54).withOpacity(0.9),
+          color: bgColor ?? const Color(0xFF6BCA54).withOpacity(0.9),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
@@ -460,7 +480,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
             ),
           ],
         ),
-        child: Icon(icon, color: Colors.white, size: 24),
+        child: Icon(icon, color: iconColor ?? Colors.white, size: 24),
       ),
     );
   }
@@ -716,30 +736,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
           scale: _guardarScaleAnim,
           child: _GuardarButton(
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.white),
-                      SizedBox(width: 10),
-                      Text(
-                        'Curso guardado exitosamente',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  backgroundColor: const Color(0xFF4DC130),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
+              FeedbackUtils.showSuccessSnackBar(context, 'Curso guardado exitosamente');
             },
           ),
         ),

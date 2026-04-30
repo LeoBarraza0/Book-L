@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/reporte_modal.dart';
+import '../../../../shared/widgets/header_background_image.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../discusion/presentation/controller/discusion_controller.dart';
@@ -100,7 +101,12 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
           CustomScrollView(
             slivers: [
               // 1. Imagen Superior (Header) 
-              SliverToBoxAdapter(child: _buildHeaderImage(context)),
+              SliverToBoxAdapter(
+                child: ListenableBuilder(
+                  listenable: _ctrl,
+                  builder: (context, _) => _buildHeaderImage(context),
+                ),
+              ),
 
               // 2. Cuerpo del detalle
               // 2. Cuerpo del detalle superior a los tabs
@@ -215,20 +221,17 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
       width: double.infinity,
       child: Stack(
         children: [
-          // Background Image
+          // Background Image (usa imagen subida o placeholder)
           Positioned.fill(
             child: ClipRRect(
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(25),
                 bottomRight: Radius.circular(25),
               ),
-              child: Transform.scale(
-                scale: 1.15, // Ajusta el zoom para ignorar bordes transparentes integrados del PNG original
-                child: Image.asset(
-                  'assets/images/green_bg.png', // image 36 de Figma (local version)
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey[400]),
-                ),
+              child: HeaderBackgroundImage(
+                imagenUrl: _ctrl.state.selected?.imagenUrl,
+                fallbackAsset: 'assets/images/green_bg.png',
+                fallbackColor: const Color(0xFF4DC130),
               ),
             ),
           ),

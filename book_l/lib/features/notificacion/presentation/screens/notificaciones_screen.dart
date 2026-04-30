@@ -7,6 +7,7 @@ import '../../domain/usecases/get_notificaciones_usecase.dart';
 import '../../domain/usecases/mark_as_read_usecase.dart';
 import '../controller/notificaciones_controller.dart';
 import '../../domain/entities/notificacion.dart';
+import '../../../../shared/widgets/custom_avatar.dart';
 
 class NotificacionScreen extends StatefulWidget {
   const NotificacionScreen({super.key});
@@ -245,22 +246,10 @@ class _NotificacionScreenState extends State<NotificacionScreen> {
         child: Row(
           children: [
             // Avatar
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
-                shape: BoxShape.circle,
-                image: (user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty)
-                    ? DecorationImage(
-                        image: NetworkImage(user.avatarUrl!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-              ),
-              child: (user?.avatarUrl == null || user!.avatarUrl!.isEmpty)
-                  ? const Icon(Icons.person, color: Color(0xFF44BD32), size: 24)
-                  : null,
+            CustomAvatar(
+              url: user?.avatarUrl,
+              nombre: user?.nombreCompleto ?? 'U',
+              radius: 25,
             ),
             const SizedBox(width: 16),
             Expanded(

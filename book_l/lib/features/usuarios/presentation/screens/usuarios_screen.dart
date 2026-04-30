@@ -11,6 +11,7 @@ import '../controller/usuarios_state.dart';
 import 'edit_usuario_screen.dart';
 import 'add_usuario_screen.dart';
 import '../../../notificacion/presentation/widgets/notification_icon_button.dart';
+import '../../../../shared/widgets/custom_avatar.dart';
 
 /// Crea y provee el [UsuariosController] con todas sus dependencias.
 ///
@@ -71,13 +72,6 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
           .toList();
     }
     return result;
-  }
-
-  String _getInitials(String name) {
-    if (name.isEmpty) return '';
-    final words = name.trim().split(RegExp(r'\s+'));
-    if (words.length == 1) return words[0][0].toUpperCase();
-    return '${words[0][0]}${words[1][0]}'.toUpperCase();
   }
 
   @override
@@ -294,32 +288,13 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Avatar
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9), // Fondo suave para el avatar
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE0E0E0)),
-              image: (user.avatarUrl != null && user.avatarUrl!.isNotEmpty)
-                  ? DecorationImage(
-                      image: NetworkImage(user.avatarUrl!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            child: (user.avatarUrl == null || user.avatarUrl!.isEmpty)
-                ? Center(
-                    child: Text(
-                      _getInitials(user.nombreCompleto),
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF44BD32),
-                      ),
-                    ),
-                  )
-                : null,
+          CustomAvatar(
+            url: user.avatarUrl,
+            nombre: user.nombreCompleto,
+            radius: 36,
+            borderColor: const Color(0xFFE0E0E0),
+            borderWidth: 1,
+            backgroundColor: const Color(0xFFE8F5E9),
           ),
           const SizedBox(width: 12),
 

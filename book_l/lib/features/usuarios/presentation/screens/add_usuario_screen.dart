@@ -4,6 +4,7 @@ import 'dart:io'; // Necesario para usar File (imagen local del dispositivo)
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart'; // Plugin para cámara y galería
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../../shared/widgets/custom_avatar.dart';
 import '../../domain/entities/usuarios.dart';
 import '../../../../core/services/bookl_service.dart';
 
@@ -34,9 +35,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
   late final List<String> _programas;
 
   // ─── Estado del avatar ──────────────────────────────────────────────────
-  // _avatarImage: Archivo local seleccionado desde cámara/galería.
-  // Null al inicio (usuario nuevo no tiene foto aún).
-  File? _avatarImage;
+  String? _avatarUrl;
   // Instancia del plugin image_picker — se crea una sola vez como campo de clase
   final ImagePicker _picker = ImagePicker();
 
@@ -173,7 +172,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                 ),
 
                 // Opción 3: Eliminar (solo si ya seleccionó una)
-                if (_avatarImage != null)
+                if (_avatarUrl != null)
                   ListTile(
                     leading:
                         const Icon(Icons.delete_outline, color: Colors.red),
@@ -181,7 +180,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                     onTap: () {
                       Navigator.pop(ctx);
                       setState(() {
-                        _avatarImage = null;
+                        _avatarUrl = null;
                       });
                     },
                   ),
@@ -215,8 +214,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
 
       if (pickedFile != null) {
         setState(() {
-          // File() de dart:io convierte la ruta a un objeto File legible por Flutter
-          _avatarImage = File(pickedFile.path);
+          _avatarUrl = pickedFile.path;
         });
       }
     } catch (e) {
@@ -315,19 +313,10 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                             onTap: _showImagePickerSheet,
                             child: Stack(
                               children: [
-                                CircleAvatar(
+                                CustomAvatar(
+                                  url: _avatarUrl,
+                                  nombre: _nombreController.text.isNotEmpty ? _nombreController.text : 'Usuario',
                                   radius: 40,
-                                  backgroundColor: Colors.white,
-                                  // Si _avatarImage tiene valor, usamos FileImage (imagen local)
-                                  // Si no, mostramos el ícono de persona como placeholder
-                                  backgroundImage: _avatarImage != null
-                                      ? FileImage(_avatarImage!)
-                                          as ImageProvider
-                                      : null,
-                                  child: _avatarImage == null
-                                      ? const Icon(Icons.person,
-                                          size: 50, color: Colors.grey)
-                                      : null,
                                 ),
                                 Positioned(
                                   bottom: 0,
@@ -339,8 +328,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
-                                      // Ícono dinámico: lápiz si tiene foto, '+' si no
-                                      _avatarImage != null
+                                      _avatarUrl != null
                                           ? Icons.edit
                                           : Icons.add,
                                       color: Colors.white,
@@ -511,9 +499,7 @@ class _AddUsuarioScreenState extends State<AddUsuarioScreen> {
                                         : null,
                                 activo: true,
                                 rol: _selectedRol ?? 'Estudiante',
-                                // Por ahora el avatarUrl no se guarda (requeriría subir el File a un servidor)
-                                // En producción se haría upload del File y se guardaría la URL resultante
-                                avatarUrl: null,
+                                avatarUrl: _avatarUrl,
                               );
                               Navigator.pop(context, newUser);
                             },

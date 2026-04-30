@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/reporte_modal.dart';
+import '../../../../shared/widgets/header_background_image.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../discusion/presentation/controller/discusion_controller.dart';
@@ -86,7 +87,12 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
         children: [
           CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(child: _buildHeaderImage(context)),
+              SliverToBoxAdapter(
+                child: ListenableBuilder(
+                  listenable: _ctrl,
+                  builder: (context, _) => _buildHeaderImage(context),
+                ),
+              ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -177,14 +183,10 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                 bottomLeft: Radius.circular(25),
                 bottomRight: Radius.circular(25),
               ),
-              child: Transform.scale(
-                scale: 1.15,
-                child: Image.asset(
-                  'assets/images/red_bg.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(color: Colors.grey[400]),
-                ),
+              child: HeaderBackgroundImage(
+                imagenUrl: _ctrl.state.selected?.imagenUrl,
+                fallbackAsset: 'assets/images/red_bg.png',
+                fallbackColor: const Color(0xFFFF606F),
               ),
             ),
           ),

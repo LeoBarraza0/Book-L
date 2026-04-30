@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../../../core/utils/feedback_utils.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../controller/leccion_controller.dart';
 import '../widgets/agregar_seccion_button.dart';
@@ -781,12 +782,7 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
   Future<void> _guardarLeccion() async {
     final nombre = _nombreCtrl.text.trim();
     if (nombre.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('El nombre de la lección es obligatorio'),
-          backgroundColor: Color(0xFFFF606F),
-        ),
-      );
+      FeedbackUtils.showErrorSnackBar(context, 'El nombre de la lección es obligatorio');
       return;
     }
 
@@ -825,35 +821,12 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 10),
-              Text(
-                'Lección guardada exitosamente',
-                style:
-                    TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600),
-              ),
-            ]),
-            backgroundColor: const Color(0xFF4DC130),
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        FeedbackUtils.showSuccessSnackBar(context, 'Lección guardada exitosamente');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al guardar: $e'),
-            backgroundColor: const Color(0xFFFF606F),
-          ),
-        );
+        FeedbackUtils.showErrorSnackBar(context, 'Error al guardar: $e');
       }
     } finally {
       if (mounted) setState(() => _guardando = false);
