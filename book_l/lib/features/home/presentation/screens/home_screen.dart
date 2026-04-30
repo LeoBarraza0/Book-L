@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/content_cards.dart';
-import '../../../../core/services/bookl_service.dart';
+import '../controller/home_controller.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../notificacion/presentation/widgets/notification_icon_button.dart';
 import 'widgets/racha_buky_widget.dart';
@@ -72,33 +72,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // Lecciones y Cursos desde el servicio JSON (Mixto)
                       ListenableBuilder(
-                        listenable: BooklService(),
+                        listenable: HomeController(),
                         builder: (context, _) {
-                          final lecciones = BooklService().lecciones
-                              .where((l) => l.estado == 'activa')
-                              .toList();
-                          final cursos = BooklService().cursos
-                              .where((c) => c.estado == 'Publicado')
-                              .toList();
+                          final mixedList = HomeController().getForYouPageItems();
                               
-                          if (lecciones.isEmpty && cursos.isEmpty) {
+                          if (mixedList.isEmpty) {
                             return const SizedBox();
                           }
                           
-                          // Mezclamos en una sola lista (intercalados para FYP)
-                          final mixedList = <Widget>[];
-                          final maxLen = lecciones.length > cursos.length ? lecciones.length : cursos.length;
-                          
-                          for (int i = 0; i < maxLen; i++) {
-                            if (i < cursos.length) {
-                               mixedList.add(FypCursoCard(curso: cursos[i]));
+                          final widgets = mixedList.map<Widget>((item) {
+                            if (item.runtimeType.toString() == 'Curso') {
+                              return FypCursoCard(curso: item);
+                            } else {
+                              return FypLeccionCard(leccion: item);
                             }
-                            if (i < lecciones.length) {
-                               mixedList.add(FypLeccionCard(leccion: lecciones[i]));
-                            }
-                          }
+                          }).toList();
                           
-                          return Column(children: mixedList);
+                          return Column(children: widgets);
                         },
                       ),
                       const SizedBox(height: 100),

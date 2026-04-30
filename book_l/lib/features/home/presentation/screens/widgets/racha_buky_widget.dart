@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/services/bookl_service.dart';
+import '../../controller/home_controller.dart';
 import '../../../../../core/storage/local_storage.dart';
 
 /// Widget funcional de "Racha Buky".
 ///
 /// Muestra los 7 días de la semana actual y marca en verde aquellos
 /// en los que el usuario realizó alguna actividad (completar o crear
-/// lecciones/cursos). Se actualiza reactivamente vía [BooklService].
+/// lecciones/cursos). Se actualiza reactivamente vía [HomeController].
 class RachaBukyWidget extends StatelessWidget {
   const RachaBukyWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: BooklService(),
+      listenable: HomeController(),
       builder: (context, _) {
         final userId = AppSession().usuarioId ?? 0;
-        final rachaData = BooklService().getRacha(userId);
+        final rachaData = HomeController().getRacha(userId);
         final diasActividad = rachaData != null
             ? List<String>.from(rachaData['dias_actividad'] ?? [])
             : <String>[];
