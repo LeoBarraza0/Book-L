@@ -150,14 +150,6 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                 ),
               ],
             ),
-
-            // Floating Bottom Navigation Bar
-            const Positioned(
-              left: 20,
-              right: 20,
-              bottom: 30, // Elevated off bottom
-              child: SharedBottomNavBar(),
-            ),
           ],
         ),
       ),
@@ -168,10 +160,12 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
     final session = AppSession();
     final rolStr = session.rol ?? 'Estudiante';
     final nombreStr = session.nombreCompleto ?? 'Usuario';
-    
+
     String? avatarUrl;
     try {
-      final user = BooklService().usuarios.firstWhere((u) => u.idUsuario == session.usuarioId);
+      final user = BooklService()
+          .usuarios
+          .firstWhere((u) => u.idUsuario == session.usuarioId);
       avatarUrl = user.avatarUrl;
     } catch (_) {}
 

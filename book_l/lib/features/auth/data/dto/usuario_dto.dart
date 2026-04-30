@@ -36,6 +36,40 @@ class UsuarioDto {
     this.preferencias,
   });
 
+  UsuarioDto copyWith({
+    int? idUsuario,
+    String? nombreCompleto,
+    String? correo,
+    String? contrasena,
+    String? rol,
+    String? programa,
+    bool? activo,
+    String? avatarUrl,
+    String? username,
+    String? descripcion,
+    int? celular,
+    int? semestre,
+    DateTime? nacimiento,
+    String? preferencias,
+  }) {
+    return UsuarioDto(
+      idUsuario: idUsuario ?? this.idUsuario,
+      nombreCompleto: nombreCompleto ?? this.nombreCompleto,
+      correo: correo ?? this.correo,
+      contrasena: contrasena ?? this.contrasena,
+      rol: rol ?? this.rol,
+      programa: programa ?? this.programa,
+      activo: activo ?? this.activo,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      username: username ?? this.username,
+      descripcion: descripcion ?? this.descripcion,
+      celular: celular ?? this.celular,
+      semestre: semestre ?? this.semestre,
+      nacimiento: nacimiento ?? this.nacimiento,
+      preferencias: preferencias ?? this.preferencias,
+    );
+  }
+
   factory UsuarioDto.fromJson(Map<String, dynamic> json) => UsuarioDto(
         idUsuario: json['id_usuario'] as int,
         nombreCompleto: json['nombre_completo'] as String,

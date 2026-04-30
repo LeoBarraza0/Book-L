@@ -157,35 +157,20 @@ class _LoginScreenState extends State<LoginScreen> {
               final email = _emailController.text.trim();
               if (email.isNotEmpty) {
                 try {
-                  final String jsonString = await rootBundle
-                      .loadString('assets/data/bookl_data.json');
-                  final Map<String, dynamic> jsonData = json.decode(jsonString);
-                  final List<dynamic> users = jsonData['usuarios'];
-
-                  final dynamic user = users.firstWhere(
-                      (u) => u['correo'] == email,
-                      orElse: () => null);
-
+                  // Busca el usuario en la BD en memoria (BooklService) según arquitectura
+                  final user = BooklService().usuarios.firstWhere((u) => u.correo == email);
+                  
                   if (!mounted) return;
-
-                  if (user != null) {
-                    final String? phone = user['celular']?.toString();
-                    _ctrl.setRecoveryData(email, phone!);
-                    Navigator.pushNamed(context, '/recuperar_correo');
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('No existe una cuenta con este correo'),
-                        backgroundColor: Color(0xFFFF5252),
-                      ),
-                    );
-                  }
+                  
+                  final String phone = user.celular?.toString() ?? '';
+                  _ctrl.setRecoveryData(email, phone);
+                  Navigator.pushNamed(context, '/recuperar_correo');
                 } catch (e) {
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error al procesar la solicitud: $e'),
-                      backgroundColor: const Color(0xFFFF5252),
+                    const SnackBar(
+                      content: Text('No existe una cuenta con este correo'),
+                      backgroundColor: Color(0xFFFF5252),
                     ),
                   );
                 }

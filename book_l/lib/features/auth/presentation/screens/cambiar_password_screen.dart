@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/auth_recovery_header.dart';
 import '../widgets/auth_pro_tip.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
+import '../controller/auth_controller.dart';
 
 class CambiarPasswordScreen extends StatefulWidget {
   const CambiarPasswordScreen({super.key});
@@ -139,9 +140,20 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
                                         (_hasUppercase ? 1 : 0) +
                                         (_hasSpecialChar ? 1 : 0)) >=
                                     2)
-                            ? () {
-                                Navigator.pushNamedAndRemoveUntil(
-                                    context, '/login', (route) => false);
+                            ? () async {
+                                final authCtrl = AuthController();
+                                final success = await authCtrl.restablecerPassword(_newPassController.text);
+                                if (success && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Contraseña actualizada exitosamente'), backgroundColor: Color(0xFF4DC130)),
+                                  );
+                                  Navigator.pushNamedAndRemoveUntil(
+                                      context, '/login', (route) => false);
+                                } else if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('No se pudo actualizar la contraseña. Revisa tus datos.'), backgroundColor: Color(0xFFFF5252)),
+                                  );
+                                }
                               }
                             : null,
                         style: ElevatedButton.styleFrom(
