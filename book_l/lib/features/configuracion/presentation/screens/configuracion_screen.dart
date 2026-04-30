@@ -3,6 +3,8 @@ import '../../../../shared/widgets/nav_bar.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
 import '../controller/configuracion_controller.dart';
 import '../../../../core/storage/local_storage.dart';
+import '../../../../core/services/bookl_service.dart';
+import '../../../../shared/widgets/custom_avatar.dart';
 
 class ConfiguracionScreen extends StatefulWidget {
   const ConfiguracionScreen({super.key});
@@ -166,6 +168,12 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
     final session = AppSession();
     final rolStr = session.rol ?? 'Estudiante';
     final nombreStr = session.nombreCompleto ?? 'Usuario';
+    
+    String? avatarUrl;
+    try {
+      final user = BooklService().usuarios.firstWhere((u) => u.idUsuario == session.usuarioId);
+      avatarUrl = user.avatarUrl;
+    } catch (_) {}
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -217,10 +225,10 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(color: const Color(0xFF4DC130), width: 3),
                 ),
-                child: const CircleAvatar(
+                child: CustomAvatar(
+                  url: avatarUrl,
+                  nombre: nombreStr,
                   radius: 50,
-                  backgroundColor: Color(0xFFE0E0E0),
-                  child: Icon(Icons.person, size: 60, color: Colors.grey),
                 ),
               ),
               Positioned(

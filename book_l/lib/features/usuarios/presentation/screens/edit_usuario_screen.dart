@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../../shared/widgets/custom_avatar.dart';
 import '../../domain/entities/usuarios.dart';
 import '../../../../core/services/bookl_service.dart';
 
@@ -31,8 +32,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
   late List<String> _roles;
 
   // ─── Estado del avatar ────────────────────────────────────────────────
-  File? _avatarImage; // Imagen local seleccionada (cámara/galería)
-  String? _avatarNetworkUrl; // URL remota del avatar existente
+  String? _avatarNetworkUrl; // URL remota o local seleccionada
   final ImagePicker _picker = ImagePicker();
 
   bool? _temaOscuroOriginal;
@@ -147,18 +147,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
     return jsonEncode(map);
   }
 
-  /// Devuelve el ImageProvider adecuado para el avatar:
-  /// - Si hay imagen local seleccionada → FileImage
-  /// - Si no, pero hay URL remota guardada → NetworkImage
-  /// - Si ninguna → null (para mostrar el icono por defecto)
-  ImageProvider? _getAvatarImageProvider() {
-    if (_avatarImage != null) {
-      return FileImage(_avatarImage!);
-    } else if (_avatarNetworkUrl != null && _avatarNetworkUrl!.isNotEmpty) {
-      return NetworkImage(_avatarNetworkUrl!);
-    }
-    return null;
-  }
+
 
   void _showImagePickerSheet() {
     showModalBottomSheet(
@@ -209,7 +198,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                     _pickImage(ImageSource.gallery);
                   },
                 ),
-                if (_avatarImage != null || _avatarNetworkUrl != null)
+                if (_avatarNetworkUrl != null)
                   ListTile(
                     leading:
                         const Icon(Icons.delete_outline, color: Colors.red),
@@ -217,7 +206,6 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                     onTap: () {
                       Navigator.pop(ctx);
                       setState(() {
-                        _avatarImage = null;
                         _avatarNetworkUrl = null;
                       });
                     },
@@ -240,7 +228,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
 
       if (pickedFile != null) {
         setState(() {
-          _avatarImage = File(pickedFile.path);
+          _avatarNetworkUrl = pickedFile.path;
         });
       }
     } catch (e) {
@@ -333,15 +321,10 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                             onTap: _showImagePickerSheet,
                             child: Stack(
                               children: [
-                                CircleAvatar(
+                                CustomAvatar(
+                                  url: _avatarNetworkUrl,
+                                  nombre: _nombreController.text.isNotEmpty ? _nombreController.text : 'Usuario',
                                   radius: 40,
-                                  backgroundColor: Colors.white,
-                                  backgroundImage: _getAvatarImageProvider(),
-                                  child: (_avatarImage == null &&
-                                          _avatarNetworkUrl == null)
-                                      ? const Icon(Icons.person,
-                                          size: 50, color: Colors.grey)
-                                      : null,
                                 ),
                                 Positioned(
                                   bottom: 0,
@@ -353,8 +336,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
-                                      (_avatarImage != null ||
-                                              _avatarNetworkUrl != null)
+                                      _avatarNetworkUrl != null
                                           ? Icons.edit
                                           : Icons.add,
                                       color: Colors.white,
@@ -532,7 +514,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                                     _preferenciasController.text),
                                 activo: _activo,
                                 rol: _selectedRol,
-                                avatarUrl: widget.usuario.avatarUrl,
+                                avatarUrl: _avatarNetworkUrl,
                               );
                               Navigator.pop(context, updatedUser);
                             },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/services/bookl_service.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../auth/domain/entities/usuario.dart';
+import '../../../../shared/widgets/custom_avatar.dart';
 import '../controller/chatbot_state.dart';
 
 class ChatMessageBubble extends StatelessWidget {
@@ -56,14 +57,11 @@ class ChatMessageBubble extends StatelessWidget {
                 } catch (e) {
                   user = null;
                 }
-                return CircleAvatar(
-                  radius: 24, // 48x48
+                return CustomAvatar(
+                  url: user?.avatarUrl,
+                  nombre: user?.nombreCompleto ?? 'Usuario',
+                  radius: 24,
                   backgroundColor: Colors.white,
-                  backgroundImage: user?.avatarUrl != null
-                      ? NetworkImage(user!.avatarUrl!)
-                      : NetworkImage(
-                              'https://ui-avatars.com/api/?name=${user?.nombreCompleto ?? 'U'}&background=random')
-                          as ImageProvider,
                 );
               }
             ),
