@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/utils/feedback_utils.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../../shared/widgets/seccion_editor_widget.dart';
@@ -177,21 +178,21 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
                           _imagenPath!,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) =>
-                              Container(color: const Color(0xFF4DC130)),
+                              Container(color: const Color(0xFFFF606F)),
                         )
                       : Image.file(
                           File(_imagenPath!),
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) =>
-                              Container(color: const Color(0xFF4DC130)),
+                              Container(color: const Color(0xFFFF606F)),
                         ))
                   : Transform.scale(
                       scale: 1.15,
                       child: Image.asset(
-                        'assets/images/green_bg.png',
+                        'assets/images/red_bg.png',
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) =>
-                            Container(color: const Color(0xFF4DC130)),
+                            Container(color: const Color(0xFFFF606F)),
                       ),
                     ),
             ),
@@ -239,7 +240,7 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.school_rounded,
-                        size: 16, color: Color(0xFF4DC130)),
+                        size: 16, color: Color(0xFFFF606F)),
                     SizedBox(width: 6),
                     Text(
                       'Nuevo Curso',
@@ -247,7 +248,7 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
                         fontFamily: 'Inter',
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF3AA820),
+                        color: Color(0xFFFF606F),
                       ),
                     ),
                   ],
@@ -379,7 +380,7 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
   Future<void> _guardarCurso() async {
     final nombre = _nombreCtrl.text.trim();
     if (nombre.isEmpty) {
-      _showSnackbar('El nombre del curso es obligatorio', isError: true);
+      FeedbackUtils.showErrorSnackBar(context, 'El nombre del curso es obligatorio');
       return;
     }
 
@@ -396,27 +397,14 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
       );
 
       if (mounted) {
-        _showSnackbar('Curso publicado exitosamente');
+        FeedbackUtils.showSuccessSnackBar(context, 'Curso publicado exitosamente');
         Navigator.pop(context);
       }
     } catch (e) {
-      _showSnackbar('Error al guardar: $e', isError: true);
+      FeedbackUtils.showErrorSnackBar(context, 'Error al guardar: $e');
     } finally {
       if (mounted) setState(() => _guardando = false);
     }
-  }
-
-  void _showSnackbar(String msg, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg, style: const TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor:
-            isError ? const Color(0xFFFF606F) : const Color(0xFF4DC130),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-      ),
-    );
   }
 }
 

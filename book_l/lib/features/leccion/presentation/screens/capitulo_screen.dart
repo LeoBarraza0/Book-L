@@ -4,6 +4,7 @@ import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
 import '../../../../shared/widgets/video_player_widget.dart';
 import '../../../../shared/widgets/pdf_viewer_widget.dart';
+import '../../../../shared/widgets/header_background_image.dart';
 import '../../../../core/storage/local_storage.dart';
 
 import '../controller/leccion_controller.dart';
@@ -44,7 +45,12 @@ class _CapituloScreenState extends State<CapituloScreen> {
         children: [
           CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(child: _buildHeaderImage(context)),
+              SliverToBoxAdapter(
+                child: ListenableBuilder(
+                  listenable: _ctrl,
+                  builder: (context, _) => _buildHeaderImage(context),
+                ),
+              ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding:
@@ -336,21 +342,30 @@ class _CapituloScreenState extends State<CapituloScreen> {
       width: double.infinity,
       child: Stack(
         children: [
-          // Background Image
+          // Background Image (usa imagen de la lección padre o placeholder)
           Positioned.fill(
             child: ClipRRect(
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(25),
                 bottomRight: Radius.circular(25),
               ),
-              child: Transform.scale(
-                scale: 1.15,
-                child: Image.asset(
-                  'assets/images/green_bg.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(color: Colors.grey[400]),
-                ),
+              child: Builder(
+                builder: (context) {
+                  final cap = _ctrl.capituloSeleccionado;
+                  String? imagenUrl;
+                  if (cap != null) {
+                    final leccion = BooklService().lecciones.cast<dynamic>().firstWhere(
+                      (l) => l.idLeccion == cap.idLeccion,
+                      orElse: () => null,
+                    );
+                    imagenUrl = leccion?.imagenUrl;
+                  }
+                  return HeaderBackgroundImage(
+                    imagenUrl: imagenUrl,
+                    fallbackAsset: 'assets/images/green_bg.png',
+                    fallbackColor: const Color(0xFF4DC130),
+                  );
+                },
               ),
             ),
           ),

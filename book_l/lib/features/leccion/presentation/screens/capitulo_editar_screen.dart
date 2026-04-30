@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/services/bookl_service.dart';
+import '../../../../shared/widgets/header_background_image.dart';
 import '../../../../shared/widgets/seccion_editor_widget.dart';
 import '../widgets/agregar_seccion_button.dart';
 import '../controller/leccion_controller.dart';
@@ -194,14 +195,23 @@ class _CapituloEditarScreenState extends State<CapituloEditarScreen>
                 bottomLeft: Radius.circular(25),
                 bottomRight: Radius.circular(25),
               ),
-              child: Transform.scale(
-                scale: 1.15,
-                child: Image.asset(
-                  'assets/images/green_bg.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(color: const Color(0xFF4DC130)),
-                ),
+              child: Builder(
+                builder: (context) {
+                  final idLeccion = _capituloActual?.idLeccion ?? widget.idLeccion;
+                  String? imagenUrl;
+                  if (idLeccion != null) {
+                    final leccion = BooklService().lecciones.cast<dynamic>().firstWhere(
+                      (l) => l.idLeccion == idLeccion,
+                      orElse: () => null,
+                    );
+                    imagenUrl = leccion?.imagenUrl;
+                  }
+                  return HeaderBackgroundImage(
+                    imagenUrl: imagenUrl,
+                    fallbackAsset: 'assets/images/green_bg.png',
+                    fallbackColor: const Color(0xFF4DC130),
+                  );
+                },
               ),
             ),
           ),

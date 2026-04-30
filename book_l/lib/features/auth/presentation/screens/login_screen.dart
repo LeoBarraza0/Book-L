@@ -27,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  //Función que se ejecuta cuando se presiona el botón de iniciar sesión
   Future<void> _onLogin() async {
     final correo = _emailController.text.trim();
     final pass = _passwordController.text;
@@ -39,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     final ok = await _ctrl.iniciarSesion(correo, pass);
-
+    //El mounted es para saber si el widget esta montado en el arbol de widgets
     if (!mounted) return;
 
     if (ok) {
@@ -73,6 +74,20 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildForm(BuildContext context) {
+    var inputContrasena = CustomTextField(
+      controller: _passwordController,
+      label: 'Ingrese su contraseña:',
+      hint: 'Password',
+      obscureText: _obscurePassword,
+      suffixIcon: IconButton(
+        icon: Icon(
+          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+          color: const Color(0xFF828282),
+          size: 20,
+        ),
+        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+      ),
+    );
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -112,21 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 22),
 
-          CustomTextField(
-            controller: _passwordController,
-            label: 'Ingrese su contraseña:',
-            hint: 'Password',
-            obscureText: _obscurePassword,
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                color: const Color(0xFF828282),
-                size: 20,
-              ),
-              onPressed: () =>
-                  setState(() => _obscurePassword = !_obscurePassword),
-            ),
-          ),
+          inputContrasena,
           const SizedBox(height: 35),
 
           // ── Botón Ingresar con estado de carga ─────────────────────────

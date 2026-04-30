@@ -439,6 +439,10 @@ class BooklService extends ChangeNotifier {
     }
   }
 
+  void guardarDatos() {
+    _save();
+  }
+
   // ── Racha (Streak) ──────────────────────────────────────────────────────────
 
   /// Obtiene la racha de un usuario. Retorna null si no existe.

@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../core/services/bookl_service.dart';
 import '../../core/storage/local_storage.dart';
@@ -67,7 +69,7 @@ class _BaseContentCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       image: imageUrl != null
                           ? DecorationImage(
-                              image: NetworkImage(imageUrl!), fit: BoxFit.cover)
+                              image: _resolveImageProvider(imageUrl!), fit: BoxFit.cover)
                           : null,
                     ),
                     alignment: Alignment.center,
@@ -146,7 +148,7 @@ class SharedLeccionCard extends StatelessWidget {
       iconBoxColor: const Color(0xFF4DC130),
       iconColor: Colors.white,
       iconData: Icons.menu_book_rounded,
-      imageUrl: _extractImageUrl(leccion.contenido),
+      imageUrl: leccion.imagenUrl ?? _extractImageUrl(leccion.contenido),
       onTap: () => Navigator.pushNamed(context, '/leccion_detail',
           arguments: leccion.idLeccion),
       tagsArea: ListenableBuilder(
@@ -284,7 +286,7 @@ class SharedCursoCard extends StatelessWidget {
       iconBoxColor: const Color(0xFFFF606F).withValues(alpha: 0.2),
       iconColor: const Color(0xFFFF606F),
       iconData: Icons.school_rounded,
-      imageUrl: _extractImageUrl(curso.contenido),
+      imageUrl: curso.imagenUrl ?? _extractImageUrl(curso.contenido),
       onTap: () => Navigator.pushNamed(context, '/curso_detail',
           arguments: curso.idCurso),
       tagsArea: const SizedBox(), // Título queda arriba al hacer esto vacío
@@ -370,6 +372,14 @@ String? _extractImageUrl(List<dynamic>? contenido) {
   return null;
 }
 
+/// Resuelve un ImageProvider según el tipo de path (red, asset o archivo local).
+ImageProvider _resolveImageProvider(String url) {
+  if (url.startsWith('http')) return NetworkImage(url);
+  if (url.startsWith('assets/')) return AssetImage(url);
+  if (!kIsWeb) return FileImage(File(url));
+  return NetworkImage(url); // fallback
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Tarjetas Verticales Grandes para el FYP (Feed Principal)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -424,7 +434,7 @@ class _BaseFypCard extends StatelessWidget {
                         width: 1),
                     image: imageUrl != null
                         ? DecorationImage(
-                            image: NetworkImage(imageUrl!), fit: BoxFit.cover)
+                            image: _resolveImageProvider(imageUrl!), fit: BoxFit.cover)
                         : null,
                   ),
                   alignment: Alignment.center,
@@ -528,7 +538,7 @@ class FypLeccionCard extends StatelessWidget {
           .withValues(alpha: 0.2), // Verde suave para banner
       iconColor: const Color(0xFF4DC130), // Libro gigante translúcido
       iconData: Icons.menu_book_rounded,
-      imageUrl: _extractImageUrl(leccion.contenido),
+      imageUrl: leccion.imagenUrl ?? _extractImageUrl(leccion.contenido),
       durationStr: '3H 2M',
       rating: leccion.rating,
       onTap: () => Navigator.pushNamed(context, '/leccion_detail',
@@ -619,7 +629,7 @@ class FypCursoCard extends StatelessWidget {
       iconColor: const Color(0xFFFF606F)
           .withValues(alpha: 0.7), // Birrete gigante translúcido
       iconData: Icons.school_rounded,
-      imageUrl: _extractImageUrl(curso.contenido),
+      imageUrl: curso.imagenUrl ?? _extractImageUrl(curso.contenido),
       durationStr: '8H 15M',
       rating: curso.rating,
       onTap: () => Navigator.pushNamed(context, '/curso_detail',

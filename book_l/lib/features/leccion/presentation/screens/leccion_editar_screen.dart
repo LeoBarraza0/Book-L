@@ -1,8 +1,10 @@
 import 'dart:io';
+import '../../../../core/utils/feedback_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../shared/widgets/nav_bar.dart';
+import '../../../../shared/widgets/header_background_image.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../../core/services/bookl_service.dart';
 import '../../../../shared/widgets/seccion_editor_widget.dart';
@@ -242,21 +244,17 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
       width: double.infinity,
       child: Stack(
         children: [
-          // Fondo verde
+          // Fondo verde o imagen subida
           Positioned.fill(
             child: ClipRRect(
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(25),
                 bottomRight: Radius.circular(25),
               ),
-              child: Transform.scale(
-                scale: 1.15,
-                child: Image.asset(
-                  'assets/images/green_bg.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(color: const Color(0xFF4DC130)),
-                ),
+              child: HeaderBackgroundImage(
+                imagenUrl: _leccionActual?.imagenUrl,
+                fallbackAsset: 'assets/images/green_bg.png',
+                fallbackColor: const Color(0xFF4DC130),
               ),
             ),
           ),
@@ -335,7 +333,17 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
                     Icons.arrow_back_rounded,
                     () => Navigator.pop(context),
                   ),
-                  _buildCircularIconButton(Icons.share_rounded, () {}),
+                  Row(
+                    children: [
+                      _buildCircularIconButton(Icons.camera_alt_rounded, _cambiarImagen),
+                      const SizedBox(width: 10),
+                      _buildCircularIconButton(
+                        Icons.delete_rounded,
+                        _eliminarLeccion,
+                        bgColor: Colors.red.withOpacity(0.9),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -345,14 +353,14 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
     );
   }
 
-  Widget _buildCircularIconButton(IconData icon, VoidCallback onTap) {
+  Widget _buildCircularIconButton(IconData icon, VoidCallback onTap, {Color? bgColor, Color? iconColor}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: const Color(0xFF6BCA54).withOpacity(0.9),
+          color: bgColor ?? const Color(0xFF6BCA54).withOpacity(0.9),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
@@ -696,6 +704,35 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
     );
   }
 
+
+  Future<void> _cambiarImagen() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null && _leccionActual != null) {
+      setState(() {
+        _leccionActual = _leccionActual!.copyWith(imagenUrl: picked.path);
+      });
+    }
+  }
+
+  Future<void> _eliminarLeccion() async {
+    final confirmar = await FeedbackUtils.showConfirmDialog(
+      context: context,
+      title: 'Eliminar Lección',
+      content: '¿Estás seguro de que deseas eliminar esta lección? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      isDestructive: true,
+    );
+
+    if (confirmar == true && _leccionActual != null) {
+      BooklService().removeLeccion(_leccionActual!.idLeccion);
+      if (mounted) {
+        FeedbackUtils.showSuccessSnackBar(context, 'Lección eliminada correctamente.');
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    }
+  }
+
   Future<void> _guardar() async {
     final nombre = _tituloCtrl.text.trim();
     if (nombre.isEmpty) return;
@@ -707,6 +744,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
           _leccionActual!.copyWith(
             nombre: nombre,
             contenido: _secciones.map((s) => s.toJson()).toList(),
+            imagenUrl: _leccionActual!.imagenUrl,
           ),
         );
         
@@ -754,23 +792,7 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
         }
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 10),
-              Text('Lección guardada exitosamente',
-                  style: TextStyle(
-                      fontFamily: 'Inter', fontWeight: FontWeight.w600)),
-            ]),
-            backgroundColor: const Color(0xFF4DC130),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        FeedbackUtils.showSuccessSnackBar(context, 'Lección guardada exitosamente');
         Navigator.pop(context);
       }
     } finally {
