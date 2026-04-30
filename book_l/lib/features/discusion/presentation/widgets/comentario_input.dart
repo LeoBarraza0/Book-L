@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../controller/discusion_controller.dart';
 import '../../../../core/storage/local_storage.dart';
-import '../../../../core/services/bookl_service.dart';
 
 class ComentarioInput extends StatefulWidget {
   final DiscusionController ctrl;
@@ -50,10 +49,7 @@ class _ComentarioInputState extends State<ComentarioInput> {
   Widget build(BuildContext context) {
     final myId = AppSession().usuarioId;
     final myUser = myId != null
-        ? BooklService().usuarios.cast<dynamic>().firstWhere(
-              (u) => u.idUsuario == myId,
-              orElse: () => null,
-            )
+        ? widget.ctrl.getUserSync(myId)
         : null;
     final myAvatar = myUser?.avatarUrl as String? ??
         'https://ui-avatars.com/api/?name=User&background=4DC130&color=fff';

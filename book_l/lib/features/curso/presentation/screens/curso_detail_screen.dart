@@ -307,11 +307,11 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.9),
+          color: color.withValues(alpha: 0.9),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -360,12 +360,9 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                   ListenableBuilder(
-                    listenable: BooklService(),
+                    listenable: _ctrl,
                     builder: (context, _) {
-                      final creator = BooklService().usuarios.cast<dynamic>().firstWhere(
-                        (u) => (u as dynamic).idUsuario == curso?.idUsuarioFk,
-                        orElse: () => null,
-                      );
+                      final creator = curso != null ? _ctrl.getCreadorSync(curso.idUsuarioFk) : null;
                       return GestureDetector(
                         onTap: () => Navigator.push(
                           context,
@@ -532,7 +529,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                       ),
                     ),
                     ListenableBuilder(
-                      listenable: BooklService(), // Listener dummy or actual comments controller if it existed
+                      listenable: _discCtrl,
                       builder: (context, _) => const Text(
                         '0 comentarios',
                         style: TextStyle(fontSize: 11, color: Colors.black54),
@@ -751,7 +748,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                       errorBuilder: (_, __, ___) => Container(
                         width: 74,
                         height: 74,
-                        color: const Color(0xFF4DC130).withOpacity(0.3),
+                        color: const Color(0xFF4DC130).withValues(alpha: 0.3),
                         child: const Icon(Icons.menu_book_rounded,
                             color: Color(0xFF4DC130), size: 32),
                       ),
@@ -759,7 +756,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                   : Container(
                       width: 74,
                       height: 74,
-                      color: const Color(0xFF4DC130).withOpacity(0.25),
+                      color: const Color(0xFF4DC130).withValues(alpha: 0.25),
                       child: const Icon(Icons.menu_book_rounded,
                           color: Color(0xFF4DC130), size: 32),
                     ),

@@ -18,4 +18,7 @@ abstract class DiscusionRepository {
     required String contenido,
     int? idPadre,
   });
+
+  /// Obtiene la información de usuario de forma síncrona
+  dynamic getUserSync(int idUsuario);
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/comentario.dart';
 import '../controller/discusion_controller.dart';
-import '../../../../core/services/bookl_service.dart';
 
 class ComentarioTile extends StatefulWidget {
   final Comentario comentario;
@@ -33,10 +32,7 @@ class _ComentarioTileState extends State<ComentarioTile> {
 
   @override
   Widget build(BuildContext context) {
-    final usuario = BooklService().usuarios.cast<dynamic>().firstWhere(
-          (u) => u.idUsuario == widget.comentario.idUsuarioFk,
-          orElse: () => null,
-        );
+    final usuario = widget.ctrl.getUserSync(widget.comentario.idUsuarioFk);
     final nombre = usuario?.nombreCompleto ?? 'Usuario';
     final avatar = usuario?.avatarUrl as String? ??
         'https://ui-avatars.com/api/?name=${nombre.replaceAll(" ", "+")}&background=4DC130&color=fff';
@@ -260,10 +256,7 @@ class _RespuestaTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final usuario = BooklService().usuarios.cast<dynamic>().firstWhere(
-          (u) => u.idUsuario == respuesta.idUsuarioFk,
-          orElse: () => null,
-        );
+    final usuario = ctrl.getUserSync(respuesta.idUsuarioFk);
     final nombre = usuario?.nombreCompleto ?? 'Usuario';
     final avatar = usuario?.avatarUrl as String? ??
         'https://ui-avatars.com/api/?name=${nombre.replaceAll(" ", "+")}&background=4DC130&color=fff';

@@ -77,4 +77,13 @@ class DiscusionRepositoryImpl implements DiscusionRepository {
 
   /// Todos los comentarios, para inicializar conteos de likes
   List<Comentario> getAllComentarios() => List.unmodifiable(_service.comentarios);
+
+  @override
+  dynamic getUserSync(int idUsuario) {
+    try {
+      return _service.usuarios.firstWhere((u) => u.idUsuario == idUsuario);
+    } catch (_) {
+      return null;
+    }
+  }
 }

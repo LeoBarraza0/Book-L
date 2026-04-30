@@ -209,9 +209,9 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.2),
+                      Colors.black.withValues(alpha: 0.2),
                       Colors.transparent,
-                      Colors.black.withOpacity(0.3),
+                      Colors.black.withValues(alpha: 0.3),
                     ],
                   ),
                 ),
@@ -229,11 +229,11 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.92),
+                  color: Colors.white.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withOpacity(0.12), blurRadius: 8),
+                        color: Colors.black.withValues(alpha: 0.12), blurRadius: 8),
                   ],
                 ),
                 child: const Row(
@@ -291,11 +291,11 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: const Color(0xFF6BCA54).withOpacity(0.9),
+          color: const Color(0xFF6BCA54).withValues(alpha: 0.9),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -350,17 +350,7 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
     );
   }
 
-  Widget _buildSeccionLabel(String texto) {
-    return Text(
-      texto,
-      style: const TextStyle(
-        fontFamily: 'Inter',
-        fontSize: 15,
-        fontWeight: FontWeight.w800,
-        color: Color(0xFF363333),
-      ),
-    );
-  }
+
 
   Widget _buildPublicarButton() {
     return ScaleTransition(
@@ -401,7 +391,7 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
         Navigator.pop(context);
       }
     } catch (e) {
-      FeedbackUtils.showErrorSnackBar(context, 'Error al guardar: $e');
+      if (mounted) FeedbackUtils.showErrorSnackBar(context, 'Error al guardar: $e');
     } finally {
       if (mounted) setState(() => _guardando = false);
     }
@@ -464,7 +454,7 @@ class _PublicarButtonState extends State<_PublicarButton>
             borderRadius: BorderRadius.circular(26),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF4DC130).withOpacity(0.35),
+                color: const Color(0xFF4DC130).withValues(alpha: 0.35),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),

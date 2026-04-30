@@ -147,6 +147,16 @@ class CursoController extends ChangeNotifier {
     return totalProgress / leccs.length;
   }
 
+  /// Obtiene de forma síncrona la información del creador para la UI.
+  /// Se usa para no bloquear la construcción de la pantalla de detalles.
+  dynamic getCreadorSync(int idUsuario) {
+    try {
+      return BooklService().usuarios.firstWhere((u) => u.idUsuario == idUsuario);
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   void dispose() {
     // Es un Singleton, no debe destruirse nunca para evitar errores de 'used after being disposed'.

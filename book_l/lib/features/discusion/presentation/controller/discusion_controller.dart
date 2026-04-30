@@ -158,4 +158,7 @@ class DiscusionController extends ChangeNotifier {
     replyToName = null;
     notifyListeners();
   }
+
+  /// Obtener usuario sincronamente
+  dynamic getUserSync(int idUsuario) => _repo.getUserSync(idUsuario);
 }

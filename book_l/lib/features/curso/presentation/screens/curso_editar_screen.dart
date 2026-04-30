@@ -11,6 +11,8 @@ import '../../../../core/services/bookl_service.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../leccion/domain/entities/leccion.dart';
 import '../../domain/entities/curso.dart';
+import '../controller/curso_controller.dart';
+import '../../../leccion/presentation/controller/leccion_controller.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CursoEditarScreen
@@ -43,21 +45,23 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
   final List<Map<String, int>> _leccionesCursosData = [];
   List<Leccion> _leccionesDelCurso = [];
   Curso? _cursoOriginal;
+  final CursoController _cursoCtrl = CursoController();
+  final LeccionController _leccionCtrl = LeccionController();
 
   @override
   void initState() {
     super.initState();
 
     if (widget.idCurso != null) {
-      _cursoOriginal = BooklService().cursos.firstWhere(
-            (c) => c.idCurso == widget.idCurso,
-            orElse: () => Curso(
-              idCurso: -1,
-              idUsuarioFk: AppSession().usuarioId ?? 1,
-              nombre: '',
-              estado: 'Borrador',
-            ),
-          );
+      _cursoOriginal = _cursoCtrl.state.selected;
+      if (_cursoOriginal == null || _cursoOriginal!.idCurso != widget.idCurso) {
+        _cursoOriginal = Curso(
+          idCurso: widget.idCurso ?? -1,
+          idUsuarioFk: AppSession().usuarioId ?? 1,
+          nombre: '',
+          estado: 'Borrador',
+        );
+      }
       _tituloCtrl.text = _cursoOriginal!.nombre;
     }
 
@@ -110,11 +114,8 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
         _cursoOriginal = _cursoOriginal!.copyWith(imagenUrl: picked.path);
       });
       // Persistir el cambio inmediatamente
-      final idx = BooklService().cursos.indexWhere((c) => c.idCurso == _cursoOriginal!.idCurso);
-      if (idx != -1) {
-        BooklService().cursos[idx] = _cursoOriginal!;
-        BooklService().guardarDatos();
-      }
+      // Persistir el cambio mediante el controlador
+      _cursoCtrl.editarCurso(_cursoOriginal!);
     }
   }
 
@@ -128,7 +129,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
     );
 
     if (confirmar == true && _cursoOriginal != null) {
-      BooklService().removeCurso(_cursoOriginal!.idCurso);
+      await _cursoCtrl.eliminarCurso(_cursoOriginal!.idCurso);
       if (mounted) {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
@@ -137,16 +138,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
 
   void _refreshLeccionesLocales() {
     if (widget.idCurso != null) {
-      final idsLecciones = BooklService()
-          .leccionesCursos
-          .where((lc) => lc['id_curso'] == widget.idCurso)
-          .map((lc) => lc['id_leccion'])
-          .toList();
-
-      _leccionesDelCurso = BooklService()
-          .lecciones
-          .where((l) => idsLecciones.contains(l.idLeccion))
-          .toList();
+      _leccionesDelCurso = List.from(_cursoCtrl.leccionesDeCurso);
     }
   }
 
@@ -182,22 +174,22 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
     });
   }
 
-  void _eliminarLeccion(Leccion leccion) {
+  void _eliminarLeccion(Leccion leccion) async {
     if (widget.idCurso == null) return;
 
+    await _cursoCtrl.desasociarLeccion(widget.idCurso!, leccion.idLeccion);
     setState(() {
-      BooklService().leccionesCursos.removeWhere((lc) =>
-          lc['id_curso'] == widget.idCurso &&
-          lc['id_leccion'] == leccion.idLeccion);
       _refreshLeccionesLocales();
     });
     // Notificamos para que la UI compartida o Home Screen recargue sus dependencias
-    FeedbackUtils.showSuccessSnackBar(context, 'Lección eliminada');
+    if (mounted) FeedbackUtils.showSuccessSnackBar(context, 'Lección eliminada');
   }
 
-  void _showAssignLessonModal() {
-    final myUserLessons = BooklService()
-        .lecciones
+  void _showAssignLessonModal() async {
+    if (_leccionCtrl.state.items.isEmpty) {
+      await _leccionCtrl.cargarLecciones();
+    }
+    final myUserLessons = _leccionCtrl.state.items
         .where((l) => l.idUsuarioFk == AppSession().usuarioId)
         .toList();
     // Excluimos las que ya están en el curso
@@ -206,6 +198,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
             (l) => !_leccionesDelCurso.any((c) => c.idLeccion == l.idLeccion))
         .toList();
 
+    if (!mounted) return;
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFFECEBEB),
@@ -246,19 +239,16 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
                         const Icon(Icons.menu_book, color: Color(0xFF4DC130)),
                     title: Text(l.nombre,
                         style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(l.estado ?? '',
+                    subtitle: Text(l.estado,
                         style: const TextStyle(fontSize: 12)),
-                    onTap: () {
+                    onTap: () async {
                       if (widget.idCurso != null) {
+                        await _cursoCtrl.asociarLeccion(widget.idCurso!, l.idLeccion);
                         setState(() {
-                          BooklService().leccionesCursos.add({
-                            'id_leccion': l.idLeccion,
-                            'id_curso': widget.idCurso!,
-                          });
                           _refreshLeccionesLocales();
                         });
                       }
-                      Navigator.pop(context);
+                      if (context.mounted) Navigator.pop(context);
                     },
                   );
                 },
@@ -377,9 +367,9 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.15),
+                      Colors.black.withValues(alpha: 0.15),
                       Colors.transparent,
-                      Colors.black.withOpacity(0.25),
+                      Colors.black.withValues(alpha: 0.25),
                     ],
                   ),
                 ),
@@ -399,11 +389,11 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.93),
+                  color: Colors.white.withValues(alpha: 0.93),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 8,
                     ),
                   ],
@@ -450,7 +440,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
                       _buildCircularIconButton(
                         Icons.delete_rounded,
                         _eliminarCurso,
-                        bgColor: Colors.red.withOpacity(0.9),
+                        bgColor: Colors.red.withValues(alpha: 0.9),
                       ),
                     ],
                   ),
@@ -470,11 +460,11 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: bgColor ?? const Color(0xFF6BCA54).withOpacity(0.9),
+          color: bgColor ?? const Color(0xFF6BCA54).withValues(alpha: 0.9),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -870,7 +860,7 @@ class _LeccionEditableCardState extends State<_LeccionEditableCard>
                     Row(
                       children: [
                         _CategoryChip(
-                          label: l.estado ?? 'Activa',
+                          label: l.estado,
                           color: const Color(0xFF6BC654),
                         ),
                       ],
@@ -1087,7 +1077,7 @@ class _ActionButtonState extends State<_ActionButton>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: widget.color.withOpacity(0.35),
+                  color: widget.color.withValues(alpha: 0.35),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -1160,7 +1150,7 @@ class _GuardarButtonState extends State<_GuardarButton>
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF4DC130).withOpacity(0.40),
+                color: const Color(0xFF4DC130).withValues(alpha: 0.40),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
