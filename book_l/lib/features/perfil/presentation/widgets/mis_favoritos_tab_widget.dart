@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/services/bookl_service.dart';
-import '../../../../core/storage/local_storage.dart';
 import '../../../../shared/widgets/search_filter_bar.dart';
 import '../../../../shared/widgets/content_cards.dart';
+import '../../../guardado/presentation/controller/guardado_controller.dart';
 
 class MisFavoritosTabWidget extends StatefulWidget {
   const MisFavoritosTabWidget({super.key});
@@ -26,23 +25,18 @@ class _MisFavoritosTabWidgetState extends State<MisFavoritosTabWidget> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: BooklService(),
+      listenable: GuardadoController(),
       builder: (context, _) {
-        return ListenableBuilder(
-          listenable: Listenable.merge([AppSession().savedLecciones, AppSession().savedCursos]),
-          builder: (context, _) {
-            final savedLeccionesSet = AppSession().savedLecciones.value;
-            final savedCursosSet = AppSession().savedCursos.value;
+        final ctrl = GuardadoController();
+        var misLecciones = ctrl.getSavedLecciones();
+        var misCursos = ctrl.getSavedCursos();
 
-            var misLecciones = BooklService().lecciones.where((l) => savedLeccionesSet.contains(l.idLeccion)).toList();
-            var misCursos = BooklService().cursos.where((c) => savedCursosSet.contains(c.idCurso)).toList();
-
-            // Aplicamos la búsqueda local
-            if (_query.isNotEmpty) {
-              final q = _query.toLowerCase();
-              misLecciones = misLecciones.where((l) => l.nombre.toLowerCase().contains(q)).toList();
-              misCursos = misCursos.where((c) => c.nombre.toLowerCase().contains(q)).toList();
-            }
+        // Aplicamos la búsqueda local
+        if (_query.isNotEmpty) {
+          final q = _query.toLowerCase();
+          misLecciones = misLecciones.where((l) => l.nombre.toLowerCase().contains(q)).toList();
+          misCursos = misCursos.where((c) => c.nombre.toLowerCase().contains(q)).toList();
+        }
 
             return DefaultTabController(
               length: 2,
@@ -112,8 +106,6 @@ class _MisFavoritosTabWidgetState extends State<MisFavoritosTabWidget> {
                 ],
               ),
             );
-          },
-        );
       },
     );
   }

@@ -7,6 +7,7 @@ import '../../features/curso/domain/entities/curso.dart';
 import '../../features/curso/presentation/controller/curso_controller.dart';
 import '../../features/leccion/domain/entities/leccion.dart';
 import '../../features/leccion/presentation/controller/leccion_controller.dart';
+import '../../features/guardado/presentation/controller/guardado_controller.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Card Base que estandariza diseño, tamaño de cajitas y estructura visual.
@@ -245,19 +246,18 @@ class SharedLeccionCard extends StatelessWidget {
 
   Widget _buildFavoriteButton(int id, bool isLeccion) {
     return ListenableBuilder(
-      listenable:
-          isLeccion ? AppSession().savedLecciones : AppSession().savedCursos,
+      listenable: GuardadoController(),
       builder: (context, _) {
         final isSaved = isLeccion
-            ? AppSession().savedLecciones.value.contains(id)
-            : AppSession().savedCursos.value.contains(id);
+            ? GuardadoController().isLeccionSaved(id)
+            : GuardadoController().isCursoSaved(id);
 
         return GestureDetector(
           onTap: () {
             if (isLeccion) {
-              AppSession().toggleSavedLeccion(id);
+              GuardadoController().toggleSavedLeccion(id);
             } else {
-              AppSession().toggleSavedCurso(id);
+              GuardadoController().toggleSavedCurso(id);
             }
           },
           child: Icon(
@@ -313,13 +313,12 @@ class SharedCursoCard extends StatelessWidget {
         ],
       ),
       favoriteButton: ListenableBuilder(
-        listenable: AppSession().savedCursos,
+        listenable: GuardadoController(),
         builder: (context, _) {
-          final isSaved =
-              AppSession().savedCursos.value.contains(curso.idCurso);
+          final isSaved = GuardadoController().isCursoSaved(curso.idCurso);
           return GestureDetector(
             onTap: () {
-              AppSession().toggleSavedCurso(curso.idCurso);
+              GuardadoController().toggleSavedCurso(curso.idCurso);
             },
             child: Icon(
               isSaved ? Icons.favorite : Icons.favorite_border,
@@ -589,19 +588,18 @@ class FypLeccionCard extends StatelessWidget {
 
   Widget _buildFavoriteButton(int id, bool isLeccion) {
     return ListenableBuilder(
-      listenable:
-          isLeccion ? AppSession().savedLecciones : AppSession().savedCursos,
+      listenable: GuardadoController(),
       builder: (context, _) {
         final isSaved = isLeccion
-            ? AppSession().savedLecciones.value.contains(id)
-            : AppSession().savedCursos.value.contains(id);
+            ? GuardadoController().isLeccionSaved(id)
+            : GuardadoController().isCursoSaved(id);
 
         return GestureDetector(
           onTap: () {
             if (isLeccion) {
-              AppSession().toggleSavedLeccion(id);
+              GuardadoController().toggleSavedLeccion(id);
             } else {
-              AppSession().toggleSavedCurso(id);
+              GuardadoController().toggleSavedCurso(id);
             }
           },
           child: Icon(
@@ -637,13 +635,12 @@ class FypCursoCard extends StatelessWidget {
       newBadge: null, // Cursos en FYP no tienen badge Nuevo por ahora
       tagsArea: _buildTag('Curso', const Color(0xFFFF606F)), // Rojo marca
       favoriteButton: ListenableBuilder(
-        listenable: AppSession().savedCursos,
+        listenable: GuardadoController(),
         builder: (context, _) {
-          final isSaved =
-              AppSession().savedCursos.value.contains(curso.idCurso);
+          final isSaved = GuardadoController().isCursoSaved(curso.idCurso);
           return GestureDetector(
             onTap: () {
-              AppSession().toggleSavedCurso(curso.idCurso);
+              GuardadoController().toggleSavedCurso(curso.idCurso);
             },
             child: Icon(
               isSaved ? Icons.favorite : Icons.favorite_border,

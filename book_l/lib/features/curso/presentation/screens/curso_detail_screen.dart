@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/nav_bar.dart';
 import '../../../../shared/widgets/reporte_modal.dart';
+import '../../../guardado/presentation/controller/guardado_controller.dart';
 import '../../../../shared/widgets/header_background_image.dart';
 import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
@@ -12,7 +13,7 @@ import 'curso_editar_screen.dart';
 import '../../../leccion/presentation/controller/leccion_controller.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
 import '../../../../core/storage/local_storage.dart';
-import '../../../../core/services/bookl_service.dart';
+
 import '../../../calificacion/presentation/controller/calificacion_controller.dart';
 
 class CursoDetailScreen extends StatefulWidget {
@@ -49,7 +50,6 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
         await CalificacionController().calificarCurso(cursoId, valor);
         
     if (result != null && mounted) {
-      final nuevoRating = result.$1;
       final isUpdate = result.$2;
 
       _ctrl.seleccionarCurso(cursoId);
@@ -224,14 +224,14 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                         },
                       ),
                       ListenableBuilder(
-                        listenable: AppSession().savedCursos,
+                        listenable: GuardadoController(),
                         builder: (context, _) {
-                          final isSaved = widget.idCurso != null && AppSession().savedCursos.value.contains(widget.idCurso!);
+                          final isSaved = widget.idCurso != null && GuardadoController().isCursoSaved(widget.idCurso!);
                           return _buildCircularIconButton(
                             isSaved ? Icons.favorite : Icons.favorite_border,
                             () {
                               if (widget.idCurso != null) {
-                                AppSession().toggleSavedCurso(widget.idCurso!);
+                                GuardadoController().toggleSavedCurso(widget.idCurso!);
                               }
                             },
                             color: isSaved ? Colors.redAccent : const Color(0xFF6BCA54),
@@ -259,7 +259,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                                     entidadId: curso.idCurso,
                                     entidadNombre: curso.nombre,
                                   );
-                                  if (result == true && mounted) {
+                                  if (result == true && context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: const Row(
@@ -869,12 +869,12 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
               children: [
                 if (idLeccion != null)
                   ListenableBuilder(
-                    listenable: AppSession().savedLecciones,
+                    listenable: GuardadoController(),
                     builder: (context, _) {
-                      final isSaved = AppSession().savedLecciones.value.contains(idLeccion);
+                      final isSaved = GuardadoController().isLeccionSaved(idLeccion);
                       return GestureDetector(
                         onTap: () {
-                          AppSession().toggleSavedLeccion(idLeccion);
+                          GuardadoController().toggleSavedLeccion(idLeccion);
                         },
                         child: Icon(
                           isSaved ? Icons.favorite : Icons.favorite_border,

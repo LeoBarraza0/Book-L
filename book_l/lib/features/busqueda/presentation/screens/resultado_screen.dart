@@ -7,6 +7,7 @@ import '../../domain/entities/resultado_busqueda.dart';
 import '../../../perfil/presentation/screens/perfil_screen.dart';
 import '../../../leccion/presentation/controller/leccion_controller.dart';
 import '../../../curso/presentation/controller/curso_controller.dart';
+import '../../../guardado/presentation/controller/guardado_controller.dart';
 
 class ResultadoScreen extends StatefulWidget {
   const ResultadoScreen({super.key});
@@ -510,22 +511,20 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
 
   Widget _buildFavoriteButton(ResultadoBusqueda item) {
     final isLeccion = item.tipo == 'Lección';
-    final listenable =
-        isLeccion ? AppSession().savedLecciones : AppSession().savedCursos;
 
     return ListenableBuilder(
-      listenable: listenable,
+      listenable: GuardadoController(),
       builder: (context, _) {
         final isSaved = isLeccion
-            ? AppSession().savedLecciones.value.contains(item.id)
-            : AppSession().savedCursos.value.contains(item.id);
+            ? GuardadoController().isLeccionSaved(item.id)
+            : GuardadoController().isCursoSaved(item.id);
 
         return GestureDetector(
           onTap: () {
             if (isLeccion) {
-              AppSession().toggleSavedLeccion(item.id);
+              GuardadoController().toggleSavedLeccion(item.id);
             } else {
-              AppSession().toggleSavedCurso(item.id);
+              GuardadoController().toggleSavedCurso(item.id);
             }
           },
           child: Icon(

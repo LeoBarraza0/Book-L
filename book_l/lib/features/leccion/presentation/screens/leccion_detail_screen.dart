@@ -8,6 +8,7 @@ import '../../../discusion/presentation/screens/discusion_screen.dart';
 import '../../../discusion/presentation/widgets/comentario_input.dart';
 import '../../../discusion/presentation/controller/discusion_controller.dart';
 import '../../../ejercicio/presentation/screens/ejercicios_screen.dart';
+import '../../../guardado/presentation/controller/guardado_controller.dart';
 import '../controller/leccion_controller.dart';
 import '../../domain/entities/capitulo.dart';
 import '../../../../shared/widgets/quill_read_only_view.dart';
@@ -59,7 +60,6 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
         await CalificacionController().calificarLeccion(leccionId, valor);
         
     if (result != null && mounted) {
-      final nuevoRating = result.$1;
       final isUpdate = result.$2;
       
       // Forzar actualización del controlador de lección local para refrescar el header
@@ -267,17 +267,17 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                         },
                       ),
                       ListenableBuilder(
-                        listenable: AppSession().savedLecciones,
+                        listenable: GuardadoController(),
                         builder: (context, _) {
-                          final isSaved = widget.idLeccion != null && AppSession().savedLecciones.value.contains(widget.idLeccion!);
+                          final isSaved = widget.idLeccion != null && GuardadoController().isLeccionSaved(widget.idLeccion!);
                           return _buildCircularIconButton(
                             isSaved ? Icons.favorite : Icons.favorite_border,
                             () {
                               if (widget.idLeccion != null) {
-                                AppSession().toggleSavedLeccion(widget.idLeccion!);
+                                GuardadoController().toggleSavedLeccion(widget.idLeccion!);
                               }
                             },
-                            color: isSaved ? Colors.redAccent.withOpacity(0.9) : const Color(0xFF6BCA54).withOpacity(0.9),
+                            color: isSaved ? Colors.redAccent.withValues(alpha: 0.9) : const Color(0xFF6BCA54).withValues(alpha: 0.9),
                           );
                         },
                       ),
@@ -302,7 +302,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                                     entidadId: leccion.idLeccion,
                                     entidadNombre: leccion.nombre,
                                   );
-                                  if (result == true && mounted) {
+                                  if (result == true && context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: const Row(
@@ -325,7 +325,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                                     );
                                   }
                                 },
-                                color: const Color(0xFFFF606F).withOpacity(0.9),
+                                color: const Color(0xFFFF606F).withValues(alpha: 0.9),
                               ),
                             ],
                           );
@@ -349,11 +349,11 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: color ?? const Color(0xFF6BCA54).withOpacity(0.9), // Más visible sobre imagen
+          color: color ?? const Color(0xFF6BCA54).withValues(alpha: 0.9), // Más visible sobre imagen
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -610,20 +610,20 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFF0F0F0),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
       ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color.withOpacity(0.7), size: 36),
+            Icon(icon, color: color.withValues(alpha: 0.7), size: 36),
             const SizedBox(height: 8),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: color.withOpacity(0.7),
+                color: color.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -797,6 +797,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                       try {
                         await launchUrl(Uri.parse(m.url!), mode: LaunchMode.externalApplication);
                       } catch (_) {
+                        if (!context.mounted) return;
                          ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('No se pudo abrir el enlace: ${m.url}')),
                         );
@@ -946,7 +947,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                  color: const Color(0xFF4DC130).withOpacity(0.85),
+                  color: const Color(0xFF4DC130).withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(10)),
               child: const Text('En curso',
                   style: TextStyle(
@@ -1087,14 +1088,6 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
     );
   }
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'Fecha desconocida';
-    final months = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
 }
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
