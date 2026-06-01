@@ -1,6 +1,6 @@
 -- ============================================================
---  MODELO RELACIONAL MySQL — Book-L
---  Compatible con HeidiSQL
+--  MODELO RELACIONAL MySQL — Book-L (Actualizado)
+--  Compatible con HeidiSQL, MySQL 8.0+ y MariaDB
 -- ============================================================
 
 -- 1. Crear y seleccionar la base de datos
@@ -23,11 +23,11 @@ CREATE TABLE Tbl_usuario (
     IdUsuario       INT          NOT NULL AUTO_INCREMENT,
     NombreCompleto  VARCHAR(200) NOT NULL,
     Correo          VARCHAR(255) NOT NULL,
-    Password        VARCHAR(255) NOT NULL,
+    Contrasena      VARCHAR(255) NOT NULL COMMENT 'Mapeado a password en frontend, contrasena en DTO',
     Username        VARCHAR(100) NOT NULL,
-    Celular         INT(10)      NULL COMMENT 'Máximo 10 dígitos',
+    Celular         BIGINT       NULL COMMENT 'Cambiado a BIGINT para evitar desbordamiento con números de 10 dígitos (ej: 300xxxxxxx)',
     Semestre        TINYINT      NULL,
-    nacimiento      DATE         NULL,
+    Nacimiento      DATE         NULL COMMENT 'Nombre unificado en PascalCase',
     Programa        ENUM(
                         'Ingenieria de Sistemas',
                         'Ingenieria Industrial',
@@ -41,6 +41,9 @@ CREATE TABLE Tbl_usuario (
                         'Arquitectura'
                     ) NULL COMMENT 'Programa académico del usuario',
     Preferencias    JSON         NULL,
+    Rol             ENUM('Estudiante', 'Profesor', 'Administrador') NOT NULL DEFAULT 'Estudiante' COMMENT 'Rol asignado para control de accesos',
+    Avatar_url      VARCHAR(2048) NULL COMMENT 'URL o path de la foto de perfil',
+    Descripcion     TEXT         NULL COMMENT 'Descripción del perfil del usuario',
     Activo          TINYINT(1)   NOT NULL DEFAULT 1,
     Created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     Updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -75,10 +78,12 @@ CREATE TABLE Tbl_seguidores (
 DROP TABLE IF EXISTS Tbl_leccion;
 CREATE TABLE Tbl_leccion (
     IdLeccion    INT          NOT NULL AUTO_INCREMENT,
-    IdUsuarioFk  INT          NOT NULL,
+    IdUsuarioFk  INT          NOT NULL COMMENT 'Creador/Dueño de la lección',
     Nombre       VARCHAR(200) NOT NULL,
     Contenido    JSON         NULL COMMENT 'Arreglo de secciones con titulo, cuerpo_delta, imagen_url y video_url',
     Imagen_url   VARCHAR(2048) NULL COMMENT 'URL o path de la imagen de portada de la lección',
+    TagColor     INT          NULL COMMENT 'Mapeado a tagColor en la entidad frontend',
+    EsNuevo      TINYINT(1)   NOT NULL DEFAULT 1 COMMENT 'Mapeado a esNuevo en frontend',
     Estado       ENUM('activa','inactiva','en_revision','suspendida') NOT NULL DEFAULT 'activa' COMMENT 'activa=visible | en_revision=reportada | suspendida=desactivada por admin',
     Created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     Updated_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -114,13 +119,19 @@ CREATE TABLE Tbl_material (
 DROP TABLE IF EXISTS Tbl_curso;
 CREATE TABLE Tbl_curso (
     IdCurso      INT          NOT NULL AUTO_INCREMENT,
+    IdUsuarioFk  INT          NOT NULL COMMENT 'Creador/Profesor del curso (Requerido por entidad frontend)',
     Nombre       VARCHAR(200) NOT NULL,
     Contenido    JSON         NULL COMMENT 'Arreglo de secciones con titulo, cuerpo_delta, imagen_url y video_url',
     Imagen_url   VARCHAR(2048) NULL COMMENT 'URL o path de la imagen de portada del curso',
+    TagColor     INT          NULL COMMENT 'Mapeado a tagColor en la entidad frontend',
+    EsNuevo      TINYINT(1)   NOT NULL DEFAULT 1 COMMENT 'Mapeado a esNuevo en frontend',
     Estado       ENUM('activo','inactivo','en_revision','suspendido') NOT NULL DEFAULT 'activo' COMMENT 'activo=visible | en_revision=reportado | suspendido=desactivado por admin',
     Created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     Updated_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (IdCurso)
+    PRIMARY KEY (IdCurso),
+    CONSTRAINT fk_curso_usuario
+        FOREIGN KEY (IdUsuarioFk) REFERENCES Tbl_usuario (IdUsuario)
+        ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -164,7 +175,7 @@ CREATE TABLE Tbl_capitulo (
 -- ============================================================
 DROP TABLE IF EXISTS Tbl_discusion;
 CREATE TABLE Tbl_discusion (
-    Id_discusion INT NULL,
+    Id_discusion INT NOT NULL AUTO_INCREMENT,
     Id_cursoFk   INT NULL,
     Id_leccionFk INT NULL,
     PRIMARY KEY (Id_discusion),
@@ -175,8 +186,6 @@ CREATE TABLE Tbl_discusion (
         FOREIGN KEY (Id_leccionFk) REFERENCES Tbl_leccion (IdLeccion)
         ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-ALTER TABLE Tbl_discusion MODIFY Id_discusion INT NOT NULL AUTO_INCREMENT;
 
 -- ============================================================
 -- Tbl_comentario
@@ -208,46 +217,66 @@ CREATE TABLE Tbl_comentario (
 DROP TABLE IF EXISTS Tbl_notificacion;
 CREATE TABLE Tbl_notificacion (
     IdNotificacion  INT           NOT NULL AUTO_INCREMENT,
-    IdUserFk        INT           NOT NULL,
-    Titulo          VARCHAR(255)  NOT NULL,
-    Contenido       TEXT          NULL,
-    Link_contenido  VARCHAR(2048) NULL,
-    Id_cursoFk      INT           NULL,
-    Id_leccionFk    INT           NULL,
-    Id_comentarioFk INT           NULL,
+    IdUsuarioFk     INT           NOT NULL COMMENT 'Estandarizado con IdUsuarioFk en lugar de IdUserFk',
+    Tipo            VARCHAR(50)   NOT NULL COMMENT 'Tipo de notificación (e.g. follow, comentario, etc.)',
+    IdReferencia    INT           NULL     COMMENT 'ID de la entidad asociada (ej: id_seguidor)',
+    Mensaje         TEXT          NOT NULL COMMENT 'Mensaje visible para el usuario (Mapeado a mensaje en frontend)',
+    Leida           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '0 = no leida | 1 = leida (Critico para AppSession)',
+    IdCursoFk       INT           NULL     COMMENT 'Relación opcional para deep-linking',
+    IdLeccionFk     INT           NULL     COMMENT 'Relación opcional para deep-linking',
+    IdComentarioFk  INT           NULL     COMMENT 'Relación opcional para deep-linking',
     Created_at      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     Updated_at      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (IdNotificacion),
     CONSTRAINT fk_notif_usuario
-        FOREIGN KEY (IdUserFk)        REFERENCES Tbl_usuario    (IdUsuario)
+        FOREIGN KEY (IdUsuarioFk)    REFERENCES Tbl_usuario    (IdUsuario)
         ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_notif_curso
-        FOREIGN KEY (Id_cursoFk)      REFERENCES Tbl_curso      (IdCurso)
+        FOREIGN KEY (IdCursoFk)      REFERENCES Tbl_curso      (IdCurso)
         ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_notif_leccion
-        FOREIGN KEY (Id_leccionFk)    REFERENCES Tbl_leccion    (IdLeccion)
+        FOREIGN KEY (IdLeccionFk)    REFERENCES Tbl_leccion    (IdLeccion)
         ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_notif_comentario
-        FOREIGN KEY (Id_comentarioFk) REFERENCES Tbl_comentario (Id_comentario)
+        FOREIGN KEY (IdComentarioFk) REFERENCES Tbl_comentario (Id_comentario)
         ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- Tbl_guardado
+-- Tbl_guardado_leccion
 -- ============================================================
-DROP TABLE IF EXISTS Tbl_guardado;
-CREATE TABLE Tbl_guardado (
-    IdGuardado INT      NOT NULL AUTO_INCREMENT,
-    IdUsuario  INT      NOT NULL,
-    IdLeccion  INT      NOT NULL,
-    Created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (IdGuardado),
-    UNIQUE KEY uq_guardado (IdUsuario, IdLeccion),
-    CONSTRAINT fk_guardado_usuario
+DROP TABLE IF EXISTS Tbl_guardado_leccion;
+CREATE TABLE Tbl_guardado_leccion (
+    IdGuardadoLeccion INT      NOT NULL AUTO_INCREMENT,
+    IdUsuario         INT      NOT NULL,
+    IdLeccion         INT      NOT NULL,
+    Created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (IdGuardadoLeccion),
+    UNIQUE KEY uq_guardado_leccion (IdUsuario, IdLeccion),
+    CONSTRAINT fk_guardado_leccion_usuario
         FOREIGN KEY (IdUsuario) REFERENCES Tbl_usuario (IdUsuario)
         ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_guardado_leccion
+    CONSTRAINT fk_guardado_leccion_leccion
         FOREIGN KEY (IdLeccion) REFERENCES Tbl_leccion (IdLeccion)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- Tbl_guardado_curso
+-- ============================================================
+DROP TABLE IF EXISTS Tbl_guardado_curso;
+CREATE TABLE Tbl_guardado_curso (
+    IdGuardadoCurso   INT      NOT NULL AUTO_INCREMENT,
+    IdUsuario         INT      NOT NULL,
+    IdCurso           INT      NOT NULL,
+    Created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (IdGuardadoCurso),
+    UNIQUE KEY uq_guardado_curso (IdUsuario, IdCurso),
+    CONSTRAINT fk_guardado_curso_usuario
+        FOREIGN KEY (IdUsuario) REFERENCES Tbl_usuario (IdUsuario)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_guardado_curso_curso
+        FOREIGN KEY (IdCurso)   REFERENCES Tbl_curso   (IdCurso)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -256,11 +285,13 @@ CREATE TABLE Tbl_guardado (
 -- ============================================================
 DROP TABLE IF EXISTS Tbl_ejercicio;
 CREATE TABLE Tbl_ejercicio (
-    IdEjercicio INT      NOT NULL AUTO_INCREMENT,
-    IdCapitulo  INT      NOT NULL,
+    IdEjercicio INT          NOT NULL AUTO_INCREMENT,
+    IdCapitulo  INT          NOT NULL,
     Tipo        ENUM('multiple_choice','true_false','ordenar','rellenar','respuesta_corta') NOT NULL,
-    Created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    Updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    Titulo      VARCHAR(200) NOT NULL COMMENT 'Requerido por la entidad Ejercicio y su DTO en el frontend',
+    Descripcion TEXT         NOT NULL COMMENT 'Requerido por la entidad Ejercicio y su DTO en el frontend',
+    Created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Updated_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (IdEjercicio),
     CONSTRAINT fk_ejercicio_capitulo
         FOREIGN KEY (IdCapitulo) REFERENCES Tbl_capitulo (IdCapitulo)
@@ -332,6 +363,8 @@ CREATE TABLE Tbl_reporte (
     Entidad_tipo VARCHAR(60) NOT NULL COMMENT 'Nombre de la tabla reportada',
     Entidad_id   INT         NOT NULL,
     Motivo       TEXT        NULL,
+    Created_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Agregado para analíticas cronológicas en dashboard',
+    Updated_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (IdReporte),
     CONSTRAINT fk_reporte_usuario
         FOREIGN KEY (IdUsuarioFk) REFERENCES Tbl_usuario (IdUsuario)
@@ -424,8 +457,6 @@ CREATE TABLE Tbl_progreso_usuario (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
-
--- ============================================================
 -- Tbl_calificacion_leccion  (M:N usuario <-> leccion)
 -- ============================================================
 DROP TABLE IF EXISTS Tbl_calificacion_leccion;
@@ -433,7 +464,7 @@ CREATE TABLE Tbl_calificacion_leccion (
     IdCalificacion INT          NOT NULL AUTO_INCREMENT,
     IdUsuarioFk    INT          NOT NULL,
     IdLeccionFk    INT          NOT NULL,
-    Calificacion   DECIMAL(3,1) NOT NULL COMMENT 'Valor de 1.0 a 5.0',
+    Valor          TINYINT      NOT NULL COMMENT 'Valor del 1 al 5. Estandarizado con el DTO (sustituye DECIMAL)',
     Comentario     TEXT         NULL,
     Created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     Updated_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -455,7 +486,7 @@ CREATE TABLE Tbl_calificacion_curso (
     IdCalificacion INT          NOT NULL AUTO_INCREMENT,
     IdUsuarioFk    INT          NOT NULL,
     IdCursoFk      INT          NOT NULL,
-    Calificacion   DECIMAL(3,1) NOT NULL COMMENT 'Valor de 1.0 a 5.0',
+    Valor          TINYINT      NOT NULL COMMENT 'Valor del 1 al 5. Estandarizado con el DTO (sustituye DECIMAL)',
     Comentario     TEXT         NULL,
     Created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     Updated_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
