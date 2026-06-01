@@ -2,34 +2,49 @@ import 'package:flutter/foundation.dart';
 import '../../data/repositories/guardado_repository_impl.dart';
 import '../../../leccion/domain/entities/leccion.dart';
 import '../../../curso/domain/entities/curso.dart';
+import '../../domain/usecases/get_guardados_usecase.dart';
+import '../../domain/usecases/toggle_guardado_usecase.dart';
 
 /// Controlador singleton para la gestión de elementos guardados (favoritos).
 class GuardadoController extends ChangeNotifier {
   static final GuardadoController _instance = GuardadoController._internal();
   factory GuardadoController() => _instance;
-  GuardadoController._internal();
 
-  final _repo = GuardadoRepositoryImpl();
+  final GuardadoRepositoryImpl _repo;
+  final GetGuardadosUseCase _getGuardadosUseCase;
+  final ToggleGuardadoUseCase _toggleGuardadoUseCase;
+
+  GuardadoController._internal()
+      : _repo = GuardadoRepositoryImpl(),
+        _getGuardadosUseCase = GetGuardadosUseCase(GuardadoRepositoryImpl()),
+        _toggleGuardadoUseCase = ToggleGuardadoUseCase(
+          GuardadoRepositoryImpl(),
+          GetGuardadosUseCase(GuardadoRepositoryImpl()),
+        );
 
   /// Retorna las lecciones guardadas del usuario
   List<Leccion> getSavedLecciones() {
-    return _repo.getSavedLecciones();
+    return _getGuardadosUseCase().lecciones;
   }
 
   /// Retorna los cursos guardados del usuario
   List<Curso> getSavedCursos() {
-    return _repo.getSavedCursos();
+    return _getGuardadosUseCase().cursos;
   }
 
   /// Alterna el estado de guardado de una lección
   void toggleSavedLeccion(int idLeccion) {
-    _repo.toggleSavedLeccion(idLeccion);
+    _toggleGuardadoUseCase(
+      ToggleGuardadoParams(id: idLeccion, tipo: TipoGuardado.leccion),
+    );
     notifyListeners();
   }
 
   /// Alterna el estado de guardado de un curso
   void toggleSavedCurso(int idCurso) {
-    _repo.toggleSavedCurso(idCurso);
+    _toggleGuardadoUseCase(
+      ToggleGuardadoParams(id: idCurso, tipo: TipoGuardado.curso),
+    );
     notifyListeners();
   }
 

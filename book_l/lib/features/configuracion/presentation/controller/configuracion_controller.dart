@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../domain/entities/configuracion.dart';
 import '../../data/repositories/configuracion_repository_impl.dart';
+import '../../domain/usecases/update_configuracion_usecase.dart';
 
 class ConfiguracionController extends ChangeNotifier {
-  final ConfiguracionRepositoryImpl _repository = ConfiguracionRepositoryImpl();
+  final ConfiguracionRepositoryImpl _repository;
+  final UpdateConfiguracionUseCase _updateConfiguracionUseCase;
   
   Configuracion? config;
   bool isLoading = true;
 
-  ConfiguracionController() {
+  ConfiguracionController()
+      : _repository = ConfiguracionRepositoryImpl(),
+        _updateConfiguracionUseCase = UpdateConfiguracionUseCase(ConfiguracionRepositoryImpl()) {
     _loadConfig();
   }
 
@@ -50,7 +54,7 @@ class ConfiguracionController extends ChangeNotifier {
 
   void _save() {
     if (config != null) {
-      _repository.saveConfiguracion(config!);
+      _updateConfiguracionUseCase(config!);
       notifyListeners();
     }
   }

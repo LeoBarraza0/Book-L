@@ -3,17 +3,22 @@ import '../../domain/entities/resultado_busqueda.dart';
 import '../../domain/repositories/busqueda_repository.dart';
 import '../../data/repositories/busqueda_repository_impl.dart';
 import '../../../auth/presentation/controller/auth_controller.dart';
+import '../../domain/usecases/buscar_contenido_usecase.dart';
 
 class BusquedaController extends ChangeNotifier {
   // ── Singleton ──────────────────────────────────────────────────────────────
   static final BusquedaController _instance = BusquedaController._internal();
   factory BusquedaController() => _instance;
-  BusquedaController._internal() {
+
+  // Repositorio y casos de uso inyectados
+  final BusquedaRepository _repository;
+  final BuscarContenidoUseCase _buscarContenidoUseCase;
+
+  BusquedaController._internal()
+      : _repository = BusquedaRepositoryImpl(),
+        _buscarContenidoUseCase = BuscarContenidoUseCase(BusquedaRepositoryImpl()) {
     _cargarHistorial();
   }
-
-  // Interfaz del repositorio
-  final BusquedaRepository _repository = BusquedaRepositoryImpl();
 
   // ── Estado ─────────────────────────────────────────────────────────────────
   List<ResultadoBusqueda> resultados = [];
@@ -102,8 +107,10 @@ class BusquedaController extends ChangeNotifier {
     _agregarAlHistorial(q);
     notifyListeners();
 
-    // Delega la operación de búsqueda al repositorio, que consulta el BooklService (JSON en memoria)
-    resultados = await _repository.buscar(q, filtro: filtroActivo);
+    // Delega la operación de búsqueda al caso de uso
+    resultados = await _buscarContenidoUseCase(
+      BuscarContenidoParams(query: q, filtro: filtroActivo),
+    );
 
     isLoading = false;
     notifyListeners();

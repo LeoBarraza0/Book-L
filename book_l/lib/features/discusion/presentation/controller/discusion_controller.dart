@@ -4,6 +4,8 @@ import '../../domain/entities/discusion.dart';
 import '../../domain/entities/comentario.dart';
 import '../../data/repositories/discusion_repository_impl.dart';
 import '../../../../core/storage/local_storage.dart';
+import '../../domain/usecases/get_discusion_usecase.dart';
+import '../../domain/usecases/agregar_comentario_usecase.dart';
 
 class DiscusionState {
   final Discusion? discusion;
@@ -35,9 +37,19 @@ class DiscusionState {
 class DiscusionController extends ChangeNotifier {
   static final DiscusionController _instance = DiscusionController._internal();
   factory DiscusionController() => _instance;
-  DiscusionController._internal();
 
-  final _repo = DiscusionRepositoryImpl();
+  final DiscusionRepositoryImpl _repo;
+  final GetDiscusionUseCase _getDiscusionUseCase;
+  final AgregarComentarioUseCase _agregarComentarioUseCase;
+
+  DiscusionController._internal()
+      : _repo = DiscusionRepositoryImpl(),
+        _getDiscusionUseCase = GetDiscusionUseCase(DiscusionRepositoryImpl()),
+        _agregarComentarioUseCase = AgregarComentarioUseCase(
+          DiscusionRepositoryImpl(),
+          GetDiscusionUseCase(DiscusionRepositoryImpl()),
+        );
+
   DiscusionState _state = const DiscusionState();
   DiscusionState get state => _state;
 
@@ -94,7 +106,7 @@ class DiscusionController extends ChangeNotifier {
 
   bool _likesLoaded = false;
 
-  void cargarDiscusion({int? idCurso, int? idLeccion}) {
+  Future<void> cargarDiscusion({int? idCurso, int? idLeccion}) async {
     _state = _state.copyWith(isLoading: true);
     notifyListeners();
 
@@ -103,9 +115,8 @@ class DiscusionController extends ChangeNotifier {
       _loadLikes();
     }
 
-    final discusion = _repo.obtenerOCrearDiscusion(
-      idCurso: idCurso,
-      idLeccion: idLeccion,
+    final discusion = await _getDiscusionUseCase(
+      GetDiscusionParams(idCurso: idCurso, idLeccion: idLeccion),
     );
 
     final raiz = _repo.getComentariosRaiz(discusion.idDiscusion);
@@ -124,16 +135,18 @@ class DiscusionController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void agregarComentario(String contenido) {
+  Future<void> agregarComentario(String contenido) async {
     final idDiscusion = _state.discusion?.idDiscusion;
     final idUsuario = AppSession().usuarioId;
     if (idDiscusion == null || idUsuario == null || contenido.trim().isEmpty) return;
 
-    _repo.agregarComentario(
-      idDiscusion: idDiscusion,
-      idUsuario: idUsuario,
-      contenido: contenido.trim(),
-      idPadre: replyToId,
+    await _agregarComentarioUseCase(
+      AgregarComentarioParams(
+        idDiscusion: idDiscusion,
+        idUsuario: idUsuario,
+        contenido: contenido.trim(),
+        idPadre: replyToId,
+      ),
     );
 
     // Limpiar reply
@@ -141,7 +154,7 @@ class DiscusionController extends ChangeNotifier {
     replyToName = null;
 
     // Recargar
-    cargarDiscusion(
+    await cargarDiscusion(
       idCurso: _state.discusion?.idCursoFk,
       idLeccion: _state.discusion?.idLeccionFk,
     );

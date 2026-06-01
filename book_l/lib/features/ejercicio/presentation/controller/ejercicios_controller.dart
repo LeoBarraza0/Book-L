@@ -3,16 +3,26 @@ import '../../domain/entities/ejercicio.dart';
 import '../../domain/entities/pregunta.dart';
 import '../../domain/entities/opcion.dart';
 import '../../data/repositories/ejercicio_repository_impl.dart';
+import '../../domain/usecases/get_ejercicio_usecase.dart';
+import '../../domain/usecases/enviar_respuesta_usecase.dart';
 
 /// Controlador singleton para la gestión de ejercicios.
-/// Orquesta las operaciones CRUD delegando al repositorio.
+/// Orquesta las operaciones CRUD delegando a los casos de uso y al repositorio.
 class EjerciciosController extends ChangeNotifier {
   static final EjerciciosController _instance = EjerciciosController._internal();
   factory EjerciciosController() => _instance;
-  EjerciciosController._internal();
 
-  /// Repositorio que encapsula el acceso a datos
-  final _repo = EjercicioRepositoryImpl();
+  final EjercicioRepositoryImpl _repo;
+  final GetEjercicioUseCase _getEjercicioUseCase;
+  final EnviarRespuestaUseCase _enviarRespuestaUseCase;
+
+  EjerciciosController._internal()
+      : _repo = EjercicioRepositoryImpl(),
+        _getEjercicioUseCase = GetEjercicioUseCase(EjercicioRepositoryImpl()),
+        _enviarRespuestaUseCase = EnviarRespuestaUseCase(
+          EjercicioRepositoryImpl(),
+          GetEjercicioUseCase(EjercicioRepositoryImpl()),
+        );
 
   List<Ejercicio> _allEjercicios = [];
   List<Ejercicio> get filteredEjercicios => _getFiltered();
@@ -55,8 +65,7 @@ class EjerciciosController extends ChangeNotifier {
 
   /// Carga los ejercicios de una lección obteniendo sus capítulos
   void loadEjercicios(int idLeccion) {
-    final capitulosIds = _repo.getCapituloIdsByLeccion(idLeccion);
-    _allEjercicios = _repo.getEjerciciosByCapitulos(capitulosIds);
+    _allEjercicios = _getEjercicioUseCase(idLeccion);
     _searchQuery = '';
     _selectedFilterIndex = 0;
     notifyListeners();

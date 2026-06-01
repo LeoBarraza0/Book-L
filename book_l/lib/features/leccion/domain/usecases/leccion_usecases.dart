@@ -2,6 +2,7 @@ import '../entities/leccion.dart';
 import '../entities/capitulo.dart';
 import '../repositories/leccion_repository.dart';
 import '../repositories/capitulo_repository.dart';
+import '../../../../core/usecase/usecase.dart';
 
 // ── Lección ────────────────────────────────────────────────────────────────
 
@@ -12,11 +13,22 @@ class GetLeccionesUseCase {
   Future<List<Leccion>> call() => repository.getLecciones();
 }
 
-class GetLeccionByIdUseCase {
+class GetLeccionByIdUseCase implements UMLInclude<GetCapitulosDeLeccionUseCase> {
   final LeccionRepository repository;
-  GetLeccionByIdUseCase(this.repository);
+  
+  @override
+  final GetCapitulosDeLeccionUseCase includedUseCase;
 
-  Future<Leccion?> call(int id) => repository.getLeccionById(id);
+  GetLeccionByIdUseCase(this.repository, this.includedUseCase);
+
+  Future<Leccion?> call(int id) async {
+    final leccion = await repository.getLeccionById(id);
+    if (leccion != null) {
+      // Relación <<include>> ejecutada de forma explícita
+      await includedUseCase(id);
+    }
+    return leccion;
+  }
 }
 
 class AddLeccionUseCase {

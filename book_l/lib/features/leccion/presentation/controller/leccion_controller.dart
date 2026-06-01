@@ -8,6 +8,9 @@ import '../../domain/entities/leccion.dart';
 import '../../domain/entities/capitulo.dart';
 import '../../domain/entities/material_educativo.dart';
 import '../../domain/usecases/leccion_usecases.dart';
+import '../../domain/usecases/create_material_educativo_usecase.dart';
+import '../../domain/usecases/delete_material_educativo_usecase.dart';
+import '../../domain/usecases/update_material_educativo_usecase.dart';
 import '../../../../core/storage/local_storage.dart';
 
 /// Adaptador primario — maneja Lección y Capítulo juntos porque en la UI
@@ -23,17 +26,22 @@ class LeccionController extends ChangeNotifier {
 
     // Casos de uso de lección
     _getLecciones = GetLeccionesUseCase(_leccionRepo);
-    _getLeccionById = GetLeccionByIdUseCase(_leccionRepo);
+    _getCapitulos = GetCapitulosDeLeccionUseCase(_leccionRepo);
+    _getLeccionById = GetLeccionByIdUseCase(_leccionRepo, _getCapitulos);
     _addLeccion = AddLeccionUseCase(_leccionRepo);
     _updateLeccion = UpdateLeccionUseCase(_leccionRepo);
     _deleteLeccion = DeleteLeccionUseCase(_leccionRepo);
-    _getCapitulos = GetCapitulosDeLeccionUseCase(_leccionRepo);
 
     // Casos de uso de capítulo
     _getCapituloById = GetCapituloByIdUseCase(capituloRepo);
     _addCapitulo = AddCapituloUseCase(capituloRepo);
     _updateCapitulo = UpdateCapituloUseCase(capituloRepo);
     _deleteCapitulo = DeleteCapituloUseCase(capituloRepo);
+
+    // Casos de uso de material educativo
+    _createMaterial = CreateMaterialEducativoUseCase(_leccionRepo);
+    _deleteMaterial = DeleteMaterialEducativoUseCase(_leccionRepo);
+    _updateMaterial = UpdateMaterialEducativoUseCase(_leccionRepo);
   }
 
   // ── Repositorio (acceso directo para operaciones síncronas) ────────────────
@@ -52,6 +60,11 @@ class LeccionController extends ChangeNotifier {
   late final AddCapituloUseCase _addCapitulo;
   late final UpdateCapituloUseCase _updateCapitulo;
   late final DeleteCapituloUseCase _deleteCapitulo;
+
+  // ── Use cases — Material Educativo ────────────────────────────────────────
+  late final CreateMaterialEducativoUseCase _createMaterial;
+  late final DeleteMaterialEducativoUseCase _deleteMaterial;
+  late final UpdateMaterialEducativoUseCase _updateMaterial;
 
   // ── Estado ─────────────────────────────────────────────────────────────────
   DataState<Leccion> state = const DataState<Leccion>();
@@ -271,20 +284,20 @@ class LeccionController extends ChangeNotifier {
       descripcion: descripcion,
       tamanoBytes: tamanoBytes,
     );
-    final id = _leccionRepo.agregarMaterial(m);
+    final id = _createMaterial(m);
     notifyListeners();
     return id;
   }
 
   /// Actualiza un material educativo existente
   void editarMaterial(MaterialEducativo material) {
-    _leccionRepo.actualizarMaterial(material);
+    _updateMaterial(material);
     notifyListeners();
   }
 
   /// Elimina un material educativo por ID
   void eliminarMaterial(int idMaterial) {
-    _leccionRepo.eliminarMaterial(idMaterial);
+    _deleteMaterial(idMaterial);
     notifyListeners();
   }
 
