@@ -17,10 +17,13 @@ class EjercicioModel {
 
   factory EjercicioModel.fromJson(Map<String, dynamic> json) {
     return EjercicioModel(
-      id: json['id'] is String ? int.tryParse(json['id']) ?? 0 : (json['id'] ?? 0),
+      id: json['id'] is String
+          ? int.tryParse(json['id']) ?? 0
+          : (json['id'] ?? 0),
       pregunta: json['pregunta'] ?? '',
       tipo: json['tipo'] ?? 'practica',
-      opciones: json['opciones'] != null ? List<String>.from(json['opciones']) : null,
+      opciones:
+          json['opciones'] != null ? List<String>.from(json['opciones']) : null,
       respuestaCorrecta: json['respuestaCorrecta'],
       instrucciones: json['instrucciones'],
     );

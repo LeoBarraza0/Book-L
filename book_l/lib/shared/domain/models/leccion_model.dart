@@ -31,7 +31,9 @@ class LeccionModel {
 
   factory LeccionModel.fromJson(Map<String, dynamic> json) {
     return LeccionModel(
-      id: json['id'] is String ? int.tryParse(json['id']) ?? 0 : (json['id'] ?? 0),
+      id: json['id'] is String
+          ? int.tryParse(json['id']) ?? 0
+          : (json['id'] ?? 0),
       idCursoFk: json['id_curso_fk'] ?? json['cursoId'],
       nombre: json['nombre'] ?? json['titulo'] ?? '',
       contenido: json['contenido'] ?? '',

@@ -139,8 +139,7 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
 
   @override
   Widget build(BuildContext context) {
-    final bool hasAnyMedia =
-        widget.data.tieneImagen || widget.data.tieneVideo;
+    final bool hasAnyMedia = widget.data.tieneImagen || widget.data.tieneVideo;
 
     return FadeTransition(
       opacity: _fadeAnim,
@@ -362,7 +361,8 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
         Positioned(
           bottom: 8,
           left: 8,
-          child: _buildTypeBadge(Icons.image, 'Imagen', const Color(0xFF4DC130)),
+          child:
+              _buildTypeBadge(Icons.image, 'Imagen', const Color(0xFF4DC130)),
         ),
       ],
     );
@@ -435,8 +435,8 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
         Positioned(
           bottom: 8,
           left: 8,
-          child: _buildTypeBadge(
-              Icons.videocam, 'Video', const Color(0xFFFF606F)),
+          child:
+              _buildTypeBadge(Icons.videocam, 'Video', const Color(0xFFFF606F)),
         ),
       ],
     );
@@ -569,8 +569,8 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
-        errorBuilder: (_, __, ___) =>
-            _buildIconContent(Icons.image_outlined, 'Imagen', const Color(0xFF4DC130)),
+        errorBuilder: (_, __, ___) => _buildIconContent(
+            Icons.image_outlined, 'Imagen', const Color(0xFF4DC130)),
       );
     }
     if (kIsWeb) {
@@ -578,8 +578,8 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
         path,
         fit: BoxFit.cover,
         width: double.infinity,
-        errorBuilder: (_, __, ___) =>
-            _buildIconContent(Icons.image_outlined, 'Imagen', const Color(0xFF4DC130)),
+        errorBuilder: (_, __, ___) => _buildIconContent(
+            Icons.image_outlined, 'Imagen', const Color(0xFF4DC130)),
       );
     }
     return Image.file(
@@ -587,8 +587,8 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
       fit: BoxFit.cover,
       width: double.infinity,
       height: double.infinity,
-      errorBuilder: (_, __, ___) =>
-          _buildIconContent(Icons.image_outlined, 'Imagen', const Color(0xFF4DC130)),
+      errorBuilder: (_, __, ___) => _buildIconContent(
+          Icons.image_outlined, 'Imagen', const Color(0xFF4DC130)),
     );
   }
 
@@ -608,25 +608,34 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Agregar video', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text('Agregar video',
+            style: TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.bold,
+                fontSize: 18)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Puedes pegar un enlace de YouTube/Web o subir un archivo local.', style: TextStyle(fontSize: 13, color: Colors.black54)),
+            const Text(
+                'Puedes pegar un enlace de YouTube/Web o subir un archivo local.',
+                style: TextStyle(fontSize: 13, color: Colors.black54)),
             const SizedBox(height: 12),
             TextField(
               controller: urlCtrl,
               decoration: InputDecoration(
-                 labelText: 'URL (ej. YouTube)',
-                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                labelText: 'URL (ej. YouTube)',
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               icon: const Icon(Icons.upload_file, color: Colors.white),
-              label: const Text('Elegir de galería', style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF606F)),
+              label: const Text('Elegir de galería',
+                  style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF606F)),
               onPressed: () async {
                 Navigator.pop(ctx, 'file');
               },
@@ -634,39 +643,40 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
           TextButton(
-            onPressed: () {
-               if (urlCtrl.text.trim().isNotEmpty) {
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () {
+                if (urlCtrl.text.trim().isNotEmpty) {
                   Navigator.pop(ctx, urlCtrl.text.trim());
-               }
-            }, 
-            child: const Text('Aceptar URL')
-          ),
+                }
+              },
+              child: const Text('Aceptar URL')),
         ],
       ),
     ).then((result) async {
-       if (result == 'file') {
-          final picker = ImagePicker();
-          final vid = await picker.pickVideo(source: ImageSource.gallery);
-          if (vid != null) {
-            setState(() {
-              widget.data.tieneVideo = true;
-              widget.data.videoPath = vid.path;
-              _videoInitialized = false;
-            });
-            _initVideoPreview(vid.path);
-          }
-       } else if (result != null && result is String) {
+      if (result == 'file') {
+        final picker = ImagePicker();
+        final vid = await picker.pickVideo(source: ImageSource.gallery);
+        if (vid != null) {
           setState(() {
             widget.data.tieneVideo = true;
-            widget.data.videoPath = result;
+            widget.data.videoPath = vid.path;
             _videoInitialized = false;
           });
-          // Para youtube u otras web url no locales, desactivamos _initVideoPreview si falla,
-          // o lo intentamos aislar. La UI mostrará el preview de _buildImageWidget(path) o fallará seguro,
-          // pero como _videoInitialized quedará falso, mostrará el _buildIconContent.
-       }
+          _initVideoPreview(vid.path);
+        }
+      } else if (result != null && result is String) {
+        setState(() {
+          widget.data.tieneVideo = true;
+          widget.data.videoPath = result;
+          _videoInitialized = false;
+        });
+        // Para youtube u otras web url no locales, desactivamos _initVideoPreview si falla,
+        // o lo intentamos aislar. La UI mostrará el preview de _buildImageWidget(path) o fallará seguro,
+        // pero como _videoInitialized quedará falso, mostrará el _buildIconContent.
+      }
     });
   }
 }

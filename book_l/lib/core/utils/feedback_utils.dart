@@ -82,7 +82,8 @@ class FeedbackUtils {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           title,
-          style: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold),
         ),
         content: Text(
           content,
@@ -93,14 +94,17 @@ class FeedbackUtils {
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               cancelText,
-              style: const TextStyle(color: Colors.black54, fontFamily: 'Inter'),
+              style:
+                  const TextStyle(color: Colors.black54, fontFamily: 'Inter'),
             ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDestructive ? Colors.red : const Color(0xFF4DC130),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              backgroundColor:
+                  isDestructive ? Colors.red : const Color(0xFF4DC130),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
             child: Text(
               confirmText,

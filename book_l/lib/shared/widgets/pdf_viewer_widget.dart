@@ -63,8 +63,8 @@ class _PdfViewerWidgetState extends State<PdfViewerWidget> {
             child: Stack(
               children: [
                 PDFView(
-                  filePath: widget.path.startsWith('file://') 
-                      ? Uri.parse(widget.path).toFilePath() 
+                  filePath: widget.path.startsWith('file://')
+                      ? Uri.parse(widget.path).toFilePath()
                       : widget.path,
                   enableSwipe: true,
                   swipeHorizontal: false,
@@ -73,7 +73,11 @@ class _PdfViewerWidgetState extends State<PdfViewerWidget> {
                   pageSnap: true,
                   fitPolicy: FitPolicy.WIDTH,
                   onRender: (pages) {
-                    if (mounted) setState(() { _totalPages = pages ?? 0; _isReady = true; });
+                    if (mounted)
+                      setState(() {
+                        _totalPages = pages ?? 0;
+                        _isReady = true;
+                      });
                   },
                   onViewCreated: (controller) => _pdfController = controller,
                   onPageChanged: (page, _) {
@@ -86,7 +90,8 @@ class _PdfViewerWidgetState extends State<PdfViewerWidget> {
                 if (!_isReady)
                   const Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4DC130)),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFF4DC130)),
                     ),
                   ),
               ],
@@ -104,7 +109,8 @@ class _PdfViewerWidgetState extends State<PdfViewerWidget> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left_rounded, color: Color(0xFF4DC130)),
+                    icon: const Icon(Icons.chevron_left_rounded,
+                        color: Color(0xFF4DC130)),
                     onPressed: _currentPage > 0
                         ? () => _pdfController?.setPage(_currentPage - 1)
                         : null,
@@ -118,7 +124,8 @@ class _PdfViewerWidgetState extends State<PdfViewerWidget> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.chevron_right_rounded, color: Color(0xFF4DC130)),
+                    icon: const Icon(Icons.chevron_right_rounded,
+                        color: Color(0xFF4DC130)),
                     onPressed: _currentPage < _totalPages - 1
                         ? () => _pdfController?.setPage(_currentPage + 1)
                         : null,

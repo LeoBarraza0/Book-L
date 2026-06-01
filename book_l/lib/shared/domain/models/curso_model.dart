@@ -32,7 +32,9 @@ class CursoModel {
 
   factory CursoModel.fromJson(Map<String, dynamic> json) {
     return CursoModel(
-      id: json['id'] is String ? int.tryParse(json['id']) ?? 0 : (json['id'] ?? 0),
+      id: json['id'] is String
+          ? int.tryParse(json['id']) ?? 0
+          : (json['id'] ?? 0),
       nombre: json['nombre'] ?? json['titulo'] ?? '',
       descripcion: json['descripcion'] ?? '',
       tags: List<String>.from(json['tags'] ?? []),
@@ -40,7 +42,9 @@ class CursoModel {
       duracion: json['duracion'] ?? '',
       estudiantes: json['estudiantes'] ?? 0,
       progreso: (json['progreso'] ?? 0.0).toDouble(),
-      tagColor: json['tagColor'] != null ? Color(json['tagColor']) : const Color(0xFF4DC130),
+      tagColor: json['tagColor'] != null
+          ? Color(json['tagColor'])
+          : const Color(0xFF4DC130),
       esNuevo: json['esNuevo'] ?? false,
       lecciones: (json['lecciones'] as List<dynamic>?)
               ?.map((e) => LeccionModel.fromJson(e))

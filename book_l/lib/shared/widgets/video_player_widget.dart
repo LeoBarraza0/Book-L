@@ -120,7 +120,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         children: [
                           // Fondo oscuro
                           Container(color: Colors.black.withOpacity(0.4)),
-                          
+
                           // Botón Play/Pause
                           GestureDetector(
                             onTap: () {

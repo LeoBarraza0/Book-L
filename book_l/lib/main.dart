@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app.dart';
-import 'core/services/bookl_service.dart';
-import 'core/storage/local_storage.dart';
+import 'core/infrastructure/services/bookl_service.dart';
+import 'core/infrastructure/storage/local_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

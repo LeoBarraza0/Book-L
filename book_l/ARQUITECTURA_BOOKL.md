@@ -4,20 +4,20 @@
 
 ---
 
-## 1. Arquitectura adoptada: Clean Architecture por features
+## 1. Arquitectura adoptada: Arquitectura Hexagonal (Ports and Adapters) por features
 
-El proyecto implementa **Clean Architecture por features**. La separación de responsabilidades se organiza en tres capas con una dirección de dependencia estricta:
+El proyecto implementa **Arquitectura Hexagonal por features**. La separación de responsabilidades se organiza en tres capas principales con una dirección de dependencia estricta (hacia adentro):
 
 ```
-presentation/  →  domain/  ←  data/
+infrastructure/ (Adapters)  →  application/ (Ports & UseCases)  →  domain/ (Models)
 ```
 
-- `domain/` **nunca** importa nada de `data/` ni de `presentation/`.
-- `data/` conoce `domain/` (implementa sus interfaces).
-- `presentation/` conoce `domain/` (consume sus casos de uso).
-- Si en un archivo dentro de `domain/` aparece un import de `dio`, `flutter`, `shared_preferences` o cualquier paquete externo, es un error arquitectural.
+- `domain/` (Models) contiene la lógica de negocio pura y **nunca** importa nada de las otras capas.
+- `application/` contiene los casos de uso y las interfaces de los puertos de salida (ej. repositorios). Conoce a `domain/`.
+- `infrastructure/` contiene los adaptadores de entrada (UI, controllers) y de salida (implementación de repositorios, DTOs). Conoce a `application/` y `domain/`.
+- Si en un archivo dentro de `domain/` o `application/` aparece un import de `dio`, `flutter`, `shared_preferences` o cualquier paquete externo de infraestructura, es un error arquitectural.
 
-> **Nota sobre migración futura:** Esta estructura está deliberadamente alineada para que, si en un futuro se decide migrar a Arquitectura Hexagonal, el proceso sea de renombrado y reorganización de carpetas, no de reescritura. Sin embargo, esa migración **no es prioridad actual** y no debe influir en decisiones del día a día.
+> **Nota sobre evolución:** Originalmente el proyecto usaba Clean Architecture clásica, pero fue refactorizado exitosamente hacia Arquitectura Hexagonal reestructurando las carpetas para aislar mejor los puertos y adaptadores sin reescribir la lógica base.
 
 ---
 
@@ -152,21 +152,20 @@ lib/
 │   ├── error/
 │   │   ├── exception.dart
 │   │   └── failure.dart
-│   ├── network/
-│   │   └── dio_client.dart
+│   ├── infrastructure/
+│   │   ├── network/
+│   │   │   └── dio_client.dart
+│   │   ├── services/
+│   │   │   └── bookl_service.dart        ← "BD en memoria" (Singleton)
+│   │   └── storage/
+│   │       └── local_storage.dart        ← AppSession (Singleton + SharedPreferences)
 │   ├── router/
 │   │   └── app_router.dart
-│   ├── services/
-│   │   └── bookl_service.dart        ← "BD en memoria" (Singleton)
 │   ├── state/
 │   │   └── data_state.dart
-│   ├── storage/
-│   │   └── local_storage.dart        ← AppSession (Singleton + SharedPreferences)
 │   ├── theme/
 │   │   ├── app_colors.dart
 │   │   └── app_theme.dart
-│   ├── usecase/
-│   │   └── usecase.dart
 │   └── utils/
 │       ├── date_formatter.dart
 │       ├── extensions.dart
@@ -267,34 +266,36 @@ Widgets Flutter que se usan en más de una feature. No contienen lógica de nego
 
 ## 6. Capa `features/` — Módulos de negocio
 
-Cada feature encapsula un dominio de negocio completo. La estructura interna es idéntica en todas:
+Cada feature encapsula un dominio de negocio completo. La estructura interna sigue el patrón Hexagonal (Ports and Adapters):
 
 ```
 feature_name/
 ├── domain/
-│   ├── entities/       ← Objetos de negocio puros (sin JSON, sin Flutter)
-│   ├── repositories/   ← Interfaces abstractas (contratos)
-│   └── usecases/       ← Lógica de negocio
-├── data/
-│   ├── dto/            ← Traductores JSON ↔ Entity (fromJson/toJson)
-│   └── repositories/   ← Implementaciones concretas (consumen BooklService)
-└── presentation/
-    ├── controller/     ← Estado y orquestación (Singleton + ChangeNotifier)
-    ├── screens/        ← Pantallas Flutter (solo dibujan)
-    └── widgets/        ← Widgets propios de la feature
+│   └── models/               ← Objetos de negocio puros (sin JSON, sin Flutter)
+├── application/
+│   ├── ports/
+│   │   └── out/              ← Interfaces abstractas (contratos para repositorios)
+│   └── usecases/             ← Lógica de negocio (orquestación)
+└── infrastructure/
+    └── adapters/
+        ├── in/               ← Adaptadores de entrada (Driving Adapters)
+        │   └── presentation/ ← Controladores de estado, pantallas y widgets
+        └── out/              ← Adaptadores de salida (Driven Adapters)
+            ├── dtos/         ← Traductores JSON ↔ Entity (fromJson/toJson)
+            └── repositories/ ← Implementaciones concretas de los puertos de salida
 ```
 
 **Cómo cada capa implementa el flujo de datos base:**
 
 | Capa | Rol en el flujo | Equivalente en el patrón simple |
 |---|---|---|
-| `domain/entities/` | Modelo Dart puro | Clases puras de modelo |
-| `data/dto/` | Parseo JSON ↔ Entity | El `json.decode` dentro del Service |
-| `data/repositories/` | Delegación al BooklService con tipado | Los métodos CRUD del Service central |
-| `domain/repositories/` | Contrato abstracto (interfaz) | *(no existe en el patrón simple)* |
-| `domain/usecases/` | Operación de negocio unitaria | *(no existe en el patrón simple)* |
-| `presentation/controller/` | Orquesta usecases, maneja estado, notifica UI | El `setState(() {})` y manejo de estado |
-| `presentation/screens/` | Dibuja la UI, escucha al controller | El método `build()` de la vista principal |
+| `domain/models/` | Modelo Dart puro | Clases puras de modelo |
+| `infrastructure/adapters/out/dtos/` | Parseo JSON ↔ Model | El `json.decode` dentro del Service |
+| `infrastructure/adapters/out/repositories/`| Delegación al BooklService con tipado | Los métodos CRUD del Service central |
+| `application/ports/out/` | Contrato abstracto (interfaz) | *(no existe en el patrón simple)* |
+| `application/usecases/` | Operación de negocio unitaria | *(no existe en el patrón simple)* |
+| `infrastructure/adapters/in/presentation/controller/` | Orquesta usecases, maneja estado, notifica UI | El `setState(() {})` y manejo de estado |
+| `infrastructure/adapters/in/presentation/screens/` | Dibuja la UI, escucha al controller | El método `build()` de la vista principal |
 
 ### Features y sus tablas del modelo relacional
 

@@ -122,7 +122,8 @@ class CustomTextField extends StatelessWidget {
           const SizedBox(height: 4),
           Row(
             children: [
-              const Icon(Icons.info_outline, size: 12, color: Color(0xFF858484)),
+              const Icon(Icons.info_outline,
+                  size: 12, color: Color(0xFF858484)),
               const SizedBox(width: 4),
               Text(
                 helperText!,

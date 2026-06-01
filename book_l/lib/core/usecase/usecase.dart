@@ -20,4 +20,3 @@ abstract class UMLExtend<BaseUseCase> {
   BaseUseCase get baseUseCase;
   bool shouldExtend(dynamic context);
 }
-

@@ -1,42 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'features/auth/presentation/screens/login_screen.dart';
-import 'features/auth/presentation/screens/register_screen.dart';
-import 'features/home/presentation/screens/home_screen.dart';
-import 'features/notificacion/presentation/screens/notificaciones_screen.dart';
-import 'features/perfil/presentation/screens/perfil_screen.dart';
-import 'features/configuracion/presentation/screens/sugerencia_screen.dart';
-import 'features/configuracion/presentation/screens/configuracion_screen.dart';
-import 'features/chatbot/presentation/screens/chatbot_screen.dart';
-import 'features/curso/presentation/screens/curso_detail_screen.dart';
-import 'features/leccion/presentation/screens/leccion_detail_screen.dart';
-import 'features/leccion/presentation/screens/capitulo_screen.dart';
-import 'features/busqueda/presentation/screens/busqueda_screen.dart';
-import 'features/busqueda/presentation/screens/resultado_screen.dart';
-import 'features/ejercicio/presentation/screens/teorico_screen.dart';
-import 'features/curso/presentation/screens/publicar_curso_screen.dart';
-import 'features/leccion/presentation/screens/publicar_leccion_screen.dart';
+import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/login_screen.dart';
+import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/register_screen.dart';
+import 'package:book_l/features/home/infrastructure/adapters/in/presentation/screens/home_screen.dart';
+import 'package:book_l/features/notificacion/infrastructure/adapters/in/presentation/screens/notificaciones_screen.dart';
+import 'package:book_l/features/perfil/infrastructure/adapters/in/presentation/screens/perfil_screen.dart';
+import 'package:book_l/features/configuracion/infrastructure/adapters/in/presentation/screens/sugerencia_screen.dart';
+import 'package:book_l/features/configuracion/infrastructure/adapters/in/presentation/screens/configuracion_screen.dart';
+import 'package:book_l/features/chatbot/infrastructure/adapters/in/presentation/screens/chatbot_screen.dart';
+import 'package:book_l/features/curso/infrastructure/adapters/in/presentation/screens/curso_detail_screen.dart';
+import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/screens/leccion_detail_screen.dart';
+import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/screens/capitulo_screen.dart';
+import 'package:book_l/features/busqueda/infrastructure/adapters/in/presentation/screens/busqueda_screen.dart';
+import 'package:book_l/features/busqueda/infrastructure/adapters/in/presentation/screens/resultado_screen.dart';
+import 'package:book_l/features/ejercicio/infrastructure/adapters/in/presentation/screens/teorico_screen.dart';
+import 'package:book_l/features/curso/infrastructure/adapters/in/presentation/screens/publicar_curso_screen.dart';
+import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/screens/publicar_leccion_screen.dart';
 
-import 'features/ejercicio/domain/entities/ejercicio.dart';
-import 'features/home/presentation/screens/admin_home_screen.dart';
-import 'features/leccion/presentation/screens/admin_leccion_screen.dart';
-import 'features/curso/presentation/screens/curso_editar_screen.dart';
-import 'features/leccion/presentation/screens/leccion_editar_screen.dart';
-import 'features/leccion/presentation/screens/capitulo_editar_screen.dart';
-import 'features/leccion/presentation/screens/crear_capitulo_screen.dart';
-import 'features/usuarios/presentation/screens/usuarios_screen.dart';
-import 'features/reportes/presentation/screens/reportes_screen.dart';
-import 'features/reportes/presentation/screens/reporte_detail_screen.dart';
+import 'features/ejercicio/domain/models/ejercicio.dart';
+import 'package:book_l/features/home/infrastructure/adapters/in/presentation/screens/admin_home_screen.dart';
+import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/screens/admin_leccion_screen.dart';
+import 'package:book_l/features/curso/infrastructure/adapters/in/presentation/screens/curso_editar_screen.dart';
+import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/screens/leccion_editar_screen.dart';
+import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/screens/capitulo_editar_screen.dart';
+import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/screens/crear_capitulo_screen.dart';
+import 'package:book_l/features/usuarios/infrastructure/adapters/in/presentation/screens/usuarios_screen.dart';
+import 'package:book_l/features/reportes/infrastructure/adapters/in/presentation/screens/reportes_screen.dart';
+import 'package:book_l/features/reportes/infrastructure/adapters/in/presentation/screens/reporte_detail_screen.dart';
 
+import 'package:book_l/features/onboarding/infrastructure/adapters/in/presentation/screens/bienvenida_screen.dart';
+import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/recuperar_correo_screen.dart';
+import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/recuperar_numero_screen.dart';
+import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/ingresar_codigo_screen.dart';
+import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/cambiar_password_screen.dart';
 
-import 'features/onboarding/presentation/screens/bienvenida_screen.dart';
-import 'features/auth/presentation/screens/recuperar_correo_screen.dart';
-import 'features/auth/presentation/screens/recuperar_numero_screen.dart';
-import 'features/auth/presentation/screens/ingresar_codigo_screen.dart';
-import 'features/auth/presentation/screens/cambiar_password_screen.dart';
-
-import 'core/storage/local_storage.dart';
+import 'core/infrastructure/storage/local_storage.dart';
 
 class BookLApp extends StatelessWidget {
   const BookLApp({super.key});
@@ -158,7 +157,6 @@ class BookLApp extends StatelessWidget {
                     tipo: args?['tipo'] as String? ?? 'Lección',
                   );
                 },
-
               },
             );
           },

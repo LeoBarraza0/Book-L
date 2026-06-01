@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../domain/models/curso_model.dart';
 import '../domain/models/leccion_model.dart';
 import '../domain/models/capitulo_model.dart';
-import '../../core/services/bookl_service.dart';
-import '../../features/curso/domain/entities/curso.dart';
-import '../../features/leccion/domain/entities/leccion.dart';
-import '../../features/leccion/domain/entities/capitulo.dart';
+import '../../core/infrastructure/services/bookl_service.dart';
+import '../../features/curso/domain/models/curso.dart';
+import '../../features/leccion/domain/models/leccion.dart';
+import '../../features/leccion/domain/models/capitulo.dart';
 
 /// Singleton in-memory repository for locally created courses.
 /// Now acts as a bridge to [BooklService] for centralized architecture.

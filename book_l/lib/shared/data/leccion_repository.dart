@@ -1,7 +1,7 @@
 import '../domain/models/leccion_model.dart';
-import '../../core/services/bookl_service.dart';
-import '../../features/leccion/domain/entities/leccion.dart';
-import '../../features/leccion/domain/entities/capitulo.dart';
+import '../../core/infrastructure/services/bookl_service.dart';
+import '../../features/leccion/domain/models/leccion.dart';
+import '../../features/leccion/domain/models/capitulo.dart';
 import 'package:flutter/foundation.dart';
 
 /// Repositorio singleton de lecciones independientes (no asociadas a un curso).

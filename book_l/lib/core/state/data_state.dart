@@ -6,7 +6,7 @@ enum DataStatus { initial, loading, loaded, error }
 class DataState<T> {
   final DataStatus status;
   final List<T> items;
-  final T? selected;       // ítem actualmente seleccionado (detalle)
+  final T? selected; // ítem actualmente seleccionado (detalle)
   final String? errorMessage;
 
   const DataState({

@@ -29,7 +29,7 @@ class CreateMenuModal extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Title
             const Text(
               'Añadir',
@@ -40,7 +40,7 @@ class CreateMenuModal extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            
+
             // Subtitle
             const Text(
               '¿Qué desea añadir un curso o una lección?',
@@ -51,7 +51,7 @@ class CreateMenuModal extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Buttons Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -82,7 +82,7 @@ class CreateMenuModal extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // Lección Button
                 Expanded(
                   child: ElevatedButton(

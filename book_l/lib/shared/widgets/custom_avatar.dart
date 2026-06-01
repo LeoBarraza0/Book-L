@@ -23,7 +23,7 @@ class CustomAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveBackgroundColor = backgroundColor ?? const Color(0xFFF0F0F0);
-    
+
     // Generar iniciales de forma robusta
     final tokens = nombre.trim().split(' ').where((s) => s.isNotEmpty).toList();
     String iniciales = '?';

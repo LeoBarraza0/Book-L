@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:book_l/shared/widgets/create_menu_modal.dart' as lib_modal;
-import '../../core/services/bookl_service.dart';
+import '../../core/infrastructure/services/bookl_service.dart';
 
 class SharedBottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -118,20 +118,19 @@ class SharedBottomNavBar extends StatelessWidget {
         children: [
           Icon(
             icon,
-            color: isSelected
-                ? const Color(0xFF4DC130)
-                : const Color(0xFF676767),
+            color:
+                isSelected ? const Color(0xFF4DC130) : const Color(0xFF676767),
             size: 26,
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-               fontSize: 11,
-               fontWeight: FontWeight.bold,
-               color: isSelected
-                   ? const Color(0xFF4DC130)
-                   : const Color(0xFF676767),
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: isSelected
+                  ? const Color(0xFF4DC130)
+                  : const Color(0xFF676767),
             ),
           ),
         ],

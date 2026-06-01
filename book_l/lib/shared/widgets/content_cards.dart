@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../core/services/bookl_service.dart';
-import '../../core/storage/local_storage.dart';
-import '../../features/curso/domain/entities/curso.dart';
-import '../../features/curso/presentation/controller/curso_controller.dart';
-import '../../features/leccion/domain/entities/leccion.dart';
-import '../../features/leccion/presentation/controller/leccion_controller.dart';
-import '../../features/guardado/presentation/controller/guardado_controller.dart';
+import '../../core/infrastructure/services/bookl_service.dart';
+import '../../core/infrastructure/storage/local_storage.dart';
+import '../../features/curso/domain/models/curso.dart';
+import 'package:book_l/features/curso/infrastructure/adapters/in/presentation/controller/curso_controller.dart';
+import '../../features/leccion/domain/models/leccion.dart';
+import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/controller/leccion_controller.dart';
+import 'package:book_l/features/guardado/infrastructure/adapters/in/presentation/controller/guardado_controller.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Card Base que estandariza diseño, tamaño de cajitas y estructura visual.
@@ -70,7 +70,8 @@ class _BaseContentCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       image: imageUrl != null
                           ? DecorationImage(
-                              image: _resolveImageProvider(imageUrl!), fit: BoxFit.cover)
+                              image: _resolveImageProvider(imageUrl!),
+                              fit: BoxFit.cover)
                           : null,
                     ),
                     alignment: Alignment.center,
@@ -199,7 +200,8 @@ class SharedLeccionCard extends StatelessWidget {
       progressOverlay: ListenableBuilder(
         listenable: AppSession().completedCapitulos,
         builder: (context, _) {
-          final progress = LeccionController().calcularProgresoLeccion(leccion.idLeccion);
+          final progress =
+              LeccionController().calcularProgresoLeccion(leccion.idLeccion);
           final percent = (progress * 100).toInt();
           return SizedBox(
             width: 32,
@@ -216,7 +218,8 @@ class SharedLeccionCard extends StatelessWidget {
                 Center(
                   child: Text(
                     '$percent%',
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -433,7 +436,8 @@ class _BaseFypCard extends StatelessWidget {
                         width: 1),
                     image: imageUrl != null
                         ? DecorationImage(
-                            image: _resolveImageProvider(imageUrl!), fit: BoxFit.cover)
+                            image: _resolveImageProvider(imageUrl!),
+                            fit: BoxFit.cover)
                         : null,
                   ),
                   alignment: Alignment.center,

@@ -112,7 +112,8 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
                   child: Text(
                     label,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : const Color(0xFF555555),
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF555555),
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),

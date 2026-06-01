@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/storage/local_storage.dart';
-import '../../../core/services/bookl_service.dart';
+import 'package:book_l/core/infrastructure/storage/local_storage.dart';
+import 'package:book_l/core/infrastructure/services/bookl_service.dart';
 
 /// Modal de reporte reutilizable para lecciones y cursos.
 /// Se muestra como un bottom sheet con estilo Book-L.
@@ -84,7 +84,8 @@ class _ReporteModalContentState extends State<_ReporteModalContent> {
           ),
           backgroundColor: const Color(0xFFFEB95C),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           margin: const EdgeInsets.all(20),
         ),
       );
@@ -242,7 +243,8 @@ class _ReporteModalContentState extends State<_ReporteModalContent> {
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: const Color(0xFFFF606F).withOpacity(0.3),
+                                  color:
+                                      const Color(0xFFFF606F).withOpacity(0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
