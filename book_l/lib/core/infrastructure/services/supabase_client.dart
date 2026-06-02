@@ -9,7 +9,7 @@ class SupabaseClientHelper {
   // CREDENCIALES DE SOPORTE PARA EL PROYECTO
   // Reemplaza estas credenciales por las de tu panel de Supabase si cambian
   // =========================================================================
-  static const String url = 'https://zfbclsohgbqbasbbxntl.supabase.co/rest/v1/';
+  static const String url = 'https://zfbclsohgbqbasbbxntl.supabase.co';
   static const String anonKey =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmYmNsc29oZ2JxYmFzYmJ4bnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNTczODQsImV4cCI6MjA5NTkzMzM4NH0.XvHf9DNPQ0wjX6ztmoqZe16chJSloQ7cIysjifVWL5k';
 
@@ -19,8 +19,6 @@ class SupabaseClientHelper {
   /// Indica si Supabase ha sido inicializado correctamente y si las
   /// credenciales actuales son válidas (no placeholders).
   static bool get isConfigured {
-    return url != 'https://zfbclsohgbqbasbbxntl.supabase.co/rest/v1/' &&
-        anonKey !=
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmYmNsc29oZ2JxYmFzYmJ4bnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNTczODQsImV4cCI6MjA5NTkzMzM4NH0.XvHf9DNPQ0wjX6ztmoqZe16chJSloQ7cIysjifVWL5k';
+    return url.isNotEmpty && anonKey.isNotEmpty;
   }
 }

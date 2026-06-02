@@ -85,7 +85,7 @@ class AuthRepositoryImpl implements AuthRepository {
         // Verificar si el correo ya existe en Supabase
         final existeRes = await client
             .from('tbl_usuario')
-            .select('id_usuario')
+            .select('idusuario')
             .eq('correo', correo.trim().toLowerCase())
             .maybeSingle();
 
@@ -93,11 +93,17 @@ class AuthRepositoryImpl implements AuthRepository {
           throw Exception('El correo ya está registrado');
         }
 
+        // Generar un username automático a partir del correo
+        final baseUsername = correo.trim().toLowerCase().split('@').first;
+        final randomSuffix = DateTime.now().millisecondsSinceEpoch.toString().substring(9);
+        final generatedUsername = '${baseUsername}_$randomSuffix';
+
         // Insertar en Supabase. El id se autogenera mediante SERIAL
-        final insertRes = await client.from('tbl_usuario').insert({
-          'nombre_completo': nombreCompleto.trim(),
+        final insertRes = await client.from('tbl_usuario').insert(<String, Object>{
+          'nombrecompleto': nombreCompleto.trim(),
           'correo': correo.trim().toLowerCase(),
           'contrasena': contrasena,
+          'username': generatedUsername,
           'rol': rol,
           if (programa != null) 'programa': programa,
           'activo': true,
@@ -128,11 +134,16 @@ class AuthRepositoryImpl implements AuthRepository {
       if (existe) throw Exception('El correo ya está registrado');
 
       final nuevoId = _service.nextUsuarioId();
+      final baseUsername = correo.trim().toLowerCase().split('@').first;
+      final randomSuffix = DateTime.now().millisecondsSinceEpoch.toString().substring(9);
+      final generatedUsername = '${baseUsername}_$randomSuffix';
+
       dto = UsuarioDto(
         idUsuario: nuevoId,
         nombreCompleto: nombreCompleto.trim(),
         correo: correo.trim().toLowerCase(),
         contrasena: contrasena,
+        username: generatedUsername,
         rol: rol,
         programa: programa,
         activo: true,

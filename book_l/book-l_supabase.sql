@@ -1,598 +1,279 @@
--- ============================================================
---  MODELO RELACIONAL PostgreSQL — Book-L
---  Compatible con Supabase (PostgreSQL 15+)
---  Nombres en snake_case minúsculas (convención PostgreSQL)
--- ============================================================
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
 
--- ============================================================
--- TIPOS ENUM
--- Envueltos en bloques DO para ser idempotentes (re-ejecutables)
--- ============================================================
-
-DO $$ BEGIN
-    CREATE TYPE tipo_programa AS ENUM (
-        'Ingenieria de Sistemas',
-        'Ingenieria Industrial',
-        'Ingenieria Civil',
-        'Contaduria Publica',
-        'Administracion de Empresas',
-        'Derecho',
-        'Medicina',
-        'Psicologia',
-        'Enfermeria',
-        'Arquitectura'
-    );
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE tipo_rol AS ENUM ('Estudiante', 'Profesor', 'Administrador');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE tipo_estado_seguidor AS ENUM ('activo', 'pendiente', 'bloqueado');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE tipo_estado_leccion AS ENUM ('activa', 'inactiva', 'en_revision', 'suspendida');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE tipo_material AS ENUM ('video', 'pdf', 'enlace', 'SCORM');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE tipo_estado_curso AS ENUM ('activo', 'inactivo', 'en_revision', 'suspendido');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE tipo_evento AS ENUM (
-        'inicio_leccion', 'fin_leccion', 'comentario',
-        'respuesta', 'guardar', 'notificacion_leida'
-    );
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE tipo_progreso AS ENUM ('no_iniciada', 'en_progreso', 'completada');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE tipo_ejercicio AS ENUM (
-        'multiple_choice', 'true_false', 'ordenar',
-        'rellenar', 'respuesta_corta'
-    );
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE tipo_idioma AS ENUM ('es', 'en', 'fr', 'pt');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE tipo_fuente AS ENUM ('pequeno', 'normal', 'grande');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
--- ============================================================
--- FUNCIÓN para auto-actualizar updated_at
--- ============================================================
-
-CREATE OR REPLACE FUNCTION fn_set_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- ============================================================
--- tbl_usuario
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_usuario (
-    id_usuario       SERIAL          NOT NULL,
-    nombre_completo  VARCHAR(200)    NOT NULL,
-    correo           VARCHAR(255)    NOT NULL,
-    contrasena       VARCHAR(255)    NOT NULL,   -- Mapeado a password en frontend
-    username         VARCHAR(100)    NOT NULL,
-    celular          BIGINT          NULL,        -- BIGINT para números de 10 dígitos
-    semestre         SMALLINT        NULL,
-    nacimiento       DATE            NULL,
-    programa         tipo_programa   NULL,
-    preferencias     JSONB           NULL,
-    rol              tipo_rol        NOT NULL DEFAULT 'Estudiante',
-    avatar_url       VARCHAR(2048)   NULL,
-    descripcion      TEXT            NULL,
-    activo           BOOLEAN         NOT NULL DEFAULT TRUE,
-    created_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    deleted_at       TIMESTAMPTZ     NULL,
-    PRIMARY KEY (id_usuario),
-    CONSTRAINT uq_usuario_correo   UNIQUE (correo),
-    CONSTRAINT uq_usuario_username UNIQUE (username)
+CREATE TABLE public.tbl_usuario (
+  idusuario integer NOT NULL DEFAULT nextval('tbl_usuario_idusuario_seq'::regclass),
+  nombrecompleto character varying NOT NULL,
+  correo character varying NOT NULL UNIQUE,
+  contrasena character varying NOT NULL,
+  username character varying NOT NULL UNIQUE,
+  celular bigint,
+  semestre smallint,
+  nacimiento date,
+  programa USER-DEFINED,
+  preferencias jsonb,
+  rol USER-DEFINED NOT NULL DEFAULT 'Estudiante'::tipo_rol,
+  avatar_url character varying,
+  descripcion text,
+  activo boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp with time zone,
+  CONSTRAINT tbl_usuario_pkey PRIMARY KEY (idusuario)
 );
-
-CREATE OR REPLACE TRIGGER trg_usuario_updated_at
-BEFORE UPDATE ON tbl_usuario
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_seguidores
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_seguidores (
-    id_seguidor  INT                  NOT NULL,
-    id_seguido   INT                  NOT NULL,
-    estado       tipo_estado_seguidor NOT NULL DEFAULT 'pendiente',
-    created_at   TIMESTAMPTZ          NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMPTZ          NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_seguidor, id_seguido),
-    CONSTRAINT fk_seguidor_usuario
-        FOREIGN KEY (id_seguidor) REFERENCES tbl_usuario (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_seguido_usuario
-        FOREIGN KEY (id_seguido)  REFERENCES tbl_usuario (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_seguidores (
+  idseguidor integer NOT NULL,
+  idseguido integer NOT NULL,
+  estado USER-DEFINED NOT NULL DEFAULT 'pendiente'::tipo_estado_seguidor,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_seguidores_pkey PRIMARY KEY (idseguidor, idseguido),
+  CONSTRAINT fk_seguidor_usuario FOREIGN KEY (idseguidor) REFERENCES public.tbl_usuario(idusuario),
+  CONSTRAINT fk_seguido_usuario FOREIGN KEY (idseguido) REFERENCES public.tbl_usuario(idusuario)
 );
-
-CREATE OR REPLACE TRIGGER trg_seguidores_updated_at
-BEFORE UPDATE ON tbl_seguidores
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_leccion
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_leccion (
-    id_leccion    SERIAL               NOT NULL,
-    id_usuario_fk INT                  NOT NULL,   -- Creador/Dueño de la lección
-    nombre        VARCHAR(200)         NOT NULL,
-    contenido     JSONB                NULL,        -- Secciones: titulo, cuerpo_delta, imagen_url, video_url
-    imagen_url    VARCHAR(2048)        NULL,
-    tag_color     INT                  NULL,        -- Mapeado a tagColor en frontend
-    es_nuevo      BOOLEAN              NOT NULL DEFAULT TRUE,
-    estado        tipo_estado_leccion  NOT NULL DEFAULT 'activa',
-    created_at    TIMESTAMPTZ          NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ          NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_leccion),
-    CONSTRAINT fk_leccion_usuario
-        FOREIGN KEY (id_usuario_fk) REFERENCES tbl_usuario (id_usuario)
-        ON UPDATE CASCADE ON DELETE RESTRICT
+CREATE TABLE public.tbl_leccion (
+  idleccion integer NOT NULL DEFAULT nextval('tbl_leccion_idleccion_seq'::regclass),
+  idusuariofk integer NOT NULL,
+  nombre character varying NOT NULL,
+  contenido jsonb,
+  imagen_url character varying,
+  tagcolor integer,
+  esnuevo boolean NOT NULL DEFAULT true,
+  estado USER-DEFINED NOT NULL DEFAULT 'activa'::tipo_estado_leccion,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_leccion_pkey PRIMARY KEY (idleccion),
+  CONSTRAINT fk_leccion_usuario FOREIGN KEY (idusuariofk) REFERENCES public.tbl_usuario(idusuario)
 );
-
-CREATE OR REPLACE TRIGGER trg_leccion_updated_at
-BEFORE UPDATE ON tbl_leccion
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_material
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_material (
-    id_material   SERIAL          NOT NULL,
-    id_leccion_fk INT             NOT NULL,
-    nombre        VARCHAR(200)    NOT NULL,
-    url           VARCHAR(2048)   NULL,
-    descripcion   TEXT            NULL,
-    tipo          tipo_material   NOT NULL,
-    tamano_bytes  BIGINT          NOT NULL DEFAULT 0,
-    created_at    TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_material),
-    CONSTRAINT fk_material_leccion
-        FOREIGN KEY (id_leccion_fk) REFERENCES tbl_leccion (id_leccion)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_material (
+  idmaterial integer NOT NULL DEFAULT nextval('tbl_material_idmaterial_seq'::regclass),
+  idleccionfk integer NOT NULL,
+  nombre character varying NOT NULL,
+  url character varying,
+  descripcion text,
+  tipo USER-DEFINED NOT NULL,
+  tamano_bytes bigint NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_material_pkey PRIMARY KEY (idmaterial),
+  CONSTRAINT fk_material_leccion FOREIGN KEY (idleccionfk) REFERENCES public.tbl_leccion(idleccion)
 );
-
-CREATE OR REPLACE TRIGGER trg_material_updated_at
-BEFORE UPDATE ON tbl_material
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_curso
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_curso (
-    id_curso      SERIAL             NOT NULL,
-    id_usuario_fk INT                NOT NULL,   -- Creador/Profesor del curso
-    nombre        VARCHAR(200)       NOT NULL,
-    contenido     JSONB              NULL,        -- Secciones: titulo, cuerpo_delta, imagen_url, video_url
-    imagen_url    VARCHAR(2048)      NULL,
-    tag_color     INT                NULL,        -- Mapeado a tagColor en frontend
-    es_nuevo      BOOLEAN            NOT NULL DEFAULT TRUE,
-    estado        tipo_estado_curso  NOT NULL DEFAULT 'activo',
-    created_at    TIMESTAMPTZ        NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ        NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_curso),
-    CONSTRAINT fk_curso_usuario
-        FOREIGN KEY (id_usuario_fk) REFERENCES tbl_usuario (id_usuario)
-        ON UPDATE CASCADE ON DELETE RESTRICT
+CREATE TABLE public.tbl_curso (
+  idcurso integer NOT NULL DEFAULT nextval('tbl_curso_idcurso_seq'::regclass),
+  idusuariofk integer NOT NULL,
+  nombre character varying NOT NULL,
+  contenido jsonb,
+  imagen_url character varying,
+  tagcolor integer,
+  esnuevo boolean NOT NULL DEFAULT true,
+  estado USER-DEFINED NOT NULL DEFAULT 'activo'::tipo_estado_curso,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_curso_pkey PRIMARY KEY (idcurso),
+  CONSTRAINT fk_curso_usuario FOREIGN KEY (idusuariofk) REFERENCES public.tbl_usuario(idusuario)
 );
-
-CREATE OR REPLACE TRIGGER trg_curso_updated_at
-BEFORE UPDATE ON tbl_curso
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_lecciones_cursos  (pivote M:N)
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_lecciones_cursos (
-    id_leccion INT         NOT NULL,
-    id_curso   INT         NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_leccion, id_curso),
-    CONSTRAINT fk_lc_leccion
-        FOREIGN KEY (id_leccion) REFERENCES tbl_leccion (id_leccion)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_lc_curso
-        FOREIGN KEY (id_curso)   REFERENCES tbl_curso   (id_curso)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_lecciones_cursos (
+  idleccion integer NOT NULL,
+  idcurso integer NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_lecciones_cursos_pkey PRIMARY KEY (idleccion, idcurso),
+  CONSTRAINT fk_lc_leccion FOREIGN KEY (idleccion) REFERENCES public.tbl_leccion(idleccion),
+  CONSTRAINT fk_lc_curso FOREIGN KEY (idcurso) REFERENCES public.tbl_curso(idcurso)
 );
-
-CREATE OR REPLACE TRIGGER trg_lecciones_cursos_updated_at
-BEFORE UPDATE ON tbl_lecciones_cursos
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_capitulo
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_capitulo (
-    id_capitulo  SERIAL          NOT NULL,
-    id_leccion   INT             NOT NULL,
-    nombre       VARCHAR(200)    NOT NULL,
-    contenido    JSONB           NULL,   -- Secciones: titulo, cuerpo_delta, imagen_url, video_url
-    tiempo_total INT             NOT NULL DEFAULT 0,   -- Duración en segundos
-    created_at   TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_capitulo),
-    CONSTRAINT fk_capitulo_leccion
-        FOREIGN KEY (id_leccion) REFERENCES tbl_leccion (id_leccion)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_capitulo (
+  idcapitulo integer NOT NULL DEFAULT nextval('tbl_capitulo_idcapitulo_seq'::regclass),
+  idleccion integer NOT NULL,
+  nombre character varying NOT NULL,
+  contenido jsonb,
+  tiempo_total integer NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_capitulo_pkey PRIMARY KEY (idcapitulo),
+  CONSTRAINT fk_capitulo_leccion FOREIGN KEY (idleccion) REFERENCES public.tbl_leccion(idleccion)
 );
-
-CREATE OR REPLACE TRIGGER trg_capitulo_updated_at
-BEFORE UPDATE ON tbl_capitulo
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_discusion
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_discusion (
-    id_discusion SERIAL NOT NULL,
-    id_curso_fk  INT    NULL,
-    id_leccion_fk INT   NULL,
-    PRIMARY KEY (id_discusion),
-    CONSTRAINT fk_discusion_curso
-        FOREIGN KEY (id_curso_fk)   REFERENCES tbl_curso   (id_curso)
-        ON UPDATE CASCADE ON DELETE SET NULL,
-    CONSTRAINT fk_discusion_leccion
-        FOREIGN KEY (id_leccion_fk) REFERENCES tbl_leccion (id_leccion)
-        ON UPDATE CASCADE ON DELETE SET NULL
+CREATE TABLE public.tbl_discusion (
+  id_discusion integer NOT NULL DEFAULT nextval('tbl_discusion_id_discusion_seq'::regclass),
+  id_cursofk integer,
+  id_leccionfk integer,
+  CONSTRAINT tbl_discusion_pkey PRIMARY KEY (id_discusion),
+  CONSTRAINT fk_discusion_curso FOREIGN KEY (id_cursofk) REFERENCES public.tbl_curso(idcurso),
+  CONSTRAINT fk_discusion_leccion FOREIGN KEY (id_leccionfk) REFERENCES public.tbl_leccion(idleccion)
 );
-
--- ============================================================
--- tbl_comentario
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_comentario (
-    id_comentario  SERIAL      NOT NULL,
-    id_discusion_fk INT        NOT NULL,
-    id_usuario_fk  INT         NOT NULL,
-    contenido      TEXT        NOT NULL,
-    id_padre       INT         NULL,   -- Comentario padre para respuestas anidadas
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_comentario),
-    CONSTRAINT fk_comentario_discusion
-        FOREIGN KEY (id_discusion_fk) REFERENCES tbl_discusion  (id_discusion)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_comentario_usuario
-        FOREIGN KEY (id_usuario_fk)   REFERENCES tbl_usuario    (id_usuario)
-        ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT fk_comentario_padre
-        FOREIGN KEY (id_padre)        REFERENCES tbl_comentario (id_comentario)
-        ON UPDATE CASCADE ON DELETE SET NULL
+CREATE TABLE public.tbl_comentario (
+  id_comentario integer NOT NULL DEFAULT nextval('tbl_comentario_id_comentario_seq'::regclass),
+  id_discusionfk integer NOT NULL,
+  id_usuariofk integer NOT NULL,
+  contenido text NOT NULL,
+  id_padre integer,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_comentario_pkey PRIMARY KEY (id_comentario),
+  CONSTRAINT fk_comentario_discusion FOREIGN KEY (id_discusionfk) REFERENCES public.tbl_discusion(id_discusion),
+  CONSTRAINT fk_comentario_usuario FOREIGN KEY (id_usuariofk) REFERENCES public.tbl_usuario(idusuario),
+  CONSTRAINT fk_comentario_padre FOREIGN KEY (id_padre) REFERENCES public.tbl_comentario(id_comentario)
 );
-
-CREATE OR REPLACE TRIGGER trg_comentario_updated_at
-BEFORE UPDATE ON tbl_comentario
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_notificacion
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_notificacion (
-    id_notificacion  SERIAL          NOT NULL,
-    id_usuario_fk    INT             NOT NULL,
-    tipo             VARCHAR(50)     NOT NULL,   -- Tipo: follow, comentario, etc.
-    id_referencia    INT             NULL,
-    mensaje          TEXT            NOT NULL,
-    leida            BOOLEAN         NOT NULL DEFAULT FALSE,
-    id_curso_fk      INT             NULL,
-    id_leccion_fk    INT             NULL,
-    id_comentario_fk INT             NULL,
-    created_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_notificacion),
-    CONSTRAINT fk_notif_usuario
-        FOREIGN KEY (id_usuario_fk)    REFERENCES tbl_usuario    (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_notif_curso
-        FOREIGN KEY (id_curso_fk)      REFERENCES tbl_curso      (id_curso)
-        ON UPDATE CASCADE ON DELETE SET NULL,
-    CONSTRAINT fk_notif_leccion
-        FOREIGN KEY (id_leccion_fk)    REFERENCES tbl_leccion    (id_leccion)
-        ON UPDATE CASCADE ON DELETE SET NULL,
-    CONSTRAINT fk_notif_comentario
-        FOREIGN KEY (id_comentario_fk) REFERENCES tbl_comentario (id_comentario)
-        ON UPDATE CASCADE ON DELETE SET NULL
+CREATE TABLE public.tbl_notificacion (
+  idnotificacion integer NOT NULL DEFAULT nextval('tbl_notificacion_idnotificacion_seq'::regclass),
+  idusuariofk integer NOT NULL,
+  tipo character varying NOT NULL,
+  idreferencia integer,
+  mensaje text NOT NULL,
+  leida boolean NOT NULL DEFAULT false,
+  idcursofk integer,
+  idleccionfk integer,
+  idcomentariofk integer,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_notificacion_pkey PRIMARY KEY (idnotificacion),
+  CONSTRAINT fk_notif_usuario FOREIGN KEY (idusuariofk) REFERENCES public.tbl_usuario(idusuario),
+  CONSTRAINT fk_notif_curso FOREIGN KEY (idcursofk) REFERENCES public.tbl_curso(idcurso),
+  CONSTRAINT fk_notif_leccion FOREIGN KEY (idleccionfk) REFERENCES public.tbl_leccion(idleccion),
+  CONSTRAINT fk_notif_comentario FOREIGN KEY (idcomentariofk) REFERENCES public.tbl_comentario(id_comentario)
 );
-
-CREATE OR REPLACE TRIGGER trg_notificacion_updated_at
-BEFORE UPDATE ON tbl_notificacion
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_guardado_leccion
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_guardado_leccion (
-    id_guardado_leccion SERIAL      NOT NULL,
-    id_usuario          INT         NOT NULL,
-    id_leccion          INT         NOT NULL,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_guardado_leccion),
-    CONSTRAINT uq_guardado_leccion UNIQUE (id_usuario, id_leccion),
-    CONSTRAINT fk_guardado_leccion_usuario
-        FOREIGN KEY (id_usuario) REFERENCES tbl_usuario (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_guardado_leccion_leccion
-        FOREIGN KEY (id_leccion) REFERENCES tbl_leccion (id_leccion)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_guardado_leccion (
+  idguardadoleccion integer NOT NULL DEFAULT nextval('tbl_guardado_leccion_idguardadoleccion_seq'::regclass),
+  idusuario integer NOT NULL,
+  idleccion integer NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_guardado_leccion_pkey PRIMARY KEY (idguardadoleccion),
+  CONSTRAINT fk_guardado_leccion_usuario FOREIGN KEY (idusuario) REFERENCES public.tbl_usuario(idusuario),
+  CONSTRAINT fk_guardado_leccion_leccion FOREIGN KEY (idleccion) REFERENCES public.tbl_leccion(idleccion)
 );
-
--- ============================================================
--- tbl_guardado_curso
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_guardado_curso (
-    id_guardado_curso SERIAL      NOT NULL,
-    id_usuario        INT         NOT NULL,
-    id_curso          INT         NOT NULL,
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_guardado_curso),
-    CONSTRAINT uq_guardado_curso UNIQUE (id_usuario, id_curso),
-    CONSTRAINT fk_guardado_curso_usuario
-        FOREIGN KEY (id_usuario) REFERENCES tbl_usuario (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_guardado_curso_curso
-        FOREIGN KEY (id_curso)   REFERENCES tbl_curso   (id_curso)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_guardado_curso (
+  idguardadocurso integer NOT NULL DEFAULT nextval('tbl_guardado_curso_idguardadocurso_seq'::regclass),
+  idusuario integer NOT NULL,
+  idcurso integer NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_guardado_curso_pkey PRIMARY KEY (idguardadocurso),
+  CONSTRAINT fk_guardado_curso_usuario FOREIGN KEY (idusuario) REFERENCES public.tbl_usuario(idusuario),
+  CONSTRAINT fk_guardado_curso_curso FOREIGN KEY (idcurso) REFERENCES public.tbl_curso(idcurso)
 );
-
--- ============================================================
--- tbl_ejercicio
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_ejercicio (
-    id_ejercicio SERIAL          NOT NULL,
-    id_capitulo  INT             NOT NULL,
-    tipo         tipo_ejercicio  NOT NULL,
-    titulo       VARCHAR(200)    NOT NULL,
-    descripcion  TEXT            NOT NULL,
-    created_at   TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_ejercicio),
-    CONSTRAINT fk_ejercicio_capitulo
-        FOREIGN KEY (id_capitulo) REFERENCES tbl_capitulo (id_capitulo)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_ejercicio (
+  idejercicio integer NOT NULL DEFAULT nextval('tbl_ejercicio_idejercicio_seq'::regclass),
+  idcapitulo integer NOT NULL,
+  tipo USER-DEFINED NOT NULL,
+  titulo character varying NOT NULL,
+  descripcion text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_ejercicio_pkey PRIMARY KEY (idejercicio),
+  CONSTRAINT fk_ejercicio_capitulo FOREIGN KEY (idcapitulo) REFERENCES public.tbl_capitulo(idcapitulo)
 );
-
-CREATE OR REPLACE TRIGGER trg_ejercicio_updated_at
-BEFORE UPDATE ON tbl_ejercicio
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_pregunta
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_pregunta (
-    id_pregunta    SERIAL      NOT NULL,
-    id_ejercicio_fk INT        NOT NULL,
-    contenido      TEXT        NOT NULL,
-    explicacion    TEXT        NULL,
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_pregunta),
-    CONSTRAINT fk_pregunta_ejercicio
-        FOREIGN KEY (id_ejercicio_fk) REFERENCES tbl_ejercicio (id_ejercicio)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_pregunta (
+  idpregunta integer NOT NULL DEFAULT nextval('tbl_pregunta_idpregunta_seq'::regclass),
+  idejerciciofk integer NOT NULL,
+  contenido text NOT NULL,
+  explicacion text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_pregunta_pkey PRIMARY KEY (idpregunta),
+  CONSTRAINT fk_pregunta_ejercicio FOREIGN KEY (idejerciciofk) REFERENCES public.tbl_ejercicio(idejercicio)
 );
-
-CREATE OR REPLACE TRIGGER trg_pregunta_updated_at
-BEFORE UPDATE ON tbl_pregunta
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_opcion
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_opcion (
-    id_opcion     SERIAL      NOT NULL,
-    id_pregunta_fk INT        NOT NULL,
-    contenido     TEXT        NOT NULL,
-    correcta      BOOLEAN     NOT NULL DEFAULT FALSE,
-    PRIMARY KEY (id_opcion),
-    CONSTRAINT fk_opcion_pregunta
-        FOREIGN KEY (id_pregunta_fk) REFERENCES tbl_pregunta (id_pregunta)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_opcion (
+  idopcion integer NOT NULL DEFAULT nextval('tbl_opcion_idopcion_seq'::regclass),
+  idpreguntafk integer NOT NULL,
+  contenido text NOT NULL,
+  correcta boolean NOT NULL DEFAULT false,
+  CONSTRAINT tbl_opcion_pkey PRIMARY KEY (idopcion),
+  CONSTRAINT fk_opcion_pregunta FOREIGN KEY (idpreguntafk) REFERENCES public.tbl_pregunta(idpregunta)
 );
-
--- ============================================================
--- tbl_respuesta_usuario
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_respuesta_usuario (
-    id_respuesta INT         NOT NULL GENERATED ALWAYS AS IDENTITY,
-    id_usuario   INT         NOT NULL,
-    id_pregunta  INT         NOT NULL,
-    id_opcion    INT         NULL,
-    correcta     BOOLEAN     NOT NULL DEFAULT FALSE,
-    fecha        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_respuesta),
-    CONSTRAINT fk_resp_usuario
-        FOREIGN KEY (id_usuario)  REFERENCES tbl_usuario  (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_resp_pregunta
-        FOREIGN KEY (id_pregunta) REFERENCES tbl_pregunta (id_pregunta)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_resp_opcion
-        FOREIGN KEY (id_opcion)   REFERENCES tbl_opcion   (id_opcion)
-        ON UPDATE CASCADE ON DELETE SET NULL
+CREATE TABLE public.tbl_respuesta_usuario (
+  id_respuesta integer NOT NULL DEFAULT nextval('tbl_respuesta_usuario_id_respuesta_seq'::regclass),
+  id_usuario integer NOT NULL,
+  id_pregunta integer NOT NULL,
+  id_opcion integer,
+  correcta boolean NOT NULL DEFAULT false,
+  fecha timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_respuesta_usuario_pkey PRIMARY KEY (id_respuesta),
+  CONSTRAINT fk_resp_usuario FOREIGN KEY (id_usuario) REFERENCES public.tbl_usuario(idusuario),
+  CONSTRAINT fk_resp_pregunta FOREIGN KEY (id_pregunta) REFERENCES public.tbl_pregunta(idpregunta),
+  CONSTRAINT fk_resp_opcion FOREIGN KEY (id_opcion) REFERENCES public.tbl_opcion(idopcion)
 );
-
--- ============================================================
--- tbl_reporte
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_reporte (
-    id_reporte   SERIAL      NOT NULL,
-    id_usuario_fk INT        NOT NULL,
-    entidad_tipo VARCHAR(60) NOT NULL,   -- Nombre de la tabla reportada
-    entidad_id   INT         NOT NULL,
-    motivo       TEXT        NULL,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_reporte),
-    CONSTRAINT fk_reporte_usuario
-        FOREIGN KEY (id_usuario_fk) REFERENCES tbl_usuario (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_reporte (
+  idreporte integer NOT NULL DEFAULT nextval('tbl_reporte_idreporte_seq'::regclass),
+  idusuariofk integer NOT NULL,
+  entidad_tipo character varying NOT NULL,
+  entidad_id integer NOT NULL,
+  motivo text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_reporte_pkey PRIMARY KEY (idreporte),
+  CONSTRAINT fk_reporte_usuario FOREIGN KEY (idusuariofk) REFERENCES public.tbl_usuario(idusuario)
 );
-
-CREATE OR REPLACE TRIGGER trg_reporte_updated_at
-BEFORE UPDATE ON tbl_reporte
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_configuracion
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_configuracion (
-    id_config             SERIAL      NOT NULL,
-    id_usuario            INT         NOT NULL,
-    tema                  BOOLEAN     NOT NULL DEFAULT FALSE,    -- FALSE = claro | TRUE = oscuro
-    idioma                tipo_idioma NOT NULL DEFAULT 'es',
-    notificaciones_push   BOOLEAN     NOT NULL DEFAULT TRUE,
-    notificaciones_email  BOOLEAN     NOT NULL DEFAULT TRUE,
-    notificaciones_racha  BOOLEAN     NOT NULL DEFAULT TRUE,     -- Recordatorio de racha diaria
-    tamano_fuente         tipo_fuente NOT NULL DEFAULT 'normal',
-    reproduccion_auto     BOOLEAN     NOT NULL DEFAULT TRUE,     -- Autoplay de videos
-    perfil_publico        BOOLEAN     NOT NULL DEFAULT TRUE,     -- TRUE = visible para otros usuarios
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_config),
-    CONSTRAINT uq_config_usuario UNIQUE (id_usuario),
-    CONSTRAINT fk_config_usuario
-        FOREIGN KEY (id_usuario) REFERENCES tbl_usuario (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_configuracion (
+  idconfig integer NOT NULL DEFAULT nextval('tbl_configuracion_idconfig_seq'::regclass),
+  idusuario integer NOT NULL UNIQUE,
+  tema boolean NOT NULL DEFAULT false,
+  idioma USER-DEFINED NOT NULL DEFAULT 'es'::tipo_idioma,
+  notificaciones_push boolean NOT NULL DEFAULT true,
+  notificaciones_email boolean NOT NULL DEFAULT true,
+  notificaciones_racha boolean NOT NULL DEFAULT true,
+  tamano_fuente USER-DEFINED NOT NULL DEFAULT 'normal'::tipo_fuente,
+  reproduccion_auto boolean NOT NULL DEFAULT true,
+  perfil_publico boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_configuracion_pkey PRIMARY KEY (idconfig),
+  CONSTRAINT fk_config_usuario FOREIGN KEY (idusuario) REFERENCES public.tbl_usuario(idusuario)
 );
-
-CREATE OR REPLACE TRIGGER trg_configuracion_updated_at
-BEFORE UPDATE ON tbl_configuracion
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_racha
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_racha (
-    id_racha            SERIAL      NOT NULL,
-    id_usuario          INT         NOT NULL,
-    current_streak      INT         NOT NULL DEFAULT 0,
-    max_streak          INT         NOT NULL DEFAULT 0,
-    last_activity_date  DATE        NULL,
-    active              BOOLEAN     NOT NULL DEFAULT TRUE,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_racha),
-    CONSTRAINT uq_racha_usuario UNIQUE (id_usuario),
-    CONSTRAINT fk_racha_usuario
-        FOREIGN KEY (id_usuario) REFERENCES tbl_usuario (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_racha (
+  id_racha integer NOT NULL DEFAULT nextval('tbl_racha_id_racha_seq'::regclass),
+  id_usuario integer NOT NULL UNIQUE,
+  current_streak integer NOT NULL DEFAULT 0,
+  max_streak integer NOT NULL DEFAULT 0,
+  last_activity_date date,
+  active boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_racha_pkey PRIMARY KEY (id_racha),
+  CONSTRAINT fk_racha_usuario FOREIGN KEY (id_usuario) REFERENCES public.tbl_usuario(idusuario)
 );
-
--- ============================================================
--- tbl_evento_aprendizaje
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_evento_aprendizaje (
-    id_evento    SERIAL      NOT NULL,
-    id_usuario   INT         NOT NULL,
-    session_id   VARCHAR(100) NULL,
-    tipo_evento  tipo_evento NOT NULL,
-    entidad_tipo VARCHAR(60) NULL,
-    entidad_id   INT         NULL,
-    fecha_evento TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    duracion     INT         NULL,   -- Duración en segundos
-    extra_data   JSONB       NULL,
-    PRIMARY KEY (id_evento),
-    CONSTRAINT fk_evento_usuario
-        FOREIGN KEY (id_usuario) REFERENCES tbl_usuario (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_evento_aprendizaje (
+  id_evento integer NOT NULL DEFAULT nextval('tbl_evento_aprendizaje_id_evento_seq'::regclass),
+  id_usuario integer NOT NULL,
+  session_id character varying,
+  tipo_evento USER-DEFINED NOT NULL,
+  entidad_tipo character varying,
+  entidad_id integer,
+  fecha_evento timestamp with time zone NOT NULL DEFAULT now(),
+  duracion integer,
+  extra_data jsonb,
+  CONSTRAINT tbl_evento_aprendizaje_pkey PRIMARY KEY (id_evento),
+  CONSTRAINT fk_evento_usuario FOREIGN KEY (id_usuario) REFERENCES public.tbl_usuario(idusuario)
 );
-
--- ============================================================
--- tbl_progreso_usuario
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_progreso_usuario (
-    id_progreso         SERIAL          NOT NULL,
-    id_usuario_fk       INT             NOT NULL,
-    id_capitulo_fk      INT             NOT NULL,
-    estado              tipo_progreso   NOT NULL DEFAULT 'no_iniciada',
-    porcentaje_capitulo NUMERIC(5,2)    NOT NULL DEFAULT 0.00,
-    created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_progreso),
-    CONSTRAINT uq_progreso UNIQUE (id_usuario_fk, id_capitulo_fk),
-    CONSTRAINT fk_progreso_usuario
-        FOREIGN KEY (id_usuario_fk)  REFERENCES tbl_usuario  (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_progreso_capitulo
-        FOREIGN KEY (id_capitulo_fk) REFERENCES tbl_capitulo (id_capitulo)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_progreso_usuario (
+  id_progreso integer NOT NULL DEFAULT nextval('tbl_progreso_usuario_id_progreso_seq'::regclass),
+  id_usuariofk integer NOT NULL,
+  id_capitulofk integer NOT NULL,
+  estado USER-DEFINED NOT NULL DEFAULT 'no_iniciada'::tipo_progreso,
+  porcentaje_capitulo numeric NOT NULL DEFAULT 0.00,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_progreso_usuario_pkey PRIMARY KEY (id_progreso),
+  CONSTRAINT fk_progreso_usuario FOREIGN KEY (id_usuariofk) REFERENCES public.tbl_usuario(idusuario),
+  CONSTRAINT fk_progreso_capitulo FOREIGN KEY (id_capitulofk) REFERENCES public.tbl_capitulo(idcapitulo)
 );
-
-CREATE OR REPLACE TRIGGER trg_progreso_usuario_updated_at
-BEFORE UPDATE ON tbl_progreso_usuario
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_calificacion_leccion  (M:N usuario <-> leccion)
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_calificacion_leccion (
-    id_calificacion SERIAL      NOT NULL,
-    id_usuario_fk   INT         NOT NULL,
-    id_leccion_fk   INT         NOT NULL,
-    valor           SMALLINT    NOT NULL,   -- Valor del 1 al 5
-    comentario      TEXT        NULL,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_calificacion),
-    CONSTRAINT uq_calif_leccion UNIQUE (id_usuario_fk, id_leccion_fk),
-    CONSTRAINT fk_calif_lec_usuario
-        FOREIGN KEY (id_usuario_fk) REFERENCES tbl_usuario (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_calif_lec_leccion
-        FOREIGN KEY (id_leccion_fk) REFERENCES tbl_leccion (id_leccion)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_calificacion_leccion (
+  idcalificacion integer NOT NULL DEFAULT nextval('tbl_calificacion_leccion_idcalificacion_seq'::regclass),
+  idusuariofk integer NOT NULL,
+  idleccionfk integer NOT NULL,
+  valor smallint NOT NULL,
+  comentario text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_calificacion_leccion_pkey PRIMARY KEY (idcalificacion),
+  CONSTRAINT fk_calif_lec_usuario FOREIGN KEY (idusuariofk) REFERENCES public.tbl_usuario(idusuario),
+  CONSTRAINT fk_calif_lec_leccion FOREIGN KEY (idleccionfk) REFERENCES public.tbl_leccion(idleccion)
 );
-
-CREATE OR REPLACE TRIGGER trg_calificacion_leccion_updated_at
-BEFORE UPDATE ON tbl_calificacion_leccion
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
-
--- ============================================================
--- tbl_calificacion_curso  (M:N usuario <-> curso)
--- ============================================================
-CREATE TABLE IF NOT EXISTS tbl_calificacion_curso (
-    id_calificacion SERIAL      NOT NULL,
-    id_usuario_fk   INT         NOT NULL,
-    id_curso_fk     INT         NOT NULL,
-    valor           SMALLINT    NOT NULL,   -- Valor del 1 al 5
-    comentario      TEXT        NULL,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id_calificacion),
-    CONSTRAINT uq_calif_curso UNIQUE (id_usuario_fk, id_curso_fk),
-    CONSTRAINT fk_calif_cur_usuario
-        FOREIGN KEY (id_usuario_fk) REFERENCES tbl_usuario (id_usuario)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_calif_cur_curso
-        FOREIGN KEY (id_curso_fk)   REFERENCES tbl_curso   (id_curso)
-        ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE public.tbl_calificacion_curso (
+  idcalificacion integer NOT NULL DEFAULT nextval('tbl_calificacion_curso_idcalificacion_seq'::regclass),
+  idusuariofk integer NOT NULL,
+  idcursofk integer NOT NULL,
+  valor smallint NOT NULL,
+  comentario text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tbl_calificacion_curso_pkey PRIMARY KEY (idcalificacion),
+  CONSTRAINT fk_calif_cur_usuario FOREIGN KEY (idusuariofk) REFERENCES public.tbl_usuario(idusuario),
+  CONSTRAINT fk_calif_cur_curso FOREIGN KEY (idcursofk) REFERENCES public.tbl_curso(idcurso)
 );
-
-CREATE OR REPLACE TRIGGER trg_calificacion_curso_updated_at
-BEFORE UPDATE ON tbl_calificacion_curso
-FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();

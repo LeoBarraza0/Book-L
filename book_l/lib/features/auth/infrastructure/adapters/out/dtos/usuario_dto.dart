@@ -71,8 +71,8 @@ class UsuarioDto {
   }
 
   factory UsuarioDto.fromJson(Map<String, dynamic> json) => UsuarioDto(
-        idUsuario: json['id_usuario'] as int,
-        nombreCompleto: json['nombre_completo'] as String,
+        idUsuario: (json['idusuario'] ?? json['id_usuario']) as int,
+        nombreCompleto: (json['nombrecompleto'] ?? json['nombre_completo']) as String,
         correo: json['correo'] as String,
         contrasena: json['contrasena'] as String,
         rol: json['rol'] as String,
@@ -94,8 +94,8 @@ class UsuarioDto {
       );
 
   Map<String, dynamic> toJson() => {
-        'id_usuario': idUsuario,
-        'nombre_completo': nombreCompleto,
+        'idusuario': idUsuario,
+        'nombrecompleto': nombreCompleto,
         'correo': correo,
         'contrasena': contrasena,
         'rol': rol,

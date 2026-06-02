@@ -27,8 +27,8 @@ class ConfiguracionDto {
 
   factory ConfiguracionDto.fromJson(Map<String, dynamic> json) {
     return ConfiguracionDto(
-      idConfig: json['id_config'] as int? ?? 0,
-      idUsuario: json['id_usuario'] as int? ?? 0,
+      idConfig: (json['idconfig'] ?? json['id_config']) as int? ?? 0,
+      idUsuario: (json['idusuario'] ?? json['id_usuario']) as int? ?? 0,
       tema: json['tema'] as int? ?? 0,
       idioma: json['idioma'] as String? ?? 'es',
       notificacionesPush: json['notificaciones_push'] as int? ?? 1,
@@ -42,8 +42,8 @@ class ConfiguracionDto {
 
   Map<String, dynamic> toJson() {
     return {
-      'id_config': idConfig,
-      'id_usuario': idUsuario,
+      'idconfig': idConfig,
+      'idusuario': idUsuario,
       'tema': tema,
       'idioma': idioma,
       'notificaciones_push': notificacionesPush,

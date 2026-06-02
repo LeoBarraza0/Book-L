@@ -21,10 +21,10 @@ class NotificacionDto {
 
   factory NotificacionDto.fromJson(Map<String, dynamic> json) {
     return NotificacionDto(
-      id: json['id'] as int,
-      idUsuarioFk: json['id_usuario_fk'] as int,
+      id: (json['idnotificacion'] ?? json['id']) as int,
+      idUsuarioFk: (json['idusuariofk'] ?? json['id_usuario_fk']) as int,
       tipo: json['tipo'] as String,
-      idReferencia: json['id_referencia'] as int,
+      idReferencia: (json['idreferencia'] ?? json['id_referencia']) as int,
       mensaje: json['mensaje'] as String,
       leida: json['leida'] as bool,
       createdAt: json['created_at'] as String,
@@ -45,10 +45,10 @@ class NotificacionDto {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'id_usuario_fk': idUsuarioFk,
+      'idnotificacion': id,
+      'idusuariofk': idUsuarioFk,
       'tipo': tipo,
-      'id_referencia': idReferencia,
+      'idreferencia': idReferencia,
       'mensaje': mensaje,
       'leida': leida,
       'created_at': createdAt,

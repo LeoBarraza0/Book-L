@@ -19,8 +19,8 @@ class ReporteDto {
 
   factory ReporteDto.fromJson(Map<String, dynamic> json) {
     return ReporteDto(
-      idReporte: json['id_reporte'] as int,
-      idUsuarioFk: json['id_usuario_fk'] as int,
+      idReporte: (json['idreporte'] ?? json['id_reporte']) as int,
+      idUsuarioFk: (json['idusuariofk'] ?? json['id_usuario_fk']) as int,
       entidadTipo: json['entidad_tipo'] as String,
       entidadId: json['entidad_id'] as int,
       motivo: json['motivo'] as String,

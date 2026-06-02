@@ -3,10 +3,10 @@ import 'package:book_l/features/calificacion/domain/models/calificacion.dart';
 class CalificacionDto {
   static Calificacion fromJson(Map<String, dynamic> json) {
     return Calificacion(
-      idCalificacion: json['id_calificacion'] as int,
-      idObjetoFk: json['id_objeto_fk'] as int,
-      tipoObjeto: json['tipo_objeto'] as String,
-      idUsuarioFk: json['id_usuario_fk'] as int,
+      idCalificacion: (json['idcalificacion'] ?? json['id_calificacion']) as int,
+      idObjetoFk: (json['id_objeto_fk'] ?? json['idobjetofk'] ?? 0) as int,
+      tipoObjeto: (json['tipo_objeto'] ?? 'leccion') as String,
+      idUsuarioFk: (json['idusuariofk'] ?? json['id_usuario_fk']) as int,
       valor: json['valor'] as int,
     );
   }

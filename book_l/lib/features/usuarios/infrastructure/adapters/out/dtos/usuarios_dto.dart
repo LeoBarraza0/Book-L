@@ -9,8 +9,8 @@ import 'package:book_l/features/usuarios/domain/models/usuarios.dart';
 class UsuarioDto {
   static Usuario fromJson(Map<String, dynamic> json) {
     return Usuario(
-      idUsuario: json['id_usuario'] as int,
-      nombreCompleto: json['nombre_completo'] as String,
+      idUsuario: (json['idusuario'] ?? json['id_usuario']) as int,
+      nombreCompleto: (json['nombrecompleto'] ?? json['nombre_completo']) as String,
       correo: json['correo'] as String,
       password: (json['contrasena'] ?? '') as String,
       username: (json['username'] ?? '') as String,
@@ -33,8 +33,8 @@ class UsuarioDto {
 
   static Map<String, dynamic> toJson(Usuario u) {
     return {
-      'id_usuario': u.idUsuario,
-      'nombre_completo': u.nombreCompleto,
+      'idusuario': u.idUsuario,
+      'nombrecompleto': u.nombreCompleto,
       'correo': u.correo,
       'contrasena': u.password,
       'username': u.username,
