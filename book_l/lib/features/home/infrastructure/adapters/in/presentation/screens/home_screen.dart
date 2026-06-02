@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 import 'package:book_l/shared/widgets/content_cards.dart';
 import '../controller/home_controller.dart';
@@ -27,8 +28,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final homeController = context.watch<HomeController>();
     return Scaffold(
-      backgroundColor: const Color(0xFFECEBEB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // ── Contenido Principal (Scroll) ─────────────────────────────
@@ -49,19 +52,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                         '¡Bienvenido, ${AppSession().nombreCompleto?.split(' ').first ?? 'Usuario'}!',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
                       ),
                       const SizedBox(height: 6),
-                      const Text(
+                      Text(
                         'Tenemos algunos materiales que podría ser de tu agrado:',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF555555),
+                          color: isDark ? Colors.white70 : const Color(0xFF555555),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -71,11 +74,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 24),
 
                       // Lecciones y Cursos desde el servicio JSON (Mixto)
-                      ListenableBuilder(
-                        listenable: HomeController(),
-                        builder: (context, _) {
-                          final mixedList =
-                              HomeController().getForYouPageItems();
+                      Builder(
+                        builder: (context) {
+                          final mixedList = homeController.getForYouPageItems();
 
                           if (mixedList.isEmpty) {
                             return const SizedBox();
@@ -123,9 +124,9 @@ class _HomeScreenState extends State<HomeScreen> {
         20,
         20,
       ), // Padding para el SafeArea
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(25),
           bottomRight: Radius.circular(25),
         ),

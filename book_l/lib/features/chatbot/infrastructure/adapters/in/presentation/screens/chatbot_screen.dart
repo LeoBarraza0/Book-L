@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
-import 'package:book_l/features/chatbot/infrastructure/adapters/out/repositories/chatbot_repository_impl.dart';
-import 'package:book_l/features/chatbot/application/usecases/get_respuesta_chatbot_usecase.dart';
 import '../controller/chatbot_controller.dart';
 import '../controller/chatbot_state.dart';
 import '../widgets/chat_message_bubble.dart';
@@ -21,34 +20,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  // Instanciación siguiendo Clean Architecture:
-  // Screen → Controller → UseCase → Repository (impl)
-  late final ChatbotController _chatbotController;
+  late ChatbotController _chatbotController;
 
   @override
   void initState() {
     super.initState();
-
-    // Inyección de dependencias manual (sin DI container por ahora)
-    final repository = ChatbotRepositoryImpl();
-    final useCase = GetRespuestaChatbotUseCase(repository);
-    _chatbotController = ChatbotController(getRespuesta: useCase);
-
-    // Escuchar cambios del controller para redibujar
-    _chatbotController.addListener(_onStateChanged);
-  }
-
-  void _onStateChanged() {
-    if (mounted) {
-      setState(() {});
-      _scrollToBottom();
-    }
   }
 
   @override
   void dispose() {
-    _chatbotController.removeListener(_onStateChanged);
-    _chatbotController.dispose();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -97,8 +77,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _chatbotController = context.watch<ChatbotController>();
+    _scrollToBottom();
     return Scaffold(
-      backgroundColor: const Color(0xFFECEBEB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           Column(
@@ -240,10 +222,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Header Blanco Superior
-  // ─────────────────────────────────────────────────────────────────────────
   Widget _buildHeader(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 10,
@@ -251,9 +231,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         left: 20,
         right: 20,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(25),
           bottomRight: Radius.circular(25),
         ),
@@ -290,29 +270,29 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
+                  children: [
                     Text(
                       'Booki',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
-                    SizedBox(width: 6),
-                    Icon(
+                    const SizedBox(width: 6),
+                    const Icon(
                       Icons.verified,
                       color: Color(0xFF4DC130),
                       size: 20,
                     ),
                   ],
                 ),
-                const Text(
+                Text(
                   'Chatbot asistente',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF757575),
+                    color: isDark ? Colors.white60 : const Color(0xFF757575),
                   ),
                 ),
               ],
@@ -330,11 +310,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   // Input de Mensaje de Chat (Grande)
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildChatInput() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       height: 120,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
@@ -352,9 +333,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             keyboardType: TextInputType.multiline,
             textInputAction: TextInputAction.send,
             onSubmitted: (_) => _sendMessage(),
-            decoration: const InputDecoration(
+            style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+            decoration: InputDecoration(
               hintText: 'What would you like to know?',
-              hintStyle: TextStyle(color: Colors.black38, fontSize: 15),
+              hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 15),
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),

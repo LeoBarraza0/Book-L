@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:book_l/shared/widgets/book_l_header.dart';
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
 import 'package:book_l/shared/widgets/custom_button.dart';
@@ -17,7 +18,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _ctrl = AuthController();
+  late AuthController _ctrl;
   bool _obscurePassword = true;
 
   @override
@@ -60,6 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _ctrl = context.watch<AuthController>();
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -131,12 +133,9 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 35),
 
           // ── Botón Ingresar con estado de carga ─────────────────────────
-          ListenableBuilder(
-            listenable: _ctrl,
-            builder: (context, _) => CustomButton(
-              label: _ctrl.isLoading ? 'Ingresando...' : 'Ingresar',
-              onPressed: _ctrl.isLoading ? null : _onLogin,
-            ),
+          CustomButton(
+            label: _ctrl.isLoading ? 'Ingresando...' : 'Ingresar',
+            onPressed: _ctrl.isLoading ? null : _onLogin,
           ),
           const SizedBox(height: 25),
 

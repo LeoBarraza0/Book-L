@@ -1,5 +1,4 @@
 import 'dart:convert'; // Para jsonEncode al reconstruir las preferencias
-import 'dart:io'; // Necesario para usar File (imagen local del dispositivo)
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart'; // Plugin para cámara y galería

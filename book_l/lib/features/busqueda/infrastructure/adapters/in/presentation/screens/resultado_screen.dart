@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
 import 'package:book_l/core/infrastructure/storage/local_storage.dart';
@@ -18,24 +19,18 @@ class ResultadoScreen extends StatefulWidget {
 
 class _ResultadoScreenState extends State<ResultadoScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final BusquedaController _ctrl = BusquedaController();
+  late BusquedaController _ctrl;
 
   static const _bgColor = Color(0xFFF5F5F5);
 
   @override
   void initState() {
     super.initState();
-    _searchController.text = _ctrl.currentQuery;
-    _ctrl.addListener(_rebuild);
-  }
-
-  void _rebuild() {
-    if (mounted) setState(() {});
+    _searchController.text = context.read<BusquedaController>().currentQuery;
   }
 
   @override
   void dispose() {
-    _ctrl.removeListener(_rebuild);
     _searchController.dispose();
     super.dispose();
   }
@@ -72,6 +67,7 @@ class _ResultadoScreenState extends State<ResultadoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _ctrl = context.watch<BusquedaController>();
     return Scaffold(
       backgroundColor: _bgColor,
       body: SafeArea(

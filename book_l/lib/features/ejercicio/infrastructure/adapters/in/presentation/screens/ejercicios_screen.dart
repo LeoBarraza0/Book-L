@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:book_l/features/ejercicio/domain/models/ejercicio.dart';
 import '../controller/ejercicios_controller.dart';
 import 'banco_ejercicios_screen.dart';
@@ -16,7 +17,6 @@ class EjerciciosScreen extends StatefulWidget {
 
 class _EjerciciosScreenState extends State<EjerciciosScreen>
     with SingleTickerProviderStateMixin {
-  final EjerciciosController _ctrl = EjerciciosController();
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
@@ -75,60 +75,56 @@ class _EjerciciosScreenState extends State<EjerciciosScreen>
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: _ctrl,
-      builder: (context, _) {
-        final categorias = <String>[];
-        if (_ctrl.tieneCategoria(widget.idLeccion, 'Teórico'))
-          categorias.add('Teórico');
-        if (_ctrl.tieneCategoria(widget.idLeccion, 'Práctico'))
-          categorias.add('Práctico');
+    final ctrl = context.watch<EjerciciosController>();
+    final categorias = <String>[];
+    if (ctrl.tieneCategoria(widget.idLeccion, 'Teórico'))
+      categorias.add('Teórico');
+    if (ctrl.tieneCategoria(widget.idLeccion, 'Práctico'))
+      categorias.add('Práctico');
 
-        if (categorias.isEmpty) {
-          return FadeTransition(
-            opacity: _fadeAnim,
-            child: _buildEmptyState(),
-          );
-        }
+    if (categorias.isEmpty) {
+      return FadeTransition(
+        opacity: _fadeAnim,
+        child: _buildEmptyState(),
+      );
+    }
 
-        return FadeTransition(
-          opacity: _fadeAnim,
-          child: SlideTransition(
-            position: _slideAnim,
-            child: Column(
-              children: List.generate(categorias.length, (i) {
-                final cat = categorias[i];
-                final count = _ctrl.getCountByCategoria(widget.idLeccion, cat);
-                final visual = cat == 'Teórico'
-                    ? _tipoConfig[TipoEjercicio.multipleChoice]!
-                    : _tipoConfig[TipoEjercicio.ordenar]!;
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: SlideTransition(
+        position: _slideAnim,
+        child: Column(
+          children: List.generate(categorias.length, (i) {
+            final cat = categorias[i];
+            final count = ctrl.getCountByCategoria(widget.idLeccion, cat);
+            final visual = cat == 'Teórico'
+                ? _tipoConfig[TipoEjercicio.multipleChoice]!
+                : _tipoConfig[TipoEjercicio.ordenar]!;
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: _EjercicioTipoCard(
-                    titulo: 'Ejercicios ${cat}s',
-                    visual: visual,
-                    count: count,
-                    delay: i * 120,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BancoEjerciciosScreen(
-                            idLeccion: widget.idLeccion,
-                            title: 'Ejercicios ${cat}s',
-                            categoriaFiltro: cat,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              }),
-            ),
-          ),
-        );
-      },
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _EjercicioTipoCard(
+                titulo: 'Ejercicios ${cat}s',
+                visual: visual,
+                count: count,
+                delay: i * 120,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BancoEjerciciosScreen(
+                        idLeccion: widget.idLeccion,
+                        title: 'Ejercicios ${cat}s',
+                        categoriaFiltro: cat,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          }),
+        ),
+      ),
     );
   }
 

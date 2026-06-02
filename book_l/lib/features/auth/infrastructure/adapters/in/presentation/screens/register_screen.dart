@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
 import 'package:book_l/shared/widgets/custom_button.dart';
@@ -21,7 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _celularController = TextEditingController();
   final _preferenciasController = TextEditingController();
-  final _ctrl = AuthController();
+  late AuthController _ctrl;
 
   bool _obscurePassword = true;
 
@@ -104,6 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _ctrl = context.watch<AuthController>();
     return Scaffold(
       backgroundColor: const Color(0xFFECEBEB),
       body: SafeArea(
@@ -217,13 +219,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 30),
 
                     // Botón Registrarse
-                    ListenableBuilder(
-                      listenable: _ctrl,
-                      builder: (context, _) => CustomButton(
-                        label:
-                            _ctrl.isLoading ? 'Registrando...' : 'Registrarse',
-                        onPressed: _ctrl.isLoading ? null : _onRegister,
-                      ),
+                    CustomButton(
+                      label:
+                          _ctrl.isLoading ? 'Registrando...' : 'Registrarse',
+                      onPressed: _ctrl.isLoading ? null : _onRegister,
                     ),
                     const SizedBox(height: 20),
 

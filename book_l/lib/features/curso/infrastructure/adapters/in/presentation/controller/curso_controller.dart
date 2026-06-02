@@ -161,6 +161,6 @@ class CursoController extends ChangeNotifier {
 
   @override
   void dispose() {
-    // Es un Singleton, no debe destruirse nunca para evitar errores de 'used after being disposed'.
+    super.dispose();
   }
 }

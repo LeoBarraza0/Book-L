@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:book_l/features/perfil/infrastructure/adapters/in/presentation/screens/perfil_screen.dart';
 import '../controller/configuracion_controller.dart';
@@ -14,27 +15,11 @@ class ConfiguracionScreen extends StatefulWidget {
 }
 
 class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
-  final ConfiguracionController _controller = ConfiguracionController();
-
-  @override
-  void initState() {
-    super.initState();
-    _controller.addListener(_onStateChanged);
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_onStateChanged);
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onStateChanged() {
-    setState(() {});
-  }
+  late ConfiguracionController _controller;
 
   @override
   Widget build(BuildContext context) {
+    _controller = context.watch<ConfiguracionController>();
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(

@@ -1,32 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/filters_widget.dart';
 import 'package:book_l/features/usuarios/domain/models/usuarios.dart';
-import 'package:book_l/features/usuarios/application/ports/out/usuarios_repository.dart';
-import 'package:book_l/features/usuarios/application/usecases/get_usuarios_usecase.dart';
-import 'package:book_l/features/usuarios/infrastructure/adapters/out/repositories/usuarios_repository_impl.dart';
 import '../controller/usuarios_controller.dart';
 import '../controller/usuarios_state.dart';
 import 'edit_usuario_screen.dart';
 import 'add_usuario_screen.dart';
 import 'package:book_l/features/notificacion/infrastructure/adapters/in/presentation/widgets/notification_icon_button.dart';
 import 'package:book_l/shared/widgets/custom_avatar.dart';
-
-/// Crea y provee el [UsuariosController] con todas sus dependencias.
-///
-/// Este "mini-injector" manual es suficiente para la fase JSON local.
-/// Cuando se integre un DI real (get_it, riverpod, etc.) se elimina
-/// este factory y el controller se inyecta desde fuera.
-UsuariosController _buildController() {
-  final UsuariosRepository repo = UsuariosRepositoryImpl();
-  return UsuariosController(
-    getUsuarios: GetUsuariosUseCase(repo),
-    addUsuario: AddUsuarioUseCase(repo),
-    updateUsuario: UpdateUsuarioUseCase(repo),
-    deleteUsuario: DeleteUsuarioUseCase(repo),
-  );
-}
 
 class UsuariosScreen extends StatefulWidget {
   const UsuariosScreen({super.key});
@@ -36,7 +19,6 @@ class UsuariosScreen extends StatefulWidget {
 }
 
 class _UsuariosScreenState extends State<UsuariosScreen> {
-  late final UsuariosController _controller;
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
 
@@ -46,14 +28,15 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = _buildController();
-    _controller.cargarUsuarios();
+    // Carga inicial de usuarios (se hace una sola vez al montar la pantalla)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<UsuariosController>().cargarUsuarios();
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _controller.dispose();
     super.dispose();
   }
 
@@ -77,128 +60,124 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final controller = context.watch<UsuariosController>();
+    final state = controller.state;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFF9E1), // Crema claro
-      body: ListenableBuilder(
-        listenable: _controller,
-        builder: (context, _) {
-          final state = _controller.state;
-          return Stack(
+      body: Stack(
+        children: [
+          // ── COLUMNA PRINCIPAL ──────────────────────────────────────────
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── COLUMNA PRINCIPAL ──────────────────────────────────────────
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ── HEADER: Imagen PNG de fondo con overlay de contenido ──
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
-                    ),
-                    child: SizedBox(
-                      height: 200,
-                      child: Stack(
-                        children: [
-                          // Fondo PNG
-                          Positioned.fill(
-                            child: Image.asset(
-                              'assets/images/yellow_bg.png',
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          // Botón atrás (esquina superior izquierda)
-                          Positioned(
-                            top: topPadding + 8,
-                            left: 20,
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.pushReplacementNamed(
-                                  context,
-                                  '/admin_Home',
-                                );
-                              },
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.3),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_back,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Icono campana (esquina superior derecha)
-                          Positioned(
-                            top: topPadding + 8,
-                            right: 20,
-                            child: const NotificationIconButton(
-                                isWhiteCircle: true),
-                          ),
-                          // Título "Usuarios"
-                          const Positioned(
-                            left: 0,
-                            right: 0,
-                            top: 80,
-                            child: Center(
-                              child: Text(
-                                'Usuarios',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 40,
-                                  fontFamily: 'Baloo',
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+              // ── HEADER: Imagen PNG de fondo con overlay de contenido ──
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+                child: SizedBox(
+                  height: 200,
+                  child: Stack(
+                    children: [
+                      // Fondo PNG
+                      Positioned.fill(
+                        child: Image.asset(
+                          'assets/images/yellow_bg.png',
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                    ),
-                  ),
-
-                  // ── ZONA GRIS con búsqueda, filtros y listado ──────────────
-                  Expanded(
-                    child: Column(
-                      children: [
-                        CustomSearchBar(
-                          controller: _searchController,
-                          onSearch: () {
-                            setState(() => _query = _searchController.text);
+                      // Botón atrás (esquina superior izquierda)
+                      Positioned(
+                        top: topPadding + 8,
+                        left: 20,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/admin_Home',
+                            );
                           },
-                          onClear: () {
-                            setState(() => _query = '');
-                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
                         ),
-                        FilterChipsRow(
-                          filters: _filtros,
-                          selectedIndex: _filtroSeleccionado,
-                          onFilterSelected: (index) {
-                            setState(() => _filtroSeleccionado = index);
-                          },
+                      ),
+                      // Icono campana (esquina superior derecha)
+                      Positioned(
+                        top: topPadding + 8,
+                        right: 20,
+                        child: const NotificationIconButton(
+                            isWhiteCircle: true),
+                      ),
+                      // Título "Usuarios"
+                      const Positioned(
+                        left: 0,
+                        right: 0,
+                        top: 80,
+                        child: Center(
+                          child: Text(
+                            'Usuarios',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 40,
+                              fontFamily: 'Baloo',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
                         ),
-                        Expanded(child: _buildBody(state)),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
 
-              // ── BOTTOM NAV BAR ─────────────────────────────────────────────
-              const Positioned(
-                left: 20,
-                right: 20,
-                bottom: 24,
-                child: SharedBottomNavBar(selectedIndex: -1),
+              // ── ZONA GRIS con búsqueda, filtros y listado ──────────────
+              Expanded(
+                child: Column(
+                  children: [
+                    CustomSearchBar(
+                      controller: _searchController,
+                      onSearch: () {
+                        setState(() => _query = _searchController.text);
+                      },
+                      onClear: () {
+                        setState(() => _query = '');
+                      },
+                    ),
+                    FilterChipsRow(
+                      filters: _filtros,
+                      selectedIndex: _filtroSeleccionado,
+                      onFilterSelected: (index) {
+                        setState(() => _filtroSeleccionado = index);
+                      },
+                    ),
+                    Expanded(child: _buildBody(state, controller)),
+                  ],
+                ),
               ),
             ],
-          );
-        },
+          ),
+
+          // ── BOTTOM NAV BAR ─────────────────────────────────────────────
+          const Positioned(
+            left: 20,
+            right: 20,
+            bottom: 24,
+            child: SharedBottomNavBar(selectedIndex: -1),
+          ),
+        ],
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80.0),
@@ -210,8 +189,8 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                 builder: (context) => const AddUsuarioScreen(),
               ),
             );
-            if (newUser != null) {
-              await _controller.agregarUsuario(newUser);
+            if (newUser != null && context.mounted) {
+              await context.read<UsuariosController>().agregarUsuario(newUser);
             }
           },
           backgroundColor: const Color(0xFF44BD32),
@@ -225,7 +204,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
   }
 
   /// Construye el cuerpo según el estado actual del controller.
-  Widget _buildBody(UsuariosState state) {
+  Widget _buildBody(UsuariosState state, UsuariosController controller) {
     if (state is UsuariosLoading || state is UsuariosInitial) {
       return const Center(
         child: CircularProgressIndicator(color: Color(0xFF175e7a)),
@@ -263,14 +242,15 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
           bottom: 100,
         ),
         itemCount: filtrados.length,
-        itemBuilder: (context, index) => _buildUsuarioCard(filtrados[index]),
+        itemBuilder: (context, index) =>
+            _buildUsuarioCard(filtrados[index], controller),
       );
     }
 
     return const SizedBox.shrink();
   }
 
-  Widget _buildUsuarioCard(Usuario user) {
+  Widget _buildUsuarioCard(Usuario user, UsuariosController controller) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -403,8 +383,10 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                         builder: (context) => EditUsuarioScreen(usuario: user),
                       ),
                     );
-                    if (updatedUser != null) {
-                      await _controller.editarUsuario(updatedUser);
+                    if (updatedUser != null && mounted) {
+                      await context
+                          .read<UsuariosController>()
+                          .editarUsuario(updatedUser);
                     }
                   },
                   borderRadius: BorderRadius.circular(14),
@@ -494,7 +476,11 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                     TextButton(
                       onPressed: () async {
                         Navigator.pop(ctx);
-                        await _controller.eliminarUsuario(user.idUsuario);
+                        if (context.mounted) {
+                          await context
+                              .read<UsuariosController>()
+                              .eliminarUsuario(user.idUsuario);
+                        }
                       },
                       child: const Text('Aceptar',
                           style: TextStyle(

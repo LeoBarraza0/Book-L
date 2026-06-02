@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:book_l/shared/widgets/search_filter_bar.dart';
 import '../controller/ejercicios_controller.dart';
 import 'package:book_l/features/ejercicio/domain/models/ejercicio.dart';
@@ -26,17 +27,17 @@ class BancoEjerciciosScreen extends StatefulWidget {
 }
 
 class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
-  final EjerciciosController _ctrl = EjerciciosController();
   final TextEditingController _searchCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _ctrl.loadEjercicios(widget.idLeccion);
+      final ctrl = context.read<EjerciciosController>();
+      ctrl.loadEjercicios(widget.idLeccion);
       // Pre-filtrar por tipo si viene especificado
       if (widget.categoriaFiltro != null) {
-        _ctrl.setCategoriaFiltro(widget.categoriaFiltro);
+        ctrl.setCategoriaFiltro(widget.categoriaFiltro);
       }
     });
   }
@@ -152,35 +153,33 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final ctrl = context.watch<EjerciciosController>();
+    final ejercicios = ctrl.filteredEjercicios;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5), // Light background for contrast
-      body: ListenableBuilder(
-        listenable: _ctrl,
-        builder: (context, _) {
-          final ejercicios = _ctrl.filteredEjercicios;
+      body: Column(
+        children: [
+          _buildHeader(),
+          const SizedBox(height: 16),
+          // Search and Filters
+          SearchFilterBar(
+            searchController: _searchCtrl,
+            query: ctrl.searchQuery,
+            onQueryChanged: ctrl.updateQuery,
+            onClear: () {
+              _searchCtrl.clear();
+              ctrl.clearSearch();
+            },
+            filtros: ctrl.filtrosActivos,
+            filtroSeleccionado: ctrl.selectedFilterIndex,
+            onFiltroChanged: ctrl.setFilter,
+          ),
+          const SizedBox(height: 16),
 
-          return Column(
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 16),
-              // Search and Filters
-              SearchFilterBar(
-                searchController: _searchCtrl,
-                query: _ctrl.searchQuery,
-                onQueryChanged: _ctrl.updateQuery,
-                onClear: () {
-                  _searchCtrl.clear();
-                  _ctrl.clearSearch();
-                },
-                filtros: _ctrl.filtrosActivos,
-                filtroSeleccionado: _ctrl.selectedFilterIndex,
-                onFiltroChanged: _ctrl.setFilter,
-              ),
-              const SizedBox(height: 16),
-
-              // Exercise List
-              Expanded(
-                child: ejercicios.isEmpty
+          // Exercise List
+          Expanded(
+            child: ejercicios.isEmpty
                     ? const Center(
                         child: Text(
                           'No se encontraron ejercicios.',
@@ -342,9 +341,7 @@ class _BancoEjerciciosScreenState extends State<BancoEjerciciosScreen> {
                       ),
               ),
             ],
-          );
-        },
-      ),
+          ),
     );
   }
 }

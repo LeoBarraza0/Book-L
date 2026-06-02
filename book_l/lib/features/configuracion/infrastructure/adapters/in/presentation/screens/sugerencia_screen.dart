@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../controller/configuracion_controller.dart';
 
@@ -14,16 +15,12 @@ class _SugerenciaScreenState extends State<SugerenciaScreen> {
   final TextEditingController _asuntoController = TextEditingController();
   final TextEditingController _problemaController = TextEditingController();
 
-  // Instancia del controller
-  final ConfiguracionController _controller = ConfiguracionController();
-
   bool _isSubmitting = false;
 
   @override
   void dispose() {
     _asuntoController.dispose();
     _problemaController.dispose();
-    _controller.dispose();
     super.dispose();
   }
 
@@ -36,7 +33,7 @@ class _SugerenciaScreenState extends State<SugerenciaScreen> {
 
     try {
       // Delega el flujo de datos al controller, manteniendo la vista limpia
-      await _controller.enviarSugerencia(
+      await context.read<ConfiguracionController>().enviarSugerencia(
         _asuntoController.text,
         _problemaController.text,
       );

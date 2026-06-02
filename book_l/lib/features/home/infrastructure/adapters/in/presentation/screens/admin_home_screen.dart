@@ -1,24 +1,16 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 
 import '../controller/admin_home_controller.dart';
 import '../controller/admin_home_state.dart';
 import 'package:book_l/features/reportes/domain/models/reporte.dart';
 import 'package:book_l/features/reportes/application/usecases/get_estadisticas_reportes_usecase.dart';
-import 'package:book_l/features/reportes/infrastructure/adapters/out/repositories/reportes_repository_impl.dart';
 import 'package:book_l/features/home/domain/models/novedad.dart';
-import 'package:book_l/features/home/application/usecases/get_novedades_usecase.dart';
 import 'package:book_l/features/notificacion/infrastructure/adapters/in/presentation/widgets/notification_icon_button.dart';
 
-AdminHomeController _buildController() {
-  final repo = ReportesRepositoryImpl();
-  return AdminHomeController(
-    getEstadisticasReportes: GetEstadisticasReportesUseCase(repo),
-    getNovedades: GetNovedadesUseCase(),
-  );
-}
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -28,23 +20,17 @@ class AdminHomeScreen extends StatefulWidget {
 }
 
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
-  late final AdminHomeController _controller;
-
   @override
   void initState() {
     super.initState();
-    _controller = _buildController();
-    _controller.cargarDashboard();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AdminHomeController>().cargarDashboard();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<AdminHomeController>();
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4F7),
       body: Stack(
@@ -65,16 +51,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       const SizedBox(height: 30),
                       _buildQuickActionsGrid(context),
                       const SizedBox(height: 30),
-                      ListenableBuilder(
-                        listenable: _controller,
-                        builder: (context, _) => _buildActividadSection(),
-                      ),
+                      _buildActividadSection(controller),
                       const SizedBox(height: 30),
-                      ListenableBuilder(
-                        listenable: _controller,
-                        builder: (context, _) =>
-                            _buildNovedadesSection(context),
-                      ),
+                      _buildNovedadesSection(context, controller),
                       const SizedBox(height: 100), // Bottom nav space
                     ],
                   ),
@@ -210,10 +189,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  Widget _buildActividadSection() {
-    final state = _controller.state;
+  Widget _buildActividadSection(AdminHomeController controller) {
+    final state = controller.state;
     List<ReportePuntoChart> chartData = [];
-    PeriodoFiltro currentFiltro = _controller.periodoActual;
+    PeriodoFiltro currentFiltro = controller.periodoActual;
 
     if (state is AdminHomeLoaded) {
       chartData = state.chartData;
@@ -290,7 +269,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       String label, PeriodoFiltro targetFiltro, PeriodoFiltro currentFiltro) {
     final isSelected = targetFiltro == currentFiltro;
     return GestureDetector(
-      onTap: () => _controller.cambiarPeriodo(targetFiltro),
+      onTap: () => context.read<AdminHomeController>().cambiarPeriodo(targetFiltro),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -322,8 +301,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  Widget _buildNovedadesSection(BuildContext context) {
-    final state = _controller.state;
+  Widget _buildNovedadesSection(BuildContext context, AdminHomeController controller) {
+    final state = controller.state;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

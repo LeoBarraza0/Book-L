@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
-import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/controller/auth_controller.dart';
-import 'package:book_l/features/notificacion/infrastructure/adapters/out/repositories/notificacion_repository_impl.dart';
-import 'package:book_l/features/notificacion/application/usecases/get_notificaciones_usecase.dart';
-import 'package:book_l/features/notificacion/application/usecases/mark_as_read_usecase.dart';
 import '../controller/notificaciones_controller.dart';
 import 'package:book_l/features/notificacion/domain/models/notificacion.dart';
 import 'package:book_l/shared/widgets/custom_avatar.dart';
@@ -17,27 +14,14 @@ class NotificacionScreen extends StatefulWidget {
 }
 
 class _NotificacionScreenState extends State<NotificacionScreen> {
-  late final NotificacionesController _controller;
-
   @override
   void initState() {
     super.initState();
-    final repo = NotificacionRepositoryImpl();
-    _controller = NotificacionesController(
-      getNotificacionesUseCase: GetNotificacionesUseCase(repo),
-      markAsReadUseCase: MarkAsReadUseCase(repo),
-      authController: AuthController(),
-    );
-    _controller.loadNotificaciones().then((_) {
-      // Marcar como leídas una vez que se han cargado en la UI
-      _controller.marcarComoLeidas();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final controller = context.read<NotificacionesController>();
+      await controller.loadNotificaciones();
+      await controller.marcarComoLeidas();
     });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   String _getRelativeTime(DateTime date) {
@@ -50,6 +34,8 @@ class _NotificacionScreenState extends State<NotificacionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<NotificacionesController>();
+
     return Scaffold(
       backgroundColor: const Color(0xFFECEBEB), // Using home's background color
       body: SafeArea(
@@ -106,40 +92,7 @@ class _NotificacionScreenState extends State<NotificacionScreen> {
 
                 // Main Content
                 Expanded(
-                  child: ListenableBuilder(
-                    listenable: _controller,
-                    builder: (context, _) {
-                      if (_controller.isLoading) {
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFF4DC130),
-                          ),
-                        );
-                      }
-
-                      if (_controller.errorMessage.isNotEmpty) {
-                        return Center(
-                          child: Text(
-                            'Error: ${_controller.errorMessage}',
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        );
-                      }
-
-                      if (_controller.notificaciones.isEmpty) {
-                        return _buildEmptyState();
-                      }
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 100, top: 10),
-                        itemCount: _controller.notificaciones.length,
-                        itemBuilder: (context, index) {
-                          return _buildNotificationCard(
-                              context, _controller.notificaciones[index]);
-                        },
-                      );
-                    },
-                  ),
+                  child: _buildContent(context, controller),
                 ),
               ],
             ),
@@ -154,6 +107,38 @@ class _NotificacionScreenState extends State<NotificacionScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildContent(
+      BuildContext context, NotificacionesController controller) {
+    if (controller.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFF4DC130),
+        ),
+      );
+    }
+
+    if (controller.errorMessage.isNotEmpty) {
+      return Center(
+        child: Text(
+          'Error: ${controller.errorMessage}',
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
+    }
+
+    if (controller.notificaciones.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 100, top: 10),
+      itemCount: controller.notificaciones.length,
+      itemBuilder: (context, index) {
+        return _buildNotificationCard(context, controller.notificaciones[index]);
+      },
     );
   }
 

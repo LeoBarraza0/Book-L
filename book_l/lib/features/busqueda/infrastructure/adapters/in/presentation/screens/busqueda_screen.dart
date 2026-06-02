@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 import '../controller/busqueda_controller.dart';
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
@@ -13,26 +14,20 @@ class BusquedaScreen extends StatefulWidget {
 class _BusquedaScreenState extends State<BusquedaScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  final BusquedaController _ctrl = BusquedaController();
+  late BusquedaController _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl.addListener(_rebuild);
-    _ctrl.recargarHistorial();
-    // Abrir teclado automáticamente al entrar a la pantalla
+    context.read<BusquedaController>().recargarHistorial();
+    // Escribir resto del initState si es necesario...
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
   }
 
-  void _rebuild() {
-    if (mounted) setState(() {});
-  }
-
   @override
   void dispose() {
-    _ctrl.removeListener(_rebuild);
     _searchController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -58,6 +53,7 @@ class _BusquedaScreenState extends State<BusquedaScreen> {
   // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    _ctrl = context.watch<BusquedaController>();
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(

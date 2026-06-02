@@ -1,18 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 import 'package:book_l/shared/widgets/search_filter_bar.dart';
 import '../controller/reportes_controller.dart';
-import 'package:book_l/features/reportes/application/usecases/get_reportes_agrupados_usecase.dart';
-import 'package:book_l/features/reportes/infrastructure/adapters/out/repositories/reportes_repository_impl.dart';
 import 'package:book_l/features/reportes/domain/models/reporte_agrupado.dart';
-
-ReportesController _buildController() {
-  final repo = ReportesRepositoryImpl();
-  return ReportesController(
-    getReportesAgrupadosUseCase: GetReportesAgrupadosUseCase(repo),
-  );
-}
 
 class ReportesScreen extends StatefulWidget {
   const ReportesScreen({super.key});
@@ -23,7 +14,6 @@ class ReportesScreen extends StatefulWidget {
 
 class _ReportesScreenState extends State<ReportesScreen> {
   final TextEditingController _searchController = TextEditingController();
-  late final ReportesController _controller;
 
   final List<String> _filtros = [
     'Todos',
@@ -38,20 +28,21 @@ class _ReportesScreenState extends State<ReportesScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = _buildController();
-    _controller.loadReportes();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ReportesController>().loadReportes();
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final controller = context.watch<ReportesController>();
 
     return Scaffold(
       backgroundColor: const Color(0xFFECEBEB),
@@ -102,11 +93,11 @@ class _ReportesScreenState extends State<ReportesScreen> {
                         ),
                       ),
                       // Título "Reportes"
-                      Positioned(
+                      const Positioned(
                         left: 0,
                         right: 0,
                         top: 80,
-                        child: const Center(
+                        child: Center(
                           child: Text(
                             'Reportes',
                             style: TextStyle(
@@ -131,59 +122,21 @@ class _ReportesScreenState extends State<ReportesScreen> {
                       activeColor: const Color(0xFFFF606F),
                       searchController: _searchController,
                       query: _searchController.text,
-                      onQueryChanged: (v) => _controller.onSearchChanged(v),
+                      onQueryChanged: (v) =>
+                          controller.onSearchChanged(v),
                       onClear: () {
                         _searchController.clear();
-                        _controller.onSearchChanged('');
+                        controller.onSearchChanged('');
                       },
                       filtros: _filtros,
                       filtroSeleccionado: _filtroSeleccionado,
                       onFiltroChanged: (index) {
                         setState(() => _filtroSeleccionado = index);
-                        _controller.onFilterChanged(_filtros[index]);
+                        controller.onFilterChanged(_filtros[index]);
                       },
                     ),
                     Expanded(
-                      child: ListenableBuilder(
-                        listenable: _controller,
-                        builder: (context, _) {
-                          if (_controller.isLoading) {
-                            return const Center(
-                              child: CircularProgressIndicator(
-                                  color: Color(0xFFFF606F)),
-                            );
-                          }
-
-                          if (_controller.errorMessage.isNotEmpty) {
-                            return Center(
-                                child: Text(
-                                    'Error: ${_controller.errorMessage}',
-                                    style: const TextStyle(color: Colors.red)));
-                          }
-
-                          final reportes = _controller.reportes;
-
-                          if (reportes.isEmpty) {
-                            return const Center(
-                                child: Text('No hay reportes disponibles',
-                                    style:
-                                        TextStyle(color: Color(0xFF888888))));
-                          }
-                          return ListView.builder(
-                            padding: const EdgeInsets.only(
-                              left: 16,
-                              right: 16,
-                              top: 8,
-                              bottom: 100,
-                            ),
-                            itemCount: reportes.length,
-                            itemBuilder: (context, index) {
-                              return _buildReporteCard(
-                                  context, reportes[index]);
-                            },
-                          );
-                        },
-                      ),
+                      child: _buildContent(context, controller),
                     ),
                   ],
                 ),
@@ -203,14 +156,50 @@ class _ReportesScreenState extends State<ReportesScreen> {
     );
   }
 
+  Widget _buildContent(BuildContext context, ReportesController controller) {
+    if (controller.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFFF606F)),
+      );
+    }
+
+    if (controller.errorMessage.isNotEmpty) {
+      return Center(
+          child: Text('Error: ${controller.errorMessage}',
+              style: const TextStyle(color: Colors.red)));
+    }
+
+    final reportes = controller.reportes;
+
+    if (reportes.isEmpty) {
+      return const Center(
+          child: Text('No hay reportes disponibles',
+              style: TextStyle(color: Color(0xFF888888))));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 8,
+        bottom: 100,
+      ),
+      itemCount: reportes.length,
+      itemBuilder: (context, index) {
+        return _buildReporteCard(context, reportes[index]);
+      },
+    );
+  }
+
   Widget _buildReporteCard(BuildContext context, ReporteAgrupado item) {
     Color boxColor = const Color(0xFFD9D9D9);
     final tipoL = item.tipoEntidad.toLowerCase().replaceAll('ó', 'o');
-    if (tipoL == 'curso')
+    if (tipoL == 'curso') {
       boxColor = const Color(0xFFFF606F);
-    else if (tipoL == 'leccion')
+    } else if (tipoL == 'leccion') {
       boxColor = const Color(0xFF5AB639);
-    else if (tipoL == 'capitulo') boxColor = const Color(0xFFFFB800);
+    } else if (tipoL == 'capitulo') {
+      boxColor = const Color(0xFFFFB800);
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),

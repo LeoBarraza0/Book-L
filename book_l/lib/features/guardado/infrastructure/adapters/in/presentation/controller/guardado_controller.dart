@@ -58,9 +58,8 @@ class GuardadoController extends ChangeNotifier {
     return _repo.isCursoSaved(idCurso);
   }
 
-  // ignore: must_call_super
   @override
   void dispose() {
-    // Singleton — no debe destruirse con el ciclo de vida de la pantalla
+    super.dispose();
   }
 }

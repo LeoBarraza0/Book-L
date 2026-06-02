@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 import 'package:book_l/core/infrastructure/services/bookl_service.dart' as bookl;
 import '../controller/reporte_detail_controller.dart';
-import 'package:book_l/features/reportes/application/usecases/get_reportes_por_entidad_usecase.dart';
-import 'package:book_l/features/reportes/infrastructure/adapters/out/repositories/reportes_repository_impl.dart';
 import 'package:book_l/features/notificacion/infrastructure/adapters/in/presentation/widgets/notification_icon_button.dart';
 
-ReporteDetailController _buildDetailController() {
-  final repo = ReportesRepositoryImpl();
-  return ReporteDetailController(
-    getReportesPorEntidadUseCase: GetReportesPorEntidadUseCase(repo),
-  );
-}
+
 
 class ReporteDetailScreen extends StatefulWidget {
   final int idLeccion;
@@ -30,25 +24,22 @@ class ReporteDetailScreen extends StatefulWidget {
 }
 
 class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
-  late final ReporteDetailController _controller;
   final List<String> _filters = ['Más Recientes', 'Más Antiguos'];
 
   @override
   void initState() {
     super.initState();
-    _controller = _buildDetailController();
-    _controller.loadDetalles(widget.tipo, widget.idLeccion);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context
+          .read<ReporteDetailController>()
+          .loadDetalles(widget.tipo, widget.idLeccion);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final controller = context.watch<ReporteDetailController>();
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFF9E1), // Crema claro
@@ -139,12 +130,9 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
                       const SizedBox(height: 20),
                       _buildStatsCards(),
                       const SizedBox(height: 24),
-                      _buildFilters(),
+                      _buildFilters(controller),
                       const SizedBox(height: 24),
-                      ListenableBuilder(
-                        listenable: _controller,
-                        builder: (context, _) => _buildCommentsList(),
-                      ),
+                      _buildCommentsList(controller),
                       const SizedBox(height: 120),
                     ],
                   ),
@@ -399,49 +387,46 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
     );
   }
 
-  Widget _buildFilters() {
-    return ListenableBuilder(
-        listenable: _controller,
-        builder: (context, _) {
-          return SizedBox(
-            height: 40,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _filters.length,
-              itemBuilder: (context, index) {
-                final filter = _filters[index];
-                final isSelected = _controller.selectedSort == filter;
-                return GestureDetector(
-                  onTap: () => _controller.onChangeSort(filter),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.only(right: 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFF5AB639)
-                          : const Color(0xFFD9D9D9),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      filter,
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black87,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                );
-              },
+  Widget _buildFilters(ReporteDetailController controller) {
+    return SizedBox(
+      height: 40,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _filters.length,
+        itemBuilder: (context, index) {
+          final filter = _filters[index];
+          final isSelected = controller.selectedSort == filter;
+          return GestureDetector(
+            onTap: () =>
+                context.read<ReporteDetailController>().onChangeSort(filter),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color(0xFF5AB639)
+                    : const Color(0xFFD9D9D9),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                filter,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             ),
           );
-        });
+        },
+      ),
+    );
   }
 
-  Widget _buildCommentsList() {
-    if (_controller.isLoading) {
+  Widget _buildCommentsList(ReporteDetailController controller) {
+    if (controller.isLoading) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 40),
         child:
@@ -449,13 +434,13 @@ class _ReporteDetailScreenState extends State<ReporteDetailScreen> {
       );
     }
 
-    if (_controller.errorMessage.isNotEmpty) {
+    if (controller.errorMessage.isNotEmpty) {
       return Center(
-          child: Text('Error: ${_controller.errorMessage}',
+          child: Text('Error: ${controller.errorMessage}',
               style: const TextStyle(color: Colors.red)));
     }
 
-    final comentarios = _controller.comentarios;
+    final comentarios = controller.comentarios;
 
     if (comentarios.isEmpty) {
       return const Padding(

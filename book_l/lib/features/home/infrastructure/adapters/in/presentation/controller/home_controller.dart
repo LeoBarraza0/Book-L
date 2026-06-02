@@ -38,9 +38,8 @@ class HomeController extends ChangeNotifier {
     return _repo.getRacha(userId);
   }
 
-  // ignore: must_call_super
   @override
   void dispose() {
-    // Singleton, no destruir
+    super.dispose();
   }
 }

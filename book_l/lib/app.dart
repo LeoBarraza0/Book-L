@@ -9,6 +9,9 @@ import 'package:book_l/features/perfil/infrastructure/adapters/in/presentation/s
 import 'package:book_l/features/configuracion/infrastructure/adapters/in/presentation/screens/sugerencia_screen.dart';
 import 'package:book_l/features/configuracion/infrastructure/adapters/in/presentation/screens/configuracion_screen.dart';
 import 'package:book_l/features/chatbot/infrastructure/adapters/in/presentation/screens/chatbot_screen.dart';
+import 'package:book_l/features/chatbot/infrastructure/adapters/in/presentation/controller/chatbot_controller.dart';
+import 'package:book_l/features/chatbot/infrastructure/adapters/out/repositories/chatbot_repository_impl.dart';
+import 'package:book_l/features/chatbot/application/usecases/get_respuesta_chatbot_usecase.dart';
 import 'package:book_l/features/curso/infrastructure/adapters/in/presentation/screens/curso_detail_screen.dart';
 import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/screens/leccion_detail_screen.dart';
 import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/screens/capitulo_screen.dart';
@@ -35,6 +38,36 @@ import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/scr
 import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/ingresar_codigo_screen.dart';
 import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/cambiar_password_screen.dart';
 
+import 'package:provider/provider.dart';
+import 'package:book_l/core/infrastructure/services/bookl_service.dart';
+import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/controller/auth_controller.dart';
+import 'package:book_l/features/curso/infrastructure/adapters/in/presentation/controller/curso_controller.dart';
+import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/controller/leccion_controller.dart';
+import 'package:book_l/features/ejercicio/infrastructure/adapters/in/presentation/controller/ejercicios_controller.dart';
+import 'package:book_l/features/progreso/infrastructure/adapters/in/presentation/controller/progreso_controller.dart';
+import 'package:book_l/features/perfil/infrastructure/adapters/in/presentation/controller/perfil_controller.dart';
+import 'package:book_l/features/guardado/infrastructure/adapters/in/presentation/controller/guardado_controller.dart';
+import 'package:book_l/features/discusion/infrastructure/adapters/in/presentation/controller/discusion_controller.dart';
+import 'package:book_l/features/calificacion/infrastructure/adapters/in/presentation/controller/calificacion_controller.dart';
+import 'package:book_l/features/busqueda/infrastructure/adapters/in/presentation/controller/busqueda_controller.dart';
+import 'package:book_l/features/home/infrastructure/adapters/in/presentation/controller/home_controller.dart';
+import 'package:book_l/features/notificacion/infrastructure/adapters/in/presentation/controller/notificaciones_controller.dart';
+import 'package:book_l/features/notificacion/infrastructure/adapters/out/repositories/notificacion_repository_impl.dart';
+import 'package:book_l/features/notificacion/application/usecases/get_notificaciones_usecase.dart';
+import 'package:book_l/features/notificacion/application/usecases/mark_as_read_usecase.dart';
+import 'package:book_l/features/usuarios/infrastructure/adapters/in/presentation/controller/usuarios_controller.dart';
+import 'package:book_l/features/usuarios/infrastructure/adapters/out/repositories/usuarios_repository_impl.dart';
+import 'package:book_l/features/usuarios/application/usecases/get_usuarios_usecase.dart';
+import 'package:book_l/features/reportes/infrastructure/adapters/in/presentation/controller/reportes_controller.dart';
+import 'package:book_l/features/reportes/infrastructure/adapters/out/repositories/reportes_repository_impl.dart';
+import 'package:book_l/features/reportes/application/usecases/get_reportes_agrupados_usecase.dart';
+import 'package:book_l/features/configuracion/infrastructure/adapters/in/presentation/controller/configuracion_controller.dart';
+import 'package:book_l/features/home/infrastructure/adapters/in/presentation/controller/admin_home_controller.dart';
+import 'package:book_l/features/reportes/application/usecases/get_estadisticas_reportes_usecase.dart';
+import 'package:book_l/features/home/application/usecases/get_novedades_usecase.dart';
+import 'package:book_l/features/reportes/infrastructure/adapters/in/presentation/controller/reporte_detail_controller.dart';
+import 'package:book_l/features/reportes/application/usecases/get_reportes_por_entidad_usecase.dart';
+
 import 'core/infrastructure/storage/local_storage.dart';
 
 class BookLApp extends StatelessWidget {
@@ -42,9 +75,63 @@ class BookLApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: AppSession().temaNotifier,
-      builder: (context, isDark, _) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => BooklService()),
+        ChangeNotifierProvider(create: (_) => AuthController()),
+        ChangeNotifierProvider(create: (_) => CursoController()),
+        ChangeNotifierProvider(create: (_) => LeccionController()),
+        ChangeNotifierProvider(create: (_) => EjerciciosController()),
+        ChangeNotifierProvider(create: (_) => ProgresoController()),
+        ChangeNotifierProvider(create: (_) => PerfilController()),
+        ChangeNotifierProvider(create: (_) => GuardadoController()),
+        ChangeNotifierProvider(create: (_) => DiscusionController()),
+        ChangeNotifierProvider(create: (_) => CalificacionController()),
+        ChangeNotifierProvider(create: (_) => BusquedaController()),
+        ChangeNotifierProvider(create: (_) => HomeController()),
+        ChangeNotifierProvider(
+          create: (_) {
+            final repo = NotificacionRepositoryImpl();
+            return NotificacionesController(
+              getNotificacionesUseCase: GetNotificacionesUseCase(repo),
+              markAsReadUseCase: MarkAsReadUseCase(repo),
+              authController: AuthController(),
+            );
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (_) {
+            final repo = UsuariosRepositoryImpl();
+            return UsuariosController(
+              getUsuarios: GetUsuariosUseCase(repo),
+              addUsuario: AddUsuarioUseCase(repo),
+              updateUsuario: UpdateUsuarioUseCase(repo),
+              deleteUsuario: DeleteUsuarioUseCase(repo),
+            );
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (_) {
+            final repo = ReportesRepositoryImpl();
+            return ReportesController(
+              getReportesAgrupadosUseCase: GetReportesAgrupadosUseCase(repo),
+            );
+          },
+        ),
+        ChangeNotifierProvider(create: (_) => ConfiguracionController()),
+        ChangeNotifierProvider(
+          create: (_) {
+            final repo = ReportesRepositoryImpl();
+            return AdminHomeController(
+              getEstadisticasReportes: GetEstadisticasReportesUseCase(repo),
+              getNovedades: GetNovedadesUseCase(),
+            );
+          },
+        ),
+      ],
+      child: ValueListenableBuilder<bool>(
+        valueListenable: AppSession().temaNotifier,
+        builder: (context, isDark, _) {
         return ValueListenableBuilder<String>(
           valueListenable: AppSession().fontScaleNotifier,
           builder: (context, fontScale, _) {
@@ -70,6 +157,8 @@ class BookLApp extends StatelessWidget {
               themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
               theme: ThemeData(
                 fontFamily: 'Inter',
+                scaffoldBackgroundColor: const Color(0xFFECEBEB),
+                cardColor: Colors.white,
                 colorScheme: ColorScheme.fromSeed(
                   seedColor: const Color(0xFF4DC130),
                   brightness: Brightness.light,
@@ -78,6 +167,8 @@ class BookLApp extends StatelessWidget {
               ),
               darkTheme: ThemeData(
                 fontFamily: 'Inter',
+                scaffoldBackgroundColor: const Color(0xFF121212),
+                cardColor: const Color(0xFF1E1E1E),
                 colorScheme: ColorScheme.fromSeed(
                   seedColor: const Color(0xFF4DC130),
                   brightness: Brightness.dark,
@@ -111,7 +202,15 @@ class BookLApp extends StatelessWidget {
                 '/perfil': (context) => const PerfilScreen(),
                 '/configuracion': (context) => const ConfiguracionScreen(),
                 '/sugerencia': (context) => const SugerenciaScreen(),
-                '/chatbot': (context) => const ChatbotScreen(),
+                '/chatbot': (context) {
+                  final repo = ChatbotRepositoryImpl();
+                  return ChangeNotifierProvider(
+                    create: (_) => ChatbotController(
+                      getRespuesta: GetRespuestaChatbotUseCase(repo),
+                    ),
+                    child: const ChatbotScreen(),
+                  );
+                },
                 '/curso_detail': (context) => CursoDetailScreen(
                       idCurso:
                           ModalRoute.of(context)?.settings.arguments as int?,
@@ -151,10 +250,18 @@ class BookLApp extends StatelessWidget {
                 '/reporte_detail': (context) {
                   final args = ModalRoute.of(context)?.settings.arguments
                       as Map<String, dynamic>?;
-                  return ReporteDetailScreen(
-                    idLeccion: args?['id_leccion'] as int? ?? 0,
-                    leccionNombre: args?['nombre'] as String? ?? 'Desconocido',
-                    tipo: args?['tipo'] as String? ?? 'Lección',
+                  final repo = ReportesRepositoryImpl();
+                  return ChangeNotifierProvider(
+                    create: (_) => ReporteDetailController(
+                      getReportesPorEntidadUseCase:
+                          GetReportesPorEntidadUseCase(repo),
+                    ),
+                    child: ReporteDetailScreen(
+                      idLeccion: args?['id_leccion'] as int? ?? 0,
+                      leccionNombre:
+                          args?['nombre'] as String? ?? 'Desconocido',
+                      tipo: args?['tipo'] as String? ?? 'Lección',
+                    ),
                   );
                 },
               },
@@ -162,6 +269,7 @@ class BookLApp extends StatelessWidget {
           },
         );
       },
-    );
-  }
+    ),
+  );
+}
 }

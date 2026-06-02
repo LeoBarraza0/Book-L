@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../controller/discusion_controller.dart';
 import '../widgets/comentario_tile.dart';
 import 'package:book_l/features/calificacion/infrastructure/adapters/in/presentation/widgets/stars_rating_widget.dart';
@@ -24,14 +25,12 @@ class DiscusionScreen extends StatefulWidget {
 }
 
 class _DiscusionScreenState extends State<DiscusionScreen> {
-  late final DiscusionController _ctrl;
-
   @override
   void initState() {
     super.initState();
-    _ctrl = widget.controller ?? DiscusionController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _ctrl.cargarDiscusion(
+      final ctrl = widget.controller ?? context.read<DiscusionController>();
+      ctrl.cargarDiscusion(
         idCurso: widget.idCurso,
         idLeccion: widget.idLeccion,
       );
@@ -40,76 +39,72 @@ class _DiscusionScreenState extends State<DiscusionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: _ctrl,
-      builder: (context, _) {
-        final state = _ctrl.state;
+    final ctrl = widget.controller ?? context.watch<DiscusionController>();
+    final state = ctrl.state;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Rating opcional
-            if (widget.showRating) ...[
-              Center(
-                child: StarsRatingWidget(
-                  onRatingChanged: widget.onRatingChanged,
-                ),
-              ),
-              const SizedBox(height: 28),
-            ],
-
-            // Header con contador reactivo
-            Row(
-              children: [
-                const Text(
-                  'Comentarios',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                if (!state.isLoading && state.discusion != null)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4DC130).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${state.comentariosRaiz.length + state.respuestasPorPadre.values.fold<int>(0, (sum, l) => sum + l.length)}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF4DC130),
-                      ),
-                    ),
-                  ),
-              ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Rating opcional
+        if (widget.showRating) ...[
+          Center(
+            child: StarsRatingWidget(
+              onRatingChanged: widget.onRatingChanged,
             ),
-            const SizedBox(height: 20),
+          ),
+          const SizedBox(height: 28),
+        ],
 
-            // Estados de carga / vacío / contenido
-            if (state.isLoading)
-              _buildSkeleton()
-            else if (state.discusion == null || state.comentariosRaiz.isEmpty)
-              _buildEmptyState()
-            else
-              ...state.comentariosRaiz.map(
-                (c) => ComentarioTile(
-                  comentario: c,
-                  respuestas: state.respuestasPorPadre[c.idComentario] ?? [],
-                  ctrl: _ctrl,
+        // Header con contador reactivo
+        Row(
+          children: [
+            const Text(
+              'Comentarios',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(width: 10),
+            if (!state.isLoading && state.discusion != null)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4DC130).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${state.comentariosRaiz.length + state.respuestasPorPadre.values.fold<int>(0, (sum, l) => sum + l.length)}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF4DC130),
+                  ),
                 ),
               ),
-            // Espacio para que el último comentario no quede tapado
-            // por el ComentarioInput flotante (~80px) + NavBar (~90px)
-            const SizedBox(height: 220),
           ],
-        );
-      },
+        ),
+        const SizedBox(height: 20),
+
+        // Estados de carga / vacío / contenido
+        if (state.isLoading)
+          _buildSkeleton()
+        else if (state.discusion == null || state.comentariosRaiz.isEmpty)
+          _buildEmptyState()
+        else
+          ...state.comentariosRaiz.map(
+            (c) => ComentarioTile(
+              comentario: c,
+              respuestas: state.respuestasPorPadre[c.idComentario] ?? [],
+              ctrl: ctrl,
+            ),
+          ),
+        // Espacio para que el último comentario no quede tapado
+        // por el ComentarioInput flotante (~80px) + NavBar (~90px)
+        const SizedBox(height: 220),
+      ],
     );
   }
 
