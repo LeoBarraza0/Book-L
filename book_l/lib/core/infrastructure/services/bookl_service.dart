@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:book_l/features/auth/infrastructure/adapters/out/dtos/usuario_dto.dart';
 import 'package:book_l/features/auth/domain/models/usuario.dart';
@@ -26,13 +27,12 @@ import 'package:book_l/features/calificacion/domain/models/calificacion.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import '../storage/local_storage.dart';
+import 'supabase_client.dart';
 
-// Servicio central de datos JSON — Singleton de uso restringido.
+// Servicio central de datos — Singleton global.
 //
 // REGLA DE USO: Solo los repository_impl pueden importar este servicio.
 // Nunca importarlo directamente desde presentation/ ni desde domain/.
-//
-// Actúa como "base de datos en memoria" hasta migrar a API REST.
 class BooklService extends ChangeNotifier {
   static const String _storageKey = 'bookl_full_data';
   // ── Singleton ──────────────────────────────────────────────────────────────
@@ -41,6 +41,7 @@ class BooklService extends ChangeNotifier {
   BooklService._internal();
 
   void notifyDataChanged() {
+    _save();
     notifyListeners();
   }
 
@@ -116,22 +117,37 @@ class BooklService extends ChangeNotifier {
       setRole(savedRol);
     }
 
+    // 1. CARGA DE CACHÉ LOCAL (tolerancia a fallos inmediata)
     final localData = prefs.getString(_storageKey);
-
     Map<String, dynamic> data;
-    if (localData != null && localData.isNotEmpty) {
-      data = json.decode(localData);
-    } else {
+    try {
+      if (localData != null && localData.isNotEmpty) {
+        data = json.decode(localData);
+      } else {
+        final raw = await rootBundle.loadString('assets/data/bookl_data.json');
+        data = json.decode(raw);
+      }
+    } catch (_) {
       final raw = await rootBundle.loadString('assets/data/bookl_data.json');
       data = json.decode(raw);
     }
 
-    // Cargar datos estáticos directamente del JSON (no se persisten simuladamente)
     final rawStatic =
         await rootBundle.loadString('assets/data/bookl_data.json');
     final staticData = json.decode(rawStatic);
     programas = List<String>.from(staticData['programas'] ?? []);
 
+    _populateFromMap(data);
+    _loaded = true;
+    notifyListeners();
+
+    // 2. SINCRONIZACIÓN ASÍNCRONA EN SEGUNDO PLANO CON SUPABASE
+    if (SupabaseClientHelper.isConfigured) {
+      _syncFromSupabase();
+    }
+  }
+
+  void _populateFromMap(Map<String, dynamic> data) {
     usuariosDto = (data['usuarios'] as List)
         .map((e) => UsuarioDto.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -219,7 +235,6 @@ class BooklService extends ChangeNotifier {
           .map<Opcion>((e) => OpcionDto.fromJson(e as Map<String, dynamic>))
           .toList();
 
-      // Anidar opciones en preguntas
       for (var p in preguntas) {
         final ops =
             opciones.where((o) => o.idPreguntaFk == p.idPregunta).toList();
@@ -266,27 +281,48 @@ class BooklService extends ChangeNotifier {
       calificaciones = [];
     }
 
-    // Leemos siempre del asset para ver si hay reportes nuevos agregados manualmente
-    try {
-      final rawAsset =
-          await rootBundle.loadString('assets/data/bookl_data.json');
-      final assetData = json.decode(rawAsset);
-      if (assetData.containsKey('reportes')) {
-        final assetReportes =
-            List<Map<String, dynamic>>.from(assetData['reportes']);
-        for (var ar in assetReportes) {
-          // Si el ID de reporte no está en memoria, lo agregamos
-          if (!reportes.any((r) => r['id_reporte'] == ar['id_reporte'])) {
-            reportes.add(ar);
-          }
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) print("Error merging reportes from asset: $e");
+    if (data.containsKey('progreso_usuario')) {
+      progresoUsuario =
+          List<Map<String, dynamic>>.from(data['progreso_usuario']);
+    } else {
+      progresoUsuario = [];
+    }
+    if (data.containsKey('respuestas_usuario')) {
+      respuestasUsuario =
+          List<Map<String, dynamic>>.from(data['respuestas_usuario']);
+    } else {
+      respuestasUsuario = [];
+    }
+    if (data.containsKey('guardados')) {
+      guardados = List<Map<String, dynamic>>.from(data['guardados']);
+    } else {
+      guardados = [];
+    }
+    if (data.containsKey('guardados_cursos')) {
+      guardadosCursos =
+          List<Map<String, dynamic>>.from(data['guardados_cursos']);
+    } else {
+      guardadosCursos = [];
+    }
+    if (data.containsKey('rachas')) {
+      rachas = (data['rachas'] as List).map((e) {
+        final map = Map<String, dynamic>.from(e as Map);
+        map['dias_actividad'] = List<String>.from(map['dias_actividad'] ?? []);
+        return map;
+      }).toList();
+    } else {
+      rachas = [];
+    }
+    if (data.containsKey('notificaciones')) {
+      notificaciones = List<Map<String, dynamic>>.from(data['notificaciones']);
+    } else {
+      notificaciones = [];
     }
 
-    // ── Anidación Relacional Final ──────────────────────────────────────────
-    // Anidar comentarios en discusiones
+    _nestRelations();
+  }
+
+  void _nestRelations() {
     for (var d in discusiones) {
       final coms =
           comentarios.where((c) => c.idDiscusionFk == d.idDiscusion).toList();
@@ -316,40 +352,165 @@ class BooklService extends ChangeNotifier {
       final i = capitulos.indexOf(c);
       capitulos[i] = c.copyWith(ejercicios: ejs);
     }
+  }
 
-    // ── Cargar Progreso, Respuestas, Guardados ─────────────────────────────
-    if (data.containsKey('progreso_usuario')) {
-      progresoUsuario =
-          List<Map<String, dynamic>>.from(data['progreso_usuario']);
-    }
-    if (data.containsKey('respuestas_usuario')) {
-      respuestasUsuario =
-          List<Map<String, dynamic>>.from(data['respuestas_usuario']);
-    }
-    if (data.containsKey('guardados')) {
-      guardados = List<Map<String, dynamic>>.from(data['guardados']);
-    }
-    if (data.containsKey('guardados_cursos')) {
-      guardadosCursos =
-          List<Map<String, dynamic>>.from(data['guardados_cursos']);
-    }
-    if (data.containsKey('rachas')) {
-      rachas = (data['rachas'] as List).map((e) {
-        final map = Map<String, dynamic>.from(e as Map);
-        // Asegurar que dias_actividad sea List<String>
-        map['dias_actividad'] = List<String>.from(map['dias_actividad'] ?? []);
-        return map;
-      }).toList();
-    }
-    if (data.containsKey('notificaciones')) {
-      notificaciones = List<Map<String, dynamic>>.from(data['notificaciones']);
-    }
+  Future<void> _syncFromSupabase() async {
+    try {
+      final client = SupabaseClientHelper.client;
 
-    // ── Semilla: cargar progreso inicial en AppSession ─────────────────────
-    _seedAppSession();
+      // Carga en paralelo
+      final results = await Future.wait([
+        client.from('tbl_usuario').select(),
+        client.from('tbl_curso').select(),
+        client.from('tbl_leccion').select(),
+        client.from('tbl_capitulo').select(),
+        client.from('tbl_material').select(),
+        client.from('tbl_configuracion').select(),
+        client.from('tbl_lecciones_cursos').select(),
+        client.from('tbl_seguidores').select(),
+        client.from('tbl_discusion').select(),
+        client.from('tbl_comentario').select(),
+        client.from('tbl_ejercicio').select(),
+        client.from('tbl_pregunta').select(),
+        client.from('tbl_opcion').select(),
+        client.from('tbl_reporte').select(),
+        client.from('tbl_calificacion_leccion').select(),
+        client.from('tbl_calificacion_curso').select(),
+        client.from('tbl_progreso_usuario').select(),
+        client.from('tbl_respuesta_usuario').select(),
+        client.from('tbl_guardado_leccion').select(),
+        client.from('tbl_guardado_curso').select(),
+        client.from('tbl_racha').select(),
+        client.from('tbl_notificacion').select(),
+      ]);
 
-    _loaded = true;
-    notifyListeners();
+      usuariosDto =
+          (results[0] as List).map((e) => UsuarioDto.fromJson(e)).toList();
+      usuarios = usuariosDto.map((d) => d.toEntity()).toList();
+
+      cursos = (results[1] as List).map((e) => CursoDto.fromJson(e)).toList();
+      lecciones =
+          (results[2] as List).map((e) => LeccionDto.fromJson(e)).toList();
+      capitulos =
+          (results[3] as List).map((e) => CapituloDto.fromJson(e)).toList();
+      materiales =
+          (results[4] as List).map((e) => MaterialDto.fromJson(e)).toList();
+
+      configuraciones = (results[5] as List)
+          .map((e) => ConfiguracionDto.fromJson(e).toEntity())
+          .toList();
+
+      leccionesCursos = (results[6] as List)
+          .map((e) => {
+                'id_leccion': e['id_leccion'] as int,
+                'id_curso': e['id_curso'] as int,
+              })
+          .toList();
+
+      seguidores = List<Map<String, dynamic>>.from(results[7] as List);
+      discusiones =
+          (results[8] as List).map((e) => DiscusionDto.fromJson(e)).toList();
+      comentarios =
+          (results[9] as List).map((e) => ComentarioDto.fromJson(e)).toList();
+      ejercicios =
+          (results[10] as List).map((e) => EjercicioDto.fromJson(e)).toList();
+      preguntas =
+          (results[11] as List).map((e) => PreguntaDto.fromJson(e)).toList();
+      opciones =
+          (results[12] as List).map((e) => OpcionDto.fromJson(e)).toList();
+      reportes = List<Map<String, dynamic>>.from(results[13] as List);
+
+      final resCalL = results[14] as List;
+      final resCalC = results[15] as List;
+      calificaciones = [
+        ...resCalL.map((e) => Calificacion(
+              idCalificacion: e['id_calificacion'] as int,
+              idObjetoFk: e['id_leccion_fk'] as int,
+              tipoObjeto: 'leccion',
+              idUsuarioFk: e['id_usuario_fk'] as int,
+              valor: e['valor'] as int,
+            )),
+        ...resCalC.map((e) => Calificacion(
+              idCalificacion: e['id_calificacion'] as int,
+              idObjetoFk: e['id_curso_fk'] as int,
+              tipoObjeto: 'curso',
+              idUsuarioFk: e['id_usuario_fk'] as int,
+              valor: e['valor'] as int,
+            )),
+      ];
+
+      progresoUsuario = List<Map<String, dynamic>>.from(results[16] as List);
+      respuestasUsuario = List<Map<String, dynamic>>.from(results[17] as List);
+      guardados = List<Map<String, dynamic>>.from(results[18] as List);
+      guardadosCursos = List<Map<String, dynamic>>.from(results[19] as List);
+
+      rachas = (results[20] as List)
+          .map((e) => {
+                'id_usuario': e['id_usuario'] as int,
+                'racha_actual': e['current_streak'] as int,
+                'dias_actividad': <String>[
+                  if (e['last_activity_date'] != null)
+                    e['last_activity_date'].toString().split('T')[0]
+                ],
+              })
+          .toList();
+
+      notificaciones = (results[21] as List)
+          .map((e) => {
+                'id': e['id_notificacion'] as int,
+                'id_usuario_fk': e['id_usuario_fk'] as int,
+                'tipo': e['tipo'] as String,
+                'id_referencia': e['id_referencia'] as int?,
+                'mensaje': e['mensaje'] as String,
+                'leida': e['leida'] as bool,
+                'id_curso_fk': e['id_curso_fk'] as int?,
+                'id_leccion_fk': e['id_leccion_fk'] as int?,
+                'id_comentario_fk': e['id_comentario_fk'] as int?,
+                'created_at': e['created_at'] as String?,
+              })
+          .toList();
+
+      for (var p in preguntas) {
+        final ops =
+            opciones.where((o) => o.idPreguntaFk == p.idPregunta).toList();
+        final i = preguntas.indexOf(p);
+        preguntas[i] = Pregunta(
+          idPregunta: p.idPregunta,
+          idEjercicioFk: p.idEjercicioFk,
+          contenido: p.contenido,
+          explicacion: p.explicacion,
+          opciones: ops,
+        );
+      }
+
+      for (var e in ejercicios) {
+        final pregs =
+            preguntas.where((p) => p.idEjercicioFk == e.idEjercicio).toList();
+        final i = ejercicios.indexOf(e);
+        ejercicios[i] = Ejercicio(
+          idEjercicio: e.idEjercicio,
+          idCapitulo: e.idCapitulo,
+          tipo: e.tipo,
+          titulo: e.titulo,
+          descripcion: e.descripcion,
+          preguntas: pregs,
+        );
+      }
+
+      _nestRelations();
+      _seedAppSession();
+
+      // Guardar a SharedPreferences local
+      final prefs = await SharedPreferences.getInstance();
+      final fullData = _toMap();
+      await prefs.setString(_storageKey, json.encode(fullData));
+
+      notifyListeners();
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error syncing from Supabase: $e");
+      }
+    }
   }
 
   /// Carga la información del JSON en AppSession para que los datos
@@ -363,7 +524,6 @@ class BooklService extends ChangeNotifier {
     final userId = session.usuarioId;
     if (userId == null) return; // No hay sesión activa, no sembramos
 
-    // ── Semilla: Capítulos completados ────────────────────────────────────
     if (session.completedCapitulos.value.isEmpty) {
       final completedCaps = progresoUsuario
           .where((p) =>
@@ -375,8 +535,6 @@ class BooklService extends ChangeNotifier {
       }
     }
 
-    // ── Semilla: Ejercicios completados ───────────────────────────────────
-    // Un ejercicio se considera completado si el usuario respondió TODAS sus preguntas
     if (session.completedEjercicios.value.isEmpty) {
       final userAnswers =
           respuestasUsuario.where((r) => r['id_usuario'] == userId);
@@ -397,7 +555,6 @@ class BooklService extends ChangeNotifier {
       }
     }
 
-    // ── Semilla: Lecciones guardadas ──────────────────────────────────────
     if (session.savedLecciones.value.isEmpty) {
       final savedLecs = guardados
           .where((g) => g['id_usuario'] == userId)
@@ -408,7 +565,6 @@ class BooklService extends ChangeNotifier {
       }
     }
 
-    // ── Semilla: Cursos guardados ─────────────────────────────────────────
     if (session.savedCursos.value.isEmpty) {
       final savedCurs = guardadosCursos
           .where((g) => g['id_usuario'] == userId)
@@ -420,39 +576,41 @@ class BooklService extends ChangeNotifier {
     }
   }
 
-  // ── Persistencia ───────────────────────────────────────────────────────────
+  Map<String, dynamic> _toMap() {
+    return {
+      'usuarios': usuariosDto.map((u) => u.toJson()).toList(),
+      'cursos': cursos.map((c) => CursoDto.toJson(c)).toList(),
+      'lecciones': lecciones.map((l) => LeccionDto.toJson(l)).toList(),
+      'capitulos': capitulos.map((c) => CapituloDto.toJson(c)).toList(),
+      'materiales': materiales.map((m) => MaterialDto.toJson(m)).toList(),
+      'configuraciones': configuraciones
+          .map((c) => ConfiguracionDto.fromEntity(c).toJson())
+          .toList(),
+      'sugerencias': sugerencias,
+      'seguidores': seguidores,
+      'discusiones': discusiones.map((d) => DiscusionDto.toJson(d)).toList(),
+      'comentarios': comentarios.map((c) => ComentarioDto.toJson(c)).toList(),
+      'ejercicios': ejercicios.map((e) => EjercicioDto.toJson(e)).toList(),
+      'preguntas': preguntas.map((p) => PreguntaDto.toJson(p)).toList(),
+      'opciones': opciones.map((o) => OpcionDto.toJson(o)).toList(),
+      'reportes': reportes,
+      'lecciones_cursos': leccionesCursos,
+      'calificaciones':
+          calificaciones.map((c) => CalificacionDto.toJson(c)).toList(),
+      'progreso_usuario': progresoUsuario,
+      'respuestas_usuario': respuestasUsuario,
+      'guardados': guardados,
+      'guardados_cursos': guardadosCursos,
+      'rachas': rachas,
+      'notificaciones': notificaciones,
+    };
+  }
+
   Future<void> _save() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final fullData = {
-        'usuarios': usuariosDto.map((u) => u.toJson()).toList(),
-        'cursos': cursos.map((c) => CursoDto.toJson(c)).toList(),
-        'lecciones': lecciones.map((l) => LeccionDto.toJson(l)).toList(),
-        'capitulos': capitulos.map((c) => CapituloDto.toJson(c)).toList(),
-        'materiales': materiales.map((m) => MaterialDto.toJson(m)).toList(),
-        'configuraciones': configuraciones
-            .map((c) => ConfiguracionDto.fromEntity(c).toJson())
-            .toList(),
-        'sugerencias': sugerencias,
-        'seguidores': seguidores,
-        'discusiones': discusiones.map((d) => DiscusionDto.toJson(d)).toList(),
-        'comentarios': comentarios.map((c) => ComentarioDto.toJson(c)).toList(),
-        'ejercicios': ejercicios.map((e) => EjercicioDto.toJson(e)).toList(),
-        'preguntas': preguntas.map((p) => PreguntaDto.toJson(p)).toList(),
-        'opciones': opciones.map((o) => OpcionDto.toJson(o)).toList(),
-        'reportes': reportes,
-        'lecciones_cursos': leccionesCursos,
-        'calificaciones':
-            calificaciones.map((c) => CalificacionDto.toJson(c)).toList(),
-        'progreso_usuario': progresoUsuario,
-        'respuestas_usuario': respuestasUsuario,
-        'guardados': guardados,
-        'guardados_cursos': guardadosCursos,
-        'rachas': rachas,
-        'notificaciones': notificaciones,
-      };
+      final fullData = _toMap();
       await prefs.setString(_storageKey, json.encode(fullData));
-      notifyListeners();
     } catch (e) {
       if (kDebugMode) print("Error saving central data: $e");
     }
@@ -460,22 +618,18 @@ class BooklService extends ChangeNotifier {
 
   void guardarDatos() {
     _save();
+    notifyListeners();
   }
 
   // ── Racha (Streak) ──────────────────────────────────────────────────────────
-
-  /// Obtiene la racha de un usuario. Retorna null si no existe.
   Map<String, dynamic>? getRacha(int idUsuario) {
     try {
       return rachas.firstWhere((r) => r['id_usuario'] == idUsuario);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
-  /// Registra actividad diaria para un usuario.
-  /// Si hoy ya fue registrado, no hace nada.
-  /// Si no, agrega hoy a la lista y recalcula la racha consecutiva.
   void registrarActividad(int idUsuario) {
     if (idUsuario == 0) return;
 
@@ -483,8 +637,8 @@ class BooklService extends ChangeNotifier {
     final hoyStr =
         '${hoy.year}-${hoy.month.toString().padLeft(2, '0')}-${hoy.day.toString().padLeft(2, '0')}';
 
-    // Buscar la racha existente o crear una nueva
     var rachaIdx = rachas.indexWhere((r) => r['id_usuario'] == idUsuario);
+    int racha = 1;
 
     if (rachaIdx == -1) {
       rachas.add({
@@ -494,15 +648,11 @@ class BooklService extends ChangeNotifier {
       });
     } else {
       final dias = List<String>.from(rachas[rachaIdx]['dias_actividad'] ?? []);
-
-      // Si hoy ya está registrado, no hacer nada
       if (dias.contains(hoyStr)) return;
 
       dias.add(hoyStr);
-      dias.sort(); // Mantener ordenado
+      dias.sort();
 
-      // Recalcular racha consecutiva (días consecutivos hacia atrás desde hoy)
-      int racha = 1;
       DateTime current = hoy;
       for (int i = dias.length - 2; i >= 0; i--) {
         final diaAnterior = DateTime.parse(dias[i]);
@@ -525,6 +675,23 @@ class BooklService extends ChangeNotifier {
     }
 
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        final client = SupabaseClientHelper.client;
+        client.from('tbl_racha').upsert({
+          'id_usuario': idUsuario,
+          'current_streak': racha,
+          'max_streak': racha,
+          'last_activity_date': hoyStr,
+          'active': true,
+        }, onConflict: 'id_usuario').then((_) => null,
+            onError: (e) => debugPrint("Supabase racha error: $e"));
+      } catch (e) {
+        debugPrint("Error syncing racha: $e");
+      }
+    }
   }
 
   // ── Operaciones de Escritura ───────────────────────────────────────────────
@@ -554,6 +721,36 @@ class BooklService extends ChangeNotifier {
         );
       }
       _save();
+      notifyListeners();
+
+      if (SupabaseClientHelper.isConfigured) {
+        try {
+          SupabaseClientHelper.client
+              .from('tbl_usuario')
+              .update({
+                'nombre_completo': usuario.nombreCompleto,
+                'correo': usuario.correo,
+                'rol': usuario.rol,
+                'programa': usuario.programa,
+                'activo': usuario.activo,
+                'avatar_url': usuario.avatarUrl,
+                'username': usuario.username,
+                'descripcion': usuario.descripcion,
+                'celular': usuario.celular,
+                'semestre': usuario.semestre,
+                if (usuario.nacimiento != null)
+                  'nacimiento':
+                      usuario.nacimiento!.toIso8601String().split('T')[0],
+                if (usuario.preferencias != null)
+                  'preferencias': usuario.preferencias,
+              })
+              .eq('id_usuario', usuario.idUsuario)
+              .then((_) => null,
+                  onError: (e) => debugPrint("Supabase error: $e"));
+        } catch (e) {
+          debugPrint("Error updating usuario: $e");
+        }
+      }
     }
   }
 
@@ -561,6 +758,23 @@ class BooklService extends ChangeNotifier {
     cursos.add(curso);
     registrarActividad(AppSession().usuarioId ?? 0);
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client.from('tbl_curso').insert({
+          'id_curso': curso.idCurso,
+          'id_usuario_fk': curso.idUsuarioFk,
+          'nombre': curso.nombre,
+          'imagen_url': curso.imagenUrl,
+          'tag_color': curso.tagColor,
+          'es_nuevo': curso.esNuevo,
+          'estado': curso.estado,
+        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (e) {
+        debugPrint("Error adding curso: $e");
+      }
+    }
   }
 
   void addLeccion(Leccion leccion, {int? idCurso}) {
@@ -573,6 +787,32 @@ class BooklService extends ChangeNotifier {
     }
     registrarActividad(AppSession().usuarioId ?? 0);
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        final client = SupabaseClientHelper.client;
+        client.from('tbl_leccion').insert({
+          'id_leccion': leccion.idLeccion,
+          'id_usuario_fk': leccion.idUsuarioFk,
+          'nombre': leccion.nombre,
+          'imagen_url': leccion.imagenUrl,
+          'tag_color': leccion.tagColor,
+          'es_nuevo': leccion.esNuevo,
+          'estado': leccion.estado,
+        }).then((_) {
+          if (idCurso != null) {
+            client.from('tbl_lecciones_cursos').insert({
+              'id_leccion': leccion.idLeccion,
+              'id_curso': idCurso,
+            }).then((_) => null,
+                onError: (e) => debugPrint("Supabase error: $e"));
+          }
+        }, onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (e) {
+        debugPrint("Error adding leccion: $e");
+      }
+    }
   }
 
   void updateLeccion(Leccion leccion) {
@@ -580,12 +820,47 @@ class BooklService extends ChangeNotifier {
     if (idx != -1) {
       lecciones[idx] = leccion;
       _save();
+      notifyListeners();
+
+      if (SupabaseClientHelper.isConfigured) {
+        try {
+          SupabaseClientHelper.client
+              .from('tbl_leccion')
+              .update({
+                'nombre': leccion.nombre,
+                'imagen_url': leccion.imagenUrl,
+                'tag_color': leccion.tagColor,
+                'es_nuevo': leccion.esNuevo,
+                'estado': leccion.estado,
+              })
+              .eq('id_leccion', leccion.idLeccion)
+              .then((_) => null,
+                  onError: (e) => debugPrint("Supabase error: $e"));
+        } catch (e) {
+          debugPrint("Error updating leccion: $e");
+        }
+      }
     }
   }
 
   void addCapitulo(Capitulo capitulo) {
     capitulos.add(capitulo);
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client.from('tbl_capitulo').insert({
+          'id_capitulo': capitulo.idCapitulo,
+          'id_leccion': capitulo.idLeccion,
+          'nombre': capitulo.nombre,
+          'contenido': capitulo.contenido,
+          'tiempo_total': capitulo.tiempoTotal,
+        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (e) {
+        debugPrint("Error adding capitulo: $e");
+      }
+    }
   }
 
   void updateCapitulo(Capitulo capitulo) {
@@ -594,6 +869,25 @@ class BooklService extends ChangeNotifier {
     if (idx != -1) {
       capitulos[idx] = capitulo;
       _save();
+      notifyListeners();
+
+      if (SupabaseClientHelper.isConfigured) {
+        try {
+          SupabaseClientHelper.client
+              .from('tbl_capitulo')
+              .update({
+                'id_leccion': capitulo.idLeccion,
+                'nombre': capitulo.nombre,
+                'contenido': capitulo.contenido,
+                'tiempo_total': capitulo.tiempoTotal,
+              })
+              .eq('id_capitulo', capitulo.idCapitulo)
+              .then((_) => null,
+                  onError: (e) => debugPrint("Supabase error: $e"));
+        } catch (e) {
+          debugPrint("Error updating capitulo: $e");
+        }
+      }
     }
   }
 
@@ -602,25 +896,86 @@ class BooklService extends ChangeNotifier {
     if (idx != -1) {
       cursos[idx] = curso;
       _save();
+      notifyListeners();
+
+      if (SupabaseClientHelper.isConfigured) {
+        try {
+          SupabaseClientHelper.client
+              .from('tbl_curso')
+              .update({
+                'nombre': curso.nombre,
+                'imagen_url': curso.imagenUrl,
+                'tag_color': curso.tagColor,
+                'es_nuevo': curso.esNuevo,
+                'estado': curso.estado,
+              })
+              .eq('id_curso', curso.idCurso)
+              .then((_) => null,
+                  onError: (e) => debugPrint("Supabase error: $e"));
+        } catch (e) {
+          debugPrint("Error updating curso: $e");
+        }
+      }
     }
   }
 
   void removeCurso(int id) {
     cursos.removeWhere((c) => c.idCurso == id);
-    // Eliminar también relaciones
     leccionesCursos.removeWhere((lc) => lc['id_curso'] == id);
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client
+            .from('tbl_curso')
+            .delete()
+            .eq('id_curso', id)
+            .then((_) => null,
+                onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (e) {
+        debugPrint("Error removing curso: $e");
+      }
+    }
   }
 
   void removeLeccion(int id) {
     lecciones.removeWhere((l) => l.idLeccion == id);
     leccionesCursos.removeWhere((lc) => lc['id_leccion'] == id);
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client
+            .from('tbl_leccion')
+            .delete()
+            .eq('id_leccion', id)
+            .then((_) => null,
+                onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (e) {
+        debugPrint("Error removing leccion: $e");
+      }
+    }
   }
 
   void removeCapitulo(int id) {
     capitulos.removeWhere((c) => c.idCapitulo == id);
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client
+            .from('tbl_capitulo')
+            .delete()
+            .eq('id_capitulo', id)
+            .then((_) => null,
+                onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (e) {
+        debugPrint("Error removing capitulo: $e");
+      }
+    }
   }
 
   void saveConfiguracion(Configuracion config) {
@@ -632,17 +987,51 @@ class BooklService extends ChangeNotifier {
       configuraciones.add(config);
     }
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client.from('tbl_configuracion').upsert({
+          'id_usuario': config.idUsuario,
+          'tema': config.temaOscuro,
+          'idioma': config.idioma,
+          'notificaciones_push': config.notificacionesPush,
+          'notificaciones_email': config.notificacionesEmail,
+          'notificaciones_racha': config.notificacionesRacha,
+          'tamano_fuente': config.tamanoFuente,
+          'reproduccion_auto': config.reproduccionAuto,
+          'perfil_publico': config.perfilPublico,
+        }, onConflict: 'id_usuario').then((_) => null,
+            onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (e) {
+        debugPrint("Error saving configuracion: $e");
+      }
+    }
   }
 
   void saveSugerencia(Map<String, dynamic> sugerencia) {
     sugerencias.add(sugerencia);
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client.from('tbl_reporte').insert({
+          'id_usuario_fk': sugerencia['id_usuario'],
+          'entidad_tipo': 'sugerencia',
+          'entidad_id': sugerencia['id_sugerencia'] ?? 0,
+          'motivo':
+              'Asunto: ${sugerencia['asunto']}\nProblema: ${sugerencia['problema']}',
+        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (e) {
+        debugPrint("Error saving sugerencia: $e");
+      }
+    }
   }
 
   // ── Operaciones Ejercicios ─────────────────────────────────────────────────
   void addEjercicio(Ejercicio e) {
     ejercicios.add(e);
-    // Re-anidar en el capítulo correspondiente
     final capIdx = capitulos.indexWhere((c) => c.idCapitulo == e.idCapitulo);
     if (capIdx != -1) {
       final cap = capitulos[capIdx];
@@ -651,13 +1040,27 @@ class BooklService extends ChangeNotifier {
       );
     }
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client.from('tbl_ejercicio').insert({
+          'id_ejercicio': e.idEjercicio,
+          'id_capitulo': e.idCapitulo,
+          'tipo': e.tipo.name,
+          'titulo': e.titulo,
+          'descripcion': e.descripcion,
+        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (ex) {
+        debugPrint("Error adding ejercicio: $ex");
+      }
+    }
   }
 
   void updateEjercicio(Ejercicio e) {
     final idx = ejercicios.indexWhere((x) => x.idEjercicio == e.idEjercicio);
     if (idx != -1) {
       ejercicios[idx] = e;
-      // Re-anidar en el capítulo
       final capIdx = capitulos.indexWhere((c) => c.idCapitulo == e.idCapitulo);
       if (capIdx != -1) {
         final cap = capitulos[capIdx];
@@ -669,6 +1072,24 @@ class BooklService extends ChangeNotifier {
         capitulos[capIdx] = cap.copyWith(ejercicios: updatedEjs);
       }
       _save();
+      notifyListeners();
+
+      if (SupabaseClientHelper.isConfigured) {
+        try {
+          SupabaseClientHelper.client
+              .from('tbl_ejercicio')
+              .update({
+                'tipo': e.tipo.name,
+                'titulo': e.titulo,
+                'descripcion': e.descripcion,
+              })
+              .eq('id_ejercicio', e.idEjercicio)
+              .then((_) => null,
+                  onError: (e) => debugPrint("Supabase error: $e"));
+        } catch (ex) {
+          debugPrint("Error updating ejercicio: $ex");
+        }
+      }
     }
   }
 
@@ -683,14 +1104,12 @@ class BooklService extends ChangeNotifier {
           descripcion: ''),
     );
     ejercicios.removeWhere((e) => e.idEjercicio == idEjercicio);
-    // Limpiar preguntas y opciones asociadas
     final pregIds = preguntas
         .where((p) => p.idEjercicioFk == idEjercicio)
         .map((p) => p.idPregunta)
         .toSet();
     opciones.removeWhere((o) => pregIds.contains(o.idPreguntaFk));
     preguntas.removeWhere((p) => p.idEjercicioFk == idEjercicio);
-    // Re-anidar en el capítulo
     if (ej.idCapitulo != -1) {
       final capIdx = capitulos.indexWhere((c) => c.idCapitulo == ej.idCapitulo);
       if (capIdx != -1) {
@@ -703,11 +1122,24 @@ class BooklService extends ChangeNotifier {
       }
     }
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client
+            .from('tbl_ejercicio')
+            .delete()
+            .eq('id_ejercicio', idEjercicio)
+            .then((_) => null,
+                onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (ex) {
+        debugPrint("Error removing ejercicio: $ex");
+      }
+    }
   }
 
   void addPregunta(Pregunta p) {
     preguntas.add(p);
-    // Re-anidar en el ejercicio correspondiente
     final ejIdx =
         ejercicios.indexWhere((e) => e.idEjercicio == p.idEjercicioFk);
     if (ejIdx != -1) {
@@ -722,11 +1154,24 @@ class BooklService extends ChangeNotifier {
       );
     }
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client.from('tbl_pregunta').insert({
+          'id_pregunta': p.idPregunta,
+          'id_ejercicio_fk': p.idEjercicioFk,
+          'contenido': p.contenido,
+          'explicacion': p.explicacion,
+        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (ex) {
+        debugPrint("Error adding pregunta: $ex");
+      }
+    }
   }
 
   void addOpcion(Opcion o) {
     opciones.add(o);
-    // Re-anidar en la pregunta correspondiente
     final pIdx = preguntas.indexWhere((p) => p.idPregunta == o.idPreguntaFk);
     if (pIdx != -1) {
       final pr = preguntas[pIdx];
@@ -739,17 +1184,59 @@ class BooklService extends ChangeNotifier {
       );
     }
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client.from('tbl_opcion').insert({
+          'id_opcion': o.idOpcion,
+          'id_pregunta_fk': o.idPreguntaFk,
+          'contenido': o.contenido,
+          'correcta': o.correcta,
+        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (ex) {
+        debugPrint("Error adding opcion: $ex");
+      }
+    }
   }
 
   // ── Operaciones Discusión ─────────────────────────────────────────────────
   void addDiscusion(Discusion d) {
     discusiones.add(d);
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client.from('tbl_discusion').insert({
+          'id_discusion': d.idDiscusion,
+          'id_curso_fk': d.idCursoFk,
+          'id_leccion_fk': d.idLeccionFk,
+        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (ex) {
+        debugPrint("Error adding discusion: $ex");
+      }
+    }
   }
 
   void addComentario(Comentario c) {
     comentarios.add(c);
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client.from('tbl_comentario').insert({
+          'id_comentario': c.idComentario,
+          'id_discusion_fk': c.idDiscusionFk,
+          'id_usuario_fk': c.idUsuarioFk,
+          'contenido': c.contenido,
+          'id_padre': c.idPadre,
+        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (ex) {
+        debugPrint("Error adding comentario: $ex");
+      }
+    }
   }
 
   int getComentariosCount(int idDiscusion) {
@@ -768,9 +1255,12 @@ class BooklService extends ChangeNotifier {
         (s) => s['id_seguidor'] == idSeguidor && s['id_seguido'] == idSeguido);
 
     bool isNewFollow = false;
+    String estadoFinal = 'activo';
+
     if (idx != -1) {
       if (seguidores[idx]['estado'] == 'activo') {
         seguidores[idx]['estado'] = 'bloqueado';
+        estadoFinal = 'bloqueado';
       } else {
         seguidores[idx]['estado'] = 'activo';
         isNewFollow = true;
@@ -792,8 +1282,9 @@ class BooklService extends ChangeNotifier {
         nombreSeguidor = u.nombreCompleto;
       }
 
+      final notifId = generateId();
       notificaciones.insert(0, {
-        'id': generateId(),
+        'id': notifId,
         'id_usuario_fk': idSeguido,
         'tipo': 'follow',
         'id_referencia': idSeguidor,
@@ -801,9 +1292,52 @@ class BooklService extends ChangeNotifier {
         'leida': false,
         'created_at': DateTime.now().toIso8601String(),
       });
+
+      if (SupabaseClientHelper.isConfigured) {
+        try {
+          SupabaseClientHelper.client.from('tbl_notificacion').insert({
+            'id_notificacion': notifId,
+            'id_usuario_fk': idSeguido,
+            'tipo': 'follow',
+            'id_referencia': idSeguidor,
+            'mensaje': '$nombreSeguidor ha comenzado a seguirte.',
+            'leida': false,
+          }).then((_) => null,
+              onError: (e) => debugPrint("Supabase notif error: $e"));
+        } catch (e) {
+          debugPrint("Error syncing follow notification: $e");
+        }
+      }
     }
 
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        final client = SupabaseClientHelper.client;
+        if (idx != -1) {
+          client
+              .from('tbl_seguidores')
+              .update({
+                'estado': estadoFinal,
+              })
+              .eq('id_seguidor', idSeguidor)
+              .eq('id_seguido', idSeguido)
+              .then((_) => null,
+                  onError: (e) => debugPrint("Supabase error: $e"));
+        } else {
+          client.from('tbl_seguidores').insert({
+            'id_seguidor': idSeguidor,
+            'id_seguido': idSeguido,
+            'estado': 'activo',
+          }).then((_) => null,
+              onError: (e) => debugPrint("Supabase error: $e"));
+        }
+      } catch (ex) {
+        debugPrint("Error syncing followers: $ex");
+      }
+    }
   }
 
   int getFollowersCount(int idUsuario) {
@@ -827,7 +1361,23 @@ class BooklService extends ChangeNotifier {
         changed = true;
       }
     }
-    if (changed) _save();
+    if (changed) {
+      _save();
+      notifyListeners();
+
+      if (SupabaseClientHelper.isConfigured) {
+        try {
+          SupabaseClientHelper.client
+              .from('tbl_notificacion')
+              .update({'leida': true})
+              .eq('id_usuario_fk', idUsuario)
+              .then((_) => null,
+                  onError: (e) => debugPrint("Supabase error: $e"));
+        } catch (ex) {
+          debugPrint("Error syncing notificaciones: $ex");
+        }
+      }
+    }
   }
 
   void clearAllData() async {
@@ -862,8 +1412,6 @@ class BooklService extends ChangeNotifier {
         1;
   }
 
-  // Generador de IDs único para nuevos registros locales
-  // Se usa microsegundos para minimizar riesgo de colisión en ráfagas.
   int generateId() => DateTime.now().microsecondsSinceEpoch;
 
   // ── Operaciones de Reportes ────────────────────────────────────────────────
@@ -873,8 +1421,9 @@ class BooklService extends ChangeNotifier {
     required int entidadId,
     required String motivo,
   }) {
+    final repId = nextReporteId();
     final nuevoReporte = {
-      'id_reporte': nextReporteId(),
+      'id_reporte': repId,
       'id_usuario_fk': idUsuarioFk,
       'entidad_tipo': entidadTipo,
       'entidad_id': entidadId,
@@ -883,12 +1432,44 @@ class BooklService extends ChangeNotifier {
     };
     reportes.add(nuevoReporte);
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client.from('tbl_reporte').insert({
+          'id_reporte': repId,
+          'id_usuario_fk': idUsuarioFk,
+          'entidad_tipo': entidadTipo,
+          'entidad_id': entidadId,
+          'motivo': motivo,
+        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (ex) {
+        debugPrint("Error adding reporte: $ex");
+      }
+    }
   }
 
   // ── Operaciones Material Educativo ──────────────────────────────────────────
   void addMaterial(MaterialEducativo m) {
     materiales.add(m);
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client.from('tbl_material').insert({
+          'id_material': m.idMaterial,
+          'id_leccion_fk': m.idLeccionFk,
+          'nombre': m.nombre,
+          'url': m.url,
+          'descripcion': m.descripcion,
+          'tipo': m.tipo,
+          'tamano_bytes': m.tamanoBytes,
+        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (ex) {
+        debugPrint("Error adding material: $ex");
+      }
+    }
   }
 
   void updateMaterial(MaterialEducativo m) {
@@ -896,12 +1477,46 @@ class BooklService extends ChangeNotifier {
     if (idx != -1) {
       materiales[idx] = m;
       _save();
+      notifyListeners();
+
+      if (SupabaseClientHelper.isConfigured) {
+        try {
+          SupabaseClientHelper.client
+              .from('tbl_material')
+              .update({
+                'nombre': m.nombre,
+                'url': m.url,
+                'descripcion': m.descripcion,
+                'tipo': m.tipo,
+                'tamano_bytes': m.tamanoBytes,
+              })
+              .eq('id_material', m.idMaterial)
+              .then((_) => null,
+                  onError: (e) => debugPrint("Supabase error: $e"));
+        } catch (ex) {
+          debugPrint("Error updating material: $ex");
+        }
+      }
     }
   }
 
   void removeMaterial(int id) {
     materiales.removeWhere((m) => m.idMaterial == id);
     _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client
+            .from('tbl_material')
+            .delete()
+            .eq('id_material', id)
+            .then((_) => null,
+                onError: (e) => debugPrint("Supabase error: $e"));
+      } catch (ex) {
+        debugPrint("Error removing material: $ex");
+      }
+    }
   }
 
   List<MaterialEducativo> materialesDeLeccion(int idLeccion) {
@@ -909,28 +1524,27 @@ class BooklService extends ChangeNotifier {
   }
 
   // ── Calificaciones (Reseñas Dinámicas) ─────────────────────────────────────
-
   Future<(double, bool)> agregarOActualizarCalificacion(
       int idObjeto, String tipoObjeto, int idUsuario, int valor) async {
     bool isUpdate = false;
-    // 1. Buscar si ya existe una calificación de este usuario para este objeto
     final index = calificaciones.indexWhere((c) =>
         c.idObjetoFk == idObjeto &&
         c.tipoObjeto == tipoObjeto &&
         c.idUsuarioFk == idUsuario);
 
+    int califId;
     if (index >= 0) {
-      // Actualizar existente
       calificaciones[index] = calificaciones[index].copyWith(valor: valor);
+      califId = calificaciones[index].idCalificacion;
       isUpdate = true;
     } else {
-      // Crear nueva
       final newId = calificaciones.isEmpty
           ? 1
           : calificaciones
                   .map((c) => c.idCalificacion)
                   .reduce((a, b) => a > b ? a : b) +
               1;
+      califId = newId;
       calificaciones.add(Calificacion(
         idCalificacion: newId,
         idObjetoFk: idObjeto,
@@ -940,7 +1554,6 @@ class BooklService extends ChangeNotifier {
       ));
     }
 
-    // 2. Calcular nuevo promedio ponderado
     final calificacionesDelObjeto = calificaciones
         .where((c) => c.idObjetoFk == idObjeto && c.tipoObjeto == tipoObjeto)
         .toList();
@@ -952,14 +1565,12 @@ class BooklService extends ChangeNotifier {
       nuevoPromedio = suma / calificacionesDelObjeto.length;
     }
 
-    // 3. Modificar la memoria del objeto destino (Leccion o Curso)
     if (tipoObjeto == 'leccion') {
       final iLeccion = lecciones.indexWhere((l) => l.idLeccion == idObjeto);
       if (iLeccion >= 0) {
         lecciones[iLeccion] = lecciones[iLeccion]
             .copyWith(rating: double.parse(nuevoPromedio.toStringAsFixed(1)));
-        nuevoPromedio =
-            lecciones[iLeccion].rating; // Mantenemos 1 decimal congruente
+        nuevoPromedio = lecciones[iLeccion].rating;
       }
     } else if (tipoObjeto == 'curso') {
       final iCurso = cursos.indexWhere((c) => c.idCurso == idObjeto);
@@ -970,8 +1581,43 @@ class BooklService extends ChangeNotifier {
       }
     }
 
-    // 4. Persistir cambios
     await _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        final client = SupabaseClientHelper.client;
+        final tableName = tipoObjeto == 'leccion'
+            ? 'tbl_calificacion_leccion'
+            : 'tbl_calificacion_curso';
+        final colName =
+            tipoObjeto == 'leccion' ? 'id_leccion_fk' : 'id_curso_fk';
+
+        if (isUpdate) {
+          client
+              .from(tableName)
+              .update({
+                'valor': valor,
+              })
+              .eq('id_usuario_fk', idUsuario)
+              .eq(colName, idObjeto)
+              .then((_) => null,
+                  onError: (e) =>
+                      debugPrint("Supabase rating update error: $e"));
+        } else {
+          client.from(tableName).insert({
+            'id_calificacion': califId,
+            'id_usuario_fk': idUsuario,
+            colName: idObjeto,
+            'valor': valor,
+          }).then((_) => null,
+              onError: (e) => debugPrint("Supabase rating insert error: $e"));
+        }
+      } catch (ex) {
+        debugPrint("Error syncing ratings: $ex");
+      }
+    }
+
     return (nuevoPromedio, isUpdate);
   }
 }

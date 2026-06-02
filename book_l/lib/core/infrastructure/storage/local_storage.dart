@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/bookl_service.dart';
+import '../services/supabase_client.dart';
 
 // Singleton de sesión activa — ÚNICA clase del proyecto que usa SharedPreferences.
 //
@@ -156,6 +157,7 @@ class AppSession {
 
   void toggleSavedCurso(int idCurso) {
     final current = Set<int>.from(savedCursos.value);
+    final wasAdded = !current.contains(idCurso);
     if (current.contains(idCurso)) {
       current.remove(idCurso);
     } else {
@@ -164,10 +166,35 @@ class AppSession {
     savedCursos.value = current;
     _prefs.setStringList(
         _kSavedCursos, current.map((e) => e.toString()).toList());
+
+    if (usuarioId != null && SupabaseClientHelper.isConfigured) {
+      try {
+        final client = SupabaseClientHelper.client;
+        if (wasAdded) {
+          client.from('tbl_guardado_curso').insert({
+            'id_usuario': usuarioId,
+            'id_curso': idCurso,
+          }).then((_) => null,
+              onError: (e) => debugPrint("Supabase saved curso error: $e"));
+        } else {
+          client
+              .from('tbl_guardado_curso')
+              .delete()
+              .eq('id_usuario', usuarioId!)
+              .eq('id_curso', idCurso)
+              .then((_) => null,
+                  onError: (e) =>
+                      debugPrint("Supabase unsaved curso error: $e"));
+        }
+      } catch (e) {
+        debugPrint("Error syncing saved curso: $e");
+      }
+    }
   }
 
   void toggleSavedLeccion(int idLeccion) {
     final current = Set<int>.from(savedLecciones.value);
+    final wasAdded = !current.contains(idLeccion);
     if (current.contains(idLeccion)) {
       current.remove(idLeccion);
     } else {
@@ -176,6 +203,30 @@ class AppSession {
     savedLecciones.value = current;
     _prefs.setStringList(
         _kSavedLecciones, current.map((e) => e.toString()).toList());
+
+    if (usuarioId != null && SupabaseClientHelper.isConfigured) {
+      try {
+        final client = SupabaseClientHelper.client;
+        if (wasAdded) {
+          client.from('tbl_guardado_leccion').insert({
+            'id_usuario': usuarioId,
+            'id_leccion': idLeccion,
+          }).then((_) => null,
+              onError: (e) => debugPrint("Supabase saved leccion error: $e"));
+        } else {
+          client
+              .from('tbl_guardado_leccion')
+              .delete()
+              .eq('id_usuario', usuarioId!)
+              .eq('id_leccion', idLeccion)
+              .then((_) => null,
+                  onError: (e) =>
+                      debugPrint("Supabase unsaved leccion error: $e"));
+        }
+      } catch (e) {
+        debugPrint("Error syncing saved leccion: $e");
+      }
+    }
   }
 
   void marcarCapituloCompletado(int idCapitulo, bool completado) {
@@ -190,6 +241,20 @@ class AppSession {
     completedCapitulos.value = current;
     _prefs.setStringList(
         _kCompletedCapitulos, current.map((e) => e.toString()).toList());
+
+    if (usuarioId != null && SupabaseClientHelper.isConfigured) {
+      try {
+        final client = SupabaseClientHelper.client;
+        client.from('tbl_progreso_usuario').upsert({
+          'id_usuario_fk': usuarioId,
+          'id_capitulo_fk': idCapitulo,
+          'estado': completado ? 'completada' : 'no_iniciada',
+        }, onConflict: 'id_usuario_fk,id_capitulo_fk').then((_) => null,
+            onError: (e) => debugPrint("Supabase progress error: $e"));
+      } catch (e) {
+        debugPrint("Error syncing completed chapter: $e");
+      }
+    }
   }
 
   void marcarEjercicioCompletado(int idEjercicio, int idCapitulo) {

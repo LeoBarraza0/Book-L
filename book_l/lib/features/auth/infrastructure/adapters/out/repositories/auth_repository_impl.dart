@@ -1,14 +1,13 @@
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
 import 'package:book_l/core/infrastructure/storage/local_storage.dart';
+import 'package:book_l/core/infrastructure/services/supabase_client.dart';
 import 'package:book_l/features/auth/infrastructure/adapters/out/dtos/usuario_dto.dart';
 import 'package:book_l/features/auth/domain/models/usuario.dart';
 import 'package:book_l/features/auth/application/ports/out/auth_repository.dart';
+import 'package:flutter/foundation.dart';
 
 // Adaptador secundario — implementa el contrato AuthRepository usando
-// BooklService (JSON en memoria) + AppSession (SharedPreferences).
-//
-// Cuando se migre a API: reemplazar el cuerpo de cada método para llamar
-// a DioClient. La interfaz AuthRepository no cambia.
+// Supabase (PostgreSQL) + BooklService + AppSession (SharedPreferences).
 class AuthRepositoryImpl implements AuthRepository {
   final BooklService _service;
   final AppSession _session;
@@ -19,12 +18,37 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Usuario?> login(String correo, String contrasena) async {
     UsuarioDto? found;
-    for (final u in _service.usuariosDto) {
-      if (u.correo.toLowerCase() == correo.trim().toLowerCase() &&
-          u.contrasena == contrasena &&
-          u.activo) {
-        found = u;
-        break;
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        final client = SupabaseClientHelper.client;
+        final res = await client
+            .from('tbl_usuario')
+            .select()
+            .eq('correo', correo.trim().toLowerCase())
+            .eq('contrasena', contrasena)
+            .eq('activo', true)
+            .maybeSingle();
+
+        if (res != null) {
+          found = UsuarioDto.fromJson(res);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print("Error al iniciar sesión en Supabase: $e");
+        }
+      }
+    }
+
+    // Fallback: Si no está configurado Supabase o falló la red, buscar localmente
+    if (found == null) {
+      for (final u in _service.usuariosDto) {
+        if (u.correo.toLowerCase() == correo.trim().toLowerCase() &&
+            u.contrasena == contrasena &&
+            u.activo) {
+          found = u;
+          break;
+        }
       }
     }
 
@@ -33,7 +57,7 @@ class AuthRepositoryImpl implements AuthRepository {
     final usuario = found.toEntity();
 
     await _session.guardarSesion(
-      token: 'local_${found.idUsuario}', // token simulado para JSON local
+      token: 'supabase_${found.idUsuario}',
       usuarioId: usuario.idUsuario,
       nombreCompleto: usuario.nombreCompleto,
       rol: usuario.rol,
@@ -52,33 +76,80 @@ class AuthRepositoryImpl implements AuthRepository {
     required String rol,
     String? programa,
   }) async {
-    // Verificar que el correo no exista
-    final existe = _service.usuariosDto.any(
-      (u) => u.correo.toLowerCase() == correo.trim().toLowerCase(),
-    );
-    if (existe) throw Exception('El correo ya está registrado');
+    UsuarioDto? dto;
 
-    final nuevoId = _service.nextUsuarioId();
-    final dto = UsuarioDto(
-      idUsuario: nuevoId,
-      nombreCompleto: nombreCompleto.trim(),
-      correo: correo.trim().toLowerCase(),
-      contrasena: contrasena,
-      rol: rol,
-      programa: programa,
-      activo: true,
-      avatarUrl: null,
-    );
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        final client = SupabaseClientHelper.client;
 
-    // Persistir en memoria (BooklService)
-    _service.usuariosDto.add(dto);
+        // Verificar si el correo ya existe en Supabase
+        final existeRes = await client
+            .from('tbl_usuario')
+            .select('id_usuario')
+            .eq('correo', correo.trim().toLowerCase())
+            .maybeSingle();
+
+        if (existeRes != null) {
+          throw Exception('El correo ya está registrado');
+        }
+
+        // Insertar en Supabase. El id se autogenera mediante SERIAL
+        final insertRes = await client.from('tbl_usuario').insert({
+          'nombre_completo': nombreCompleto.trim(),
+          'correo': correo.trim().toLowerCase(),
+          'contrasena': contrasena,
+          'rol': rol,
+          if (programa != null) 'programa': programa,
+          'activo': true,
+        }).select().single();
+
+        dto = UsuarioDto.fromJson(insertRes);
+
+        // Sincronizar en el servicio local
+        if (!_service.usuariosDto.any((u) => u.idUsuario == dto!.idUsuario)) {
+          _service.usuariosDto.add(dto);
+          _service.usuarios.add(dto.toEntity());
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print("Error al registrar en Supabase: $e");
+        }
+        if (e.toString().contains('ya está registrado')) {
+          rethrow;
+        }
+      }
+    }
+
+    // Fallback: Si no está configurado o falló la red
+    if (dto == null) {
+      final existe = _service.usuariosDto.any(
+        (u) => u.correo.toLowerCase() == correo.trim().toLowerCase(),
+      );
+      if (existe) throw Exception('El correo ya está registrado');
+
+      final nuevoId = _service.nextUsuarioId();
+      dto = UsuarioDto(
+        idUsuario: nuevoId,
+        nombreCompleto: nombreCompleto.trim(),
+        correo: correo.trim().toLowerCase(),
+        contrasena: contrasena,
+        rol: rol,
+        programa: programa,
+        activo: true,
+        avatarUrl: null,
+      );
+
+      _service.usuariosDto.add(dto);
+      _service.usuarios.add(dto.toEntity());
+      _service.guardarDatos();
+    }
+
     final usuario = dto.toEntity();
-    _service.usuarios.add(usuario);
 
     // Guardar sesión automáticamente al registrarse
     await _session.guardarSesion(
-      token: 'local_$nuevoId',
-      usuarioId: nuevoId,
+      token: 'supabase_${dto.idUsuario}',
+      usuarioId: dto.idUsuario,
       nombreCompleto: usuario.nombreCompleto,
       rol: usuario.rol,
       programa: usuario.programa,

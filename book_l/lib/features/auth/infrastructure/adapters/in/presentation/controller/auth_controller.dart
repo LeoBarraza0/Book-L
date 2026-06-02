@@ -199,5 +199,7 @@ class AuthController extends ChangeNotifier {
   @override
   void dispose() {
     // Es un Singleton, no debe destruirse nunca para evitar errores de 'used after being disposed'.
+    // Igualmente se llama super.dispose() para cumplir el contrato de ChangeNotifier.
+    super.dispose();
   }
 }
