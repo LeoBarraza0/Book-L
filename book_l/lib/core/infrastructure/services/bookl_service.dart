@@ -690,14 +690,19 @@ class BooklService extends ChangeNotifier {
     if (SupabaseClientHelper.isConfigured) {
       try {
         final client = SupabaseClientHelper.client;
-        client.from('tbl_racha').upsert(<String, Object>{
-          'id_usuario': idUsuario,
-          'current_streak': racha,
-          'max_streak': racha,
-          'last_activity_date': hoyStr,
-          'active': true,
-        }, onConflict: 'id_usuario').then((_) => null,
-            onError: (e) => debugPrint("Supabase racha error: $e"));
+        client
+            .from('tbl_racha')
+            .upsert(
+                Map<String, dynamic>.from(<String, dynamic>{
+                  'id_usuario': idUsuario,
+                  'current_streak': racha,
+                  'max_streak': racha,
+                  'last_activity_date': hoyStr,
+                  'active': true,
+                }),
+                onConflict: 'id_usuario')
+            .then((_) => null,
+                onError: (e) => debugPrint("Supabase racha error: $e"));
       } catch (e) {
         debugPrint("Error syncing racha: $e");
       }
@@ -735,7 +740,7 @@ class BooklService extends ChangeNotifier {
 
       if (SupabaseClientHelper.isConfigured) {
         try {
-          final userMap = <String, Object?>{
+          final userMap = <String, dynamic>{
             'nombrecompleto': usuario.nombreCompleto,
             'correo': usuario.correo,
             'rol': usuario.rol,
@@ -753,7 +758,7 @@ class BooklService extends ChangeNotifier {
           }..removeWhere((_, v) => v == null);
           SupabaseClientHelper.client
               .from('tbl_usuario')
-              .update(userMap.cast<String, Object>())
+              .update(Map<String, dynamic>.from(userMap))
               .eq('idusuario', usuario.idUsuario)
               .then((_) => null,
                   onError: (e) => debugPrint("Supabase error: $e"));
@@ -772,7 +777,7 @@ class BooklService extends ChangeNotifier {
 
     if (SupabaseClientHelper.isConfigured) {
       try {
-        final cursoMap = <String, Object>{
+        final cursoMap = <String, dynamic>{
           'idcurso': curso.idCurso,
           'idusuariofk': curso.idUsuarioFk,
           'nombre': curso.nombre,
@@ -781,11 +786,13 @@ class BooklService extends ChangeNotifier {
         };
         if (curso.imagenUrl != null) cursoMap['imagen_url'] = curso.imagenUrl!;
         if (curso.tagColor != null) cursoMap['tagcolor'] = curso.tagColor!;
-        if (curso.duracion != null && curso.duracion!.isNotEmpty) cursoMap['duracion'] = curso.duracion!;
-        if (curso.contenido != null) cursoMap['contenido'] = jsonEncode(curso.contenido);
+        if (curso.duracion != null && curso.duracion!.isNotEmpty)
+          cursoMap['duracion'] = curso.duracion!;
+        if (curso.contenido != null)
+          cursoMap['contenido'] = jsonEncode(curso.contenido);
         SupabaseClientHelper.client
             .from('tbl_curso')
-            .insert(cursoMap)
+            .insert(Map<String, dynamic>.from(cursoMap))
             .then((_) => null,
                 onError: (e) => debugPrint("Supabase error: $e"));
       } catch (e) {
@@ -809,27 +816,34 @@ class BooklService extends ChangeNotifier {
     if (SupabaseClientHelper.isConfigured) {
       try {
         final client = SupabaseClientHelper.client;
-        final leccionMap = <String, Object>{
+        final leccionMap = <String, dynamic>{
           'idleccion': leccion.idLeccion,
           'idusuariofk': leccion.idUsuarioFk,
           'nombre': leccion.nombre,
           'esnuevo': leccion.esNuevo ?? true,
           'estado': leccion.estado ?? 'activa',
         };
-        if (leccion.imagenUrl != null) leccionMap['imagen_url'] = leccion.imagenUrl!;
-        if (leccion.tagColor != null) leccionMap['tagcolor'] = leccion.tagColor!;
-        if (leccion.duracion != null && leccion.duracion!.isNotEmpty) leccionMap['duracion'] = leccion.duracion!;
-        if (leccion.contenido != null) leccionMap['contenido'] = jsonEncode(leccion.contenido);
+        if (leccion.imagenUrl != null)
+          leccionMap['imagen_url'] = leccion.imagenUrl!;
+        if (leccion.tagColor != null)
+          leccionMap['tagcolor'] = leccion.tagColor!;
+        if (leccion.duracion != null && leccion.duracion!.isNotEmpty)
+          leccionMap['duracion'] = leccion.duracion!;
+        if (leccion.contenido != null)
+          leccionMap['contenido'] = jsonEncode(leccion.contenido);
         client
             .from('tbl_leccion')
-            .insert(leccionMap)
+            .insert(Map<String, dynamic>.from(leccionMap))
             .then((_) {
           if (idCurso != null) {
-            client.from('tbl_lecciones_cursos').insert(<String, Object>{
-              'idleccion': leccion.idLeccion,
-              'idcurso': idCurso,
-            }).then((_) => null,
-                onError: (e) => debugPrint("Supabase error: $e"));
+            client
+                .from('tbl_lecciones_cursos')
+                .insert(Map<String, dynamic>.from(<String, dynamic>{
+                  'idleccion': leccion.idLeccion,
+                  'idcurso': idCurso,
+                }))
+                .then((_) => null,
+                    onError: (e) => debugPrint("Supabase error: $e"));
           }
         }, onError: (e) => debugPrint("Supabase error: $e"));
       } catch (e) {
@@ -847,18 +861,22 @@ class BooklService extends ChangeNotifier {
 
       if (SupabaseClientHelper.isConfigured) {
         try {
-          final updateMap = <String, Object>{
+          final updateMap = <String, dynamic>{
             'nombre': leccion.nombre,
             'esnuevo': leccion.esNuevo ?? true,
             'estado': leccion.estado ?? 'activa',
           };
-          if (leccion.imagenUrl != null) updateMap['imagen_url'] = leccion.imagenUrl!;
-          if (leccion.tagColor != null) updateMap['tagcolor'] = leccion.tagColor!;
-          if (leccion.duracion != null && leccion.duracion!.isNotEmpty) updateMap['duracion'] = leccion.duracion!;
-          if (leccion.contenido != null) updateMap['contenido'] = jsonEncode(leccion.contenido);
+          if (leccion.imagenUrl != null)
+            updateMap['imagen_url'] = leccion.imagenUrl!;
+          if (leccion.tagColor != null)
+            updateMap['tagcolor'] = leccion.tagColor!;
+          if (leccion.duracion != null && leccion.duracion!.isNotEmpty)
+            updateMap['duracion'] = leccion.duracion!;
+          if (leccion.contenido != null)
+            updateMap['contenido'] = jsonEncode(leccion.contenido);
           SupabaseClientHelper.client
               .from('tbl_leccion')
-              .update(updateMap)
+              .update(Map<String, dynamic>.from(updateMap))
               .eq('idleccion', leccion.idLeccion)
               .then((_) => null,
                   onError: (e) => debugPrint("Supabase error: $e"));
@@ -876,7 +894,7 @@ class BooklService extends ChangeNotifier {
 
     if (SupabaseClientHelper.isConfigured) {
       try {
-        final capMap = <String, Object?>{
+        final capMap = <String, dynamic>{
           'idcapitulo': capitulo.idCapitulo,
           'idleccion': capitulo.idLeccion,
           'nombre': capitulo.nombre,
@@ -886,8 +904,9 @@ class BooklService extends ChangeNotifier {
         }..removeWhere((_, v) => v == null);
         SupabaseClientHelper.client
             .from('tbl_capitulo')
-            .insert(capMap.cast<String, Object>())
-            .then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+            .insert(Map<String, dynamic>.from(capMap))
+            .then((_) => null,
+                onError: (e) => debugPrint("Supabase error: $e"));
       } catch (e) {
         debugPrint("Error adding capitulo: $e");
       }
@@ -904,7 +923,7 @@ class BooklService extends ChangeNotifier {
 
       if (SupabaseClientHelper.isConfigured) {
         try {
-          final capUpdateMap = <String, Object?>{
+          final capUpdateMap = <String, dynamic>{
             'idleccion': capitulo.idLeccion,
             'nombre': capitulo.nombre,
             'tiempo_total': capitulo.tiempoTotal,
@@ -913,7 +932,7 @@ class BooklService extends ChangeNotifier {
           }..removeWhere((_, v) => v == null);
           SupabaseClientHelper.client
               .from('tbl_capitulo')
-              .update(capUpdateMap.cast<String, Object>())
+              .update(Map<String, dynamic>.from(capUpdateMap))
               .eq('idcapitulo', capitulo.idCapitulo)
               .then((_) => null,
                   onError: (e) => debugPrint("Supabase error: $e"));
@@ -933,18 +952,22 @@ class BooklService extends ChangeNotifier {
 
       if (SupabaseClientHelper.isConfigured) {
         try {
-          final updateCursoMap = <String, Object>{
+          final updateCursoMap = <String, dynamic>{
             'nombre': curso.nombre,
             'esnuevo': curso.esNuevo ?? true,
             'estado': curso.estado ?? 'activo',
           };
-          if (curso.imagenUrl != null) updateCursoMap['imagen_url'] = curso.imagenUrl!;
-          if (curso.tagColor != null) updateCursoMap['tagcolor'] = curso.tagColor!;
-          if (curso.duracion != null && curso.duracion!.isNotEmpty) updateCursoMap['duracion'] = curso.duracion!;
-          if (curso.contenido != null) updateCursoMap['contenido'] = jsonEncode(curso.contenido);
+          if (curso.imagenUrl != null)
+            updateCursoMap['imagen_url'] = curso.imagenUrl!;
+          if (curso.tagColor != null)
+            updateCursoMap['tagcolor'] = curso.tagColor!;
+          if (curso.duracion != null && curso.duracion!.isNotEmpty)
+            updateCursoMap['duracion'] = curso.duracion!;
+          if (curso.contenido != null)
+            updateCursoMap['contenido'] = jsonEncode(curso.contenido);
           SupabaseClientHelper.client
               .from('tbl_curso')
-              .update(updateCursoMap)
+              .update(Map<String, dynamic>.from(updateCursoMap))
               .eq('idcurso', curso.idCurso)
               .then((_) => null,
                   onError: (e) => debugPrint("Supabase error: $e"));
@@ -988,10 +1011,11 @@ class BooklService extends ChangeNotifier {
         try {
           SupabaseClientHelper.client
               .from('tbl_lecciones_cursos')
-              .insert(<String, Object>{
-            'idcurso': idCurso,
-            'idleccion': idLeccion,
-          }).then((_) => null,
+              .insert(Map<String, dynamic>.from(<String, dynamic>{
+                'idcurso': idCurso,
+                'idleccion': idLeccion,
+              }))
+              .then((_) => null,
                   onError: (e) => debugPrint("Supabase error: $e"));
         } catch (e) {
           debugPrint("Error adding lecciones_cursos: $e");
@@ -1076,17 +1100,20 @@ class BooklService extends ChangeNotifier {
       try {
         SupabaseClientHelper.client
             .from('tbl_configuracion')
-            .upsert(<String, Object>{
-          'idusuario': config.idUsuario,
-          'tema': config.temaOscuro,
-          'idioma': config.idioma,
-          'notificaciones_push': config.notificacionesPush,
-          'notificaciones_email': config.notificacionesEmail,
-          'notificaciones_racha': config.notificacionesRacha,
-          'tamano_fuente': config.tamanoFuente,
-          'reproduccion_auto': config.reproduccionAuto,
-          'perfil_publico': config.perfilPublico,
-        }, onConflict: 'idusuario').then((_) => null,
+            .upsert(
+                Map<String, dynamic>.from(<String, dynamic>{
+                  'idusuario': config.idUsuario,
+                  'tema': config.temaOscuro,
+                  'idioma': config.idioma,
+                  'notificaciones_push': config.notificacionesPush,
+                  'notificaciones_email': config.notificacionesEmail,
+                  'notificaciones_racha': config.notificacionesRacha,
+                  'tamano_fuente': config.tamanoFuente,
+                  'reproduccion_auto': config.reproduccionAuto,
+                  'perfil_publico': config.perfilPublico,
+                }),
+                onConflict: 'idusuario')
+            .then((_) => null,
                 onError: (e) => debugPrint("Supabase error: $e"));
       } catch (e) {
         debugPrint("Error saving configuracion: $e");
@@ -1101,13 +1128,17 @@ class BooklService extends ChangeNotifier {
 
     if (SupabaseClientHelper.isConfigured) {
       try {
-        SupabaseClientHelper.client.from('tbl_reporte').insert(<String, Object>{
-          'idusuariofk': sugerencia['id_usuario'] as Object,
-          'entidad_tipo': 'sugerencia',
-          'entidad_id': sugerencia['id_sugerencia'] ?? 0,
-          'motivo':
-              'Asunto: ${sugerencia['asunto']}\nProblema: ${sugerencia['problema']}',
-        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+        SupabaseClientHelper.client
+            .from('tbl_reporte')
+            .insert(Map<String, dynamic>.from(<String, dynamic>{
+              'idusuariofk': sugerencia['id_usuario'] as Object,
+              'entidad_tipo': 'sugerencia',
+              'entidad_id': sugerencia['id_sugerencia'] ?? 0,
+              'motivo':
+                  'Asunto: ${sugerencia['asunto']}\nProblema: ${sugerencia['problema']}',
+            }))
+            .then((_) => null,
+                onError: (e) => debugPrint("Supabase error: $e"));
       } catch (e) {
         debugPrint("Error saving sugerencia: $e");
       }
@@ -1131,13 +1162,15 @@ class BooklService extends ChangeNotifier {
       try {
         SupabaseClientHelper.client
             .from('tbl_ejercicio')
-            .insert(<String, Object>{
-          'idejercicio': e.idEjercicio,
-          'idcapitulo': e.idCapitulo,
-          'tipo': e.tipo.name,
-          'titulo': e.titulo,
-          'descripcion': e.descripcion,
-        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+            .insert(Map<String, dynamic>.from(<String, dynamic>{
+              'idejercicio': e.idEjercicio,
+              'idcapitulo': e.idCapitulo,
+              'tipo': e.tipo.name,
+              'titulo': e.titulo,
+              'descripcion': e.descripcion,
+            }))
+            .then((_) => null,
+                onError: (e) => debugPrint("Supabase error: $e"));
       } catch (ex) {
         debugPrint("Error adding ejercicio: $ex");
       }
@@ -1165,11 +1198,11 @@ class BooklService extends ChangeNotifier {
         try {
           SupabaseClientHelper.client
               .from('tbl_ejercicio')
-              .update(<String, Object>{
+              .update(Map<String, dynamic>.from({
                 'tipo': e.tipo.name,
                 'titulo': e.titulo,
                 'descripcion': e.descripcion,
-              })
+              }))
               .eq('idejercicio', e.idEjercicio)
               .then((_) => null,
                   onError: (e) => debugPrint("Supabase error: $e"));
@@ -1245,7 +1278,7 @@ class BooklService extends ChangeNotifier {
 
     if (SupabaseClientHelper.isConfigured) {
       try {
-        final pregMap = <String, Object?>{
+        final pregMap = <String, dynamic>{
           'idpregunta': p.idPregunta,
           'idejerciciofk': p.idEjercicioFk,
           'contenido': p.contenido,
@@ -1253,7 +1286,7 @@ class BooklService extends ChangeNotifier {
         }..removeWhere((_, v) => v == null);
         SupabaseClientHelper.client
             .from('tbl_pregunta')
-            .insert(pregMap.cast<String, Object>())
+            .insert(Map<String, dynamic>.from(pregMap))
             .then((_) => null,
                 onError: (e) => debugPrint("Supabase error: $e"));
       } catch (ex) {
@@ -1280,12 +1313,16 @@ class BooklService extends ChangeNotifier {
 
     if (SupabaseClientHelper.isConfigured) {
       try {
-        SupabaseClientHelper.client.from('tbl_opcion').insert(<String, Object>{
-          'idopcion': o.idOpcion,
-          'idpreguntafk': o.idPreguntaFk,
-          'contenido': o.contenido,
-          'correcta': o.correcta,
-        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+        SupabaseClientHelper.client
+            .from('tbl_opcion')
+            .insert(Map<String, dynamic>.from(<String, dynamic>{
+              'idopcion': o.idOpcion,
+              'idpreguntafk': o.idPreguntaFk,
+              'contenido': o.contenido,
+              'correcta': o.correcta,
+            }))
+            .then((_) => null,
+                onError: (e) => debugPrint("Supabase error: $e"));
       } catch (ex) {
         debugPrint("Error adding opcion: $ex");
       }
@@ -1300,14 +1337,14 @@ class BooklService extends ChangeNotifier {
 
     if (SupabaseClientHelper.isConfigured) {
       try {
-        final discMap = <String, Object?>{
+        final discMap = <String, dynamic>{
           'id_discusion': d.idDiscusion,
           'id_cursofk': d.idCursoFk,
           'id_leccionfk': d.idLeccionFk,
         }..removeWhere((_, v) => v == null);
         SupabaseClientHelper.client
             .from('tbl_discusion')
-            .insert(discMap.cast<String, Object>())
+            .insert(Map<String, dynamic>.from(discMap))
             .then((_) => null,
                 onError: (e) => debugPrint("Supabase error: $e"));
       } catch (ex) {
@@ -1323,7 +1360,7 @@ class BooklService extends ChangeNotifier {
 
     if (SupabaseClientHelper.isConfigured) {
       try {
-        final comMap = <String, Object?>{
+        final comMap = <String, dynamic>{
           'id_comentario': c.idComentario,
           'id_discusionfk': c.idDiscusionFk,
           'id_usuariofk': c.idUsuarioFk,
@@ -1332,7 +1369,7 @@ class BooklService extends ChangeNotifier {
         }..removeWhere((_, v) => v == null);
         SupabaseClientHelper.client
             .from('tbl_comentario')
-            .insert(comMap.cast<String, Object>())
+            .insert(Map<String, dynamic>.from(comMap))
             .then((_) => null,
                 onError: (e) => debugPrint("Supabase error: $e"));
       } catch (ex) {
@@ -1399,14 +1436,15 @@ class BooklService extends ChangeNotifier {
         try {
           SupabaseClientHelper.client
               .from('tbl_notificacion')
-              .insert(<String, Object>{
-            'idnotificacion': notifId,
-            'idusuariofk': idSeguido,
-            'tipo': 'follow',
-            'idreferencia': idSeguidor,
-            'mensaje': '$nombreSeguidor ha comenzado a seguirte.',
-            'leida': false,
-          }).then((_) => null,
+              .insert(Map<String, dynamic>.from(<String, dynamic>{
+                'idnotificacion': notifId,
+                'idusuariofk': idSeguido,
+                'tipo': 'follow',
+                'idreferencia': idSeguidor,
+                'mensaje': '$nombreSeguidor ha comenzado a seguirte.',
+                'leida': false,
+              }))
+              .then((_) => null,
                   onError: (e) => debugPrint("Supabase notif error: $e"));
         } catch (e) {
           debugPrint("Error syncing follow notification: $e");
@@ -1423,20 +1461,23 @@ class BooklService extends ChangeNotifier {
         if (idx != -1) {
           client
               .from('tbl_seguidores')
-              .update(<String, Object>{
+              .update(Map<String, dynamic>.from({
                 'estado': estadoFinal,
-              })
+              }))
               .eq('idseguidor', idSeguidor)
               .eq('idseguido', idSeguido)
               .then((_) => null,
                   onError: (e) => debugPrint("Supabase error: $e"));
         } else {
-          client.from('tbl_seguidores').insert(<String, Object>{
-            'idseguidor': idSeguidor,
-            'idseguido': idSeguido,
-            'estado': 'activo',
-          }).then((_) => null,
-              onError: (e) => debugPrint("Supabase error: $e"));
+          client
+              .from('tbl_seguidores')
+              .insert(Map<String, dynamic>.from(<String, dynamic>{
+                'idseguidor': idSeguidor,
+                'idseguido': idSeguido,
+                'estado': 'activo',
+              }))
+              .then((_) => null,
+                  onError: (e) => debugPrint("Supabase error: $e"));
         }
       } catch (ex) {
         debugPrint("Error syncing followers: $ex");
@@ -1473,7 +1514,7 @@ class BooklService extends ChangeNotifier {
         try {
           SupabaseClientHelper.client
               .from('tbl_notificacion')
-              .update(<String, Object>{'leida': true})
+              .update(Map<String, dynamic>.from({'leida': true}))
               .eq('idusuariofk', idUsuario)
               .then((_) => null,
                   onError: (e) => debugPrint("Supabase error: $e"));
@@ -1540,13 +1581,17 @@ class BooklService extends ChangeNotifier {
 
     if (SupabaseClientHelper.isConfigured) {
       try {
-        SupabaseClientHelper.client.from('tbl_reporte').insert(<String, Object>{
-          'idreporte': repId,
-          'idusuariofk': idUsuarioFk,
-          'entidad_tipo': entidadTipo,
-          'entidad_id': entidadId,
-          'motivo': motivo,
-        }).then((_) => null, onError: (e) => debugPrint("Supabase error: $e"));
+        SupabaseClientHelper.client
+            .from('tbl_reporte')
+            .insert(Map<String, dynamic>.from(<String, dynamic>{
+              'idreporte': repId,
+              'idusuariofk': idUsuarioFk,
+              'entidad_tipo': entidadTipo,
+              'entidad_id': entidadId,
+              'motivo': motivo,
+            }))
+            .then((_) => null,
+                onError: (e) => debugPrint("Supabase error: $e"));
       } catch (ex) {
         debugPrint("Error adding reporte: $ex");
       }
@@ -1561,7 +1606,7 @@ class BooklService extends ChangeNotifier {
 
     if (SupabaseClientHelper.isConfigured) {
       try {
-        final matMap = <String, Object?>{
+        final matMap = <String, dynamic>{
           'idmaterial': m.idMaterial,
           'idleccionfk': m.idLeccionFk,
           'nombre': m.nombre,
@@ -1572,7 +1617,7 @@ class BooklService extends ChangeNotifier {
         }..removeWhere((_, v) => v == null);
         SupabaseClientHelper.client
             .from('tbl_material')
-            .insert(matMap.cast<String, Object>())
+            .insert(Map<String, dynamic>.from(matMap))
             .then((_) => null,
                 onError: (e) => debugPrint("Supabase error: $e"));
       } catch (ex) {
@@ -1590,7 +1635,7 @@ class BooklService extends ChangeNotifier {
 
       if (SupabaseClientHelper.isConfigured) {
         try {
-          final matUpdateMap = <String, Object?>{
+          final matUpdateMap = <String, dynamic>{
             'nombre': m.nombre,
             'url': m.url,
             'descripcion': m.descripcion,
@@ -1599,7 +1644,7 @@ class BooklService extends ChangeNotifier {
           }..removeWhere((_, v) => v == null);
           SupabaseClientHelper.client
               .from('tbl_material')
-              .update(matUpdateMap.cast<String, Object>())
+              .update(Map<String, dynamic>.from(matUpdateMap))
               .eq('idmaterial', m.idMaterial)
               .then((_) => null,
                   onError: (e) => debugPrint("Supabase error: $e"));
@@ -1705,22 +1750,26 @@ class BooklService extends ChangeNotifier {
         if (isUpdate) {
           client
               .from(tableName)
-              .update(<String, Object>{
+              .update(Map<String, dynamic>.from({
                 'valor': valor,
-              })
+              }))
               .eq('idusuariofk', idUsuario)
               .eq(colName, idObjeto)
               .then((_) => null,
                   onError: (e) =>
                       debugPrint("Supabase rating update error: $e"));
         } else {
-          client.from(tableName).insert(<String, Object>{
-            'idcalificacion': califId,
-            'idusuariofk': idUsuario,
-            colName: idObjeto,
-            'valor': valor,
-          }).then((_) => null,
-              onError: (e) => debugPrint("Supabase rating insert error: $e"));
+          client
+              .from(tableName)
+              .insert(Map<String, dynamic>.from(<String, dynamic>{
+                'idcalificacion': califId,
+                'idusuariofk': idUsuario,
+                colName: idObjeto,
+                'valor': valor,
+              }))
+              .then((_) => null,
+                  onError: (e) =>
+                      debugPrint("Supabase rating insert error: $e"));
         }
       } catch (ex) {
         debugPrint("Error syncing ratings: $ex");

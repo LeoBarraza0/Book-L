@@ -105,7 +105,7 @@ class AuthRepositoryImpl implements AuthRepository {
         final generatedUsername = '${baseUsername}_$randomSuffix';
 
         // Insertar en Supabase. El id se autogenera mediante SERIAL
-        final insertRes = await client.from('tbl_usuario').insert(<String, Object>{
+        final insertRes = await client.from('tbl_usuario').insert(Map<String, dynamic>.from({
           'nombrecompleto': nombreCompleto.trim(),
           'correo': correo.trim().toLowerCase(),
           'contrasena': contrasena,
@@ -119,7 +119,7 @@ class AuthRepositoryImpl implements AuthRepository {
           if (avatarUrl != null) 'avatar_url': avatarUrl,
           if (descripcion != null) 'descripcion': descripcion,
           'activo': true,
-        }).select().single();
+        })).select().single();
 
         dto = UsuarioDto.fromJson(insertRes);
 

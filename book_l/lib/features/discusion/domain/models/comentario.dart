@@ -5,6 +5,7 @@ class Comentario {
   final String contenido;
   final int? idPadre;
   final DateTime createdAt;
+  final DateTime? updatedAt;
 
   const Comentario({
     required this.idComentario,
@@ -13,5 +14,6 @@ class Comentario {
     required this.contenido,
     this.idPadre,
     required this.createdAt,
+    this.updatedAt,
   });
 }

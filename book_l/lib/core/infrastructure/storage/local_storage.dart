@@ -171,10 +171,10 @@ class AppSession {
       try {
         final client = SupabaseClientHelper.client;
         if (wasAdded) {
-          client.from('tbl_guardado_curso').insert(<String, Object>{
+          client.from('tbl_guardado_curso').insert(Map<String, dynamic>.from({
             'idusuario': usuarioId!,
             'idcurso': idCurso,
-          }).then((_) => null,
+          })).then((_) => null,
               onError: (e) => debugPrint("Supabase saved curso error: $e"));
         } else {
           client
@@ -208,10 +208,10 @@ class AppSession {
       try {
         final client = SupabaseClientHelper.client;
         if (wasAdded) {
-          client.from('tbl_guardado_leccion').insert(<String, Object>{
+          client.from('tbl_guardado_leccion').insert(Map<String, dynamic>.from({
             'idusuario': usuarioId!,
             'idleccion': idLeccion,
-          }).then((_) => null,
+          })).then((_) => null,
               onError: (e) => debugPrint("Supabase saved leccion error: $e"));
         } else {
           client
@@ -245,11 +245,11 @@ class AppSession {
     if (usuarioId != null && SupabaseClientHelper.isConfigured) {
       try {
         final client = SupabaseClientHelper.client;
-        client.from('tbl_progreso_usuario').upsert(<String, Object>{
+        client.from('tbl_progreso_usuario').upsert(Map<String, dynamic>.from({
           'id_usuariofk': usuarioId!,
           'id_capitulofk': idCapitulo,
           'estado': completado ? 'completada' : 'no_iniciada',
-        }, onConflict: 'id_usuariofk,id_capitulofk').then((_) => null,
+        }), onConflict: 'id_usuariofk,id_capitulofk').then((_) => null,
             onError: (e) => debugPrint("Supabase progress error: $e"));
       } catch (e) {
         debugPrint("Error syncing completed chapter: $e");

@@ -49,7 +49,7 @@ class UsuariosRepositoryImpl implements UsuariosRepository {
 
     if (SupabaseClientHelper.isConfigured) {
       try {
-        final userMap = <String, Object?>{
+        final userMap = <String, dynamic>{
           'nombrecompleto': usuario.nombreCompleto,
           'correo': usuario.correo,
           'contrasena': usuario.password ??
@@ -70,7 +70,7 @@ class UsuariosRepositoryImpl implements UsuariosRepository {
 
         await SupabaseClientHelper.client
             .from('tbl_usuario')
-            .insert(userMap.cast<String, Object>());
+            .insert(Map<String, dynamic>.from(userMap));
       } catch (e) {
         if (kDebugMode) {
           print("Error inserting usuario in Supabase: $e");
@@ -91,7 +91,7 @@ class UsuariosRepositoryImpl implements UsuariosRepository {
 
     if (SupabaseClientHelper.isConfigured) {
       try {
-        final userMap = <String, Object?>{
+        final userMap = <String, dynamic>{
           'nombrecompleto': usuario.nombreCompleto,
           'correo': usuario.correo,
           'rol': usuario.rol,
@@ -110,7 +110,7 @@ class UsuariosRepositoryImpl implements UsuariosRepository {
 
         await SupabaseClientHelper.client
             .from('tbl_usuario')
-            .update(userMap.cast<String, Object>())
+            .update(Map<String, dynamic>.from(userMap))
             .eq('idusuario', usuario.idUsuario);
       } catch (e) {
         if (kDebugMode) {

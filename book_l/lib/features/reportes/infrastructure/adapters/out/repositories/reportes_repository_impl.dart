@@ -1,19 +1,26 @@
 import 'package:book_l/features/reportes/domain/models/reporte_agrupado.dart';
 
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
+import 'package:book_l/core/infrastructure/services/supabase_client.dart';
 import 'package:book_l/features/reportes/domain/models/reporte.dart';
 import 'package:book_l/features/reportes/application/ports/out/reporte_repository.dart';
 import 'package:book_l/features/reportes/infrastructure/adapters/out/dtos/reporte_dto.dart';
+import 'package:flutter/foundation.dart';
 
 class ReportesRepositoryImpl implements ReporteRepository {
   @override
   Future<List<Reporte>> getReportes() async {
-    // Simulando latencia de red
-    await Future.delayed(const Duration(milliseconds: 600));
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        final res = await SupabaseClientHelper.client.from('tbl_reporte').select();
+        return res.map<Reporte>((e) => ReporteDto.fromJson(e).toEntity()).toList();
+      } catch (e) {
+        if (kDebugMode) print('Error getReportes Supabase: $e');
+      }
+    }
 
-    // Obtenemos los mapas desde la "base de datos" simulada
+    // Fallback: Obtenemos los mapas desde la "base de datos" simulada
     final List<Map<String, dynamic>> rawData = BooklService().reportes;
-
     try {
       final List<Reporte> reportes = rawData
           .map<Reporte>((e) => ReporteDto.fromJson(e).toEntity())
@@ -26,9 +33,19 @@ class ReportesRepositoryImpl implements ReporteRepository {
 
   @override
   Future<List<ReporteAgrupado>> getReportesAgrupados() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final service = BooklService();
-    final reportesReales = service.reportes;
+    final reportesReales = <Map<String, dynamic>>[];
+    
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        final res = await SupabaseClientHelper.client.from('tbl_reporte').select();
+        reportesReales.addAll(res);
+      } catch (e) {
+        if (kDebugMode) print('Error getReportesAgrupados Supabase: $e');
+        reportesReales.addAll(BooklService().reportes);
+      }
+    } else {
+      reportesReales.addAll(BooklService().reportes);
+    }
 
     if (reportesReales.isEmpty) return [];
 
@@ -57,6 +74,7 @@ class ReportesRepositoryImpl implements ReporteRepository {
       }
     }
 
+    final service = BooklService();
     final List<ReporteAgrupado> resultado = [];
 
     for (var key in reportCounts.keys) {
@@ -96,7 +114,6 @@ class ReportesRepositoryImpl implements ReporteRepository {
 
   @override
   Future<List<Reporte>> getReportesPorEntidad(String tipo, int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
     final allReportes = await getReportes();
 
     final normalizedSearchType = tipo.toLowerCase().replaceAll('ó', 'o');
@@ -114,6 +131,18 @@ class ReportesRepositoryImpl implements ReporteRepository {
     required int entidadId,
     required String motivo,
   }) async {
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        await SupabaseClientHelper.client.from('tbl_reporte').insert({
+          'idusuariofk': idUsuarioFk,
+          'entidad_tipo': entidadTipo,
+          'entidad_id': entidadId,
+          'motivo': motivo,
+        });
+      } catch (e) {
+        if (kDebugMode) print('Error addReporte Supabase: $e');
+      }
+    }
     BooklService().addReporte(
       idUsuarioFk: idUsuarioFk,
       entidadTipo: entidadTipo,

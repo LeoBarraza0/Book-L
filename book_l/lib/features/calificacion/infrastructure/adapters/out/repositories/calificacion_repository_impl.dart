@@ -1,6 +1,8 @@
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
 import 'package:book_l/core/infrastructure/storage/local_storage.dart';
+import 'package:book_l/core/infrastructure/services/supabase_client.dart';
 import 'package:book_l/features/calificacion/application/ports/out/calificacion_repository.dart';
+import 'package:flutter/foundation.dart';
 
 class CalificacionRepositoryImpl implements CalificacionRepository {
   final BooklService _service = BooklService();
@@ -13,6 +15,37 @@ class CalificacionRepositoryImpl implements CalificacionRepository {
     final idUsuarioSession = AppSession().usuarioId;
     if (idUsuarioSession == null) {
       throw Exception('Usuario no autenticado.');
+    }
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        final table = tipoObjeto == 'curso' ? 'tbl_calificacion_curso' : 'tbl_calificacion_leccion';
+        final fkField = tipoObjeto == 'curso' ? 'idcursofk' : 'idleccionfk';
+        
+        final existing = await SupabaseClientHelper.client
+            .from(table)
+            .select('idcalificacion')
+            .eq('idusuariofk', idUsuarioSession)
+            .eq(fkField, idObjeto)
+            .maybeSingle();
+
+        if (existing != null) {
+          await SupabaseClientHelper.client
+              .from(table)
+              .update({'valor': valor})
+              .eq('idcalificacion', existing['idcalificacion']);
+        } else {
+          await SupabaseClientHelper.client
+              .from(table)
+              .insert({
+                'idusuariofk': idUsuarioSession,
+                fkField: idObjeto,
+                'valor': valor,
+              });
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error enviarCalificacion Supabase: $e');
+      }
     }
 
     // Delega a BooklService (la base de datos en memoria) la persistencia de la nueva calificación
