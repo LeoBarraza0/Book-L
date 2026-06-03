@@ -75,6 +75,12 @@ class AuthRepositoryImpl implements AuthRepository {
     required String contrasena,
     required String rol,
     String? programa,
+    int? celular,
+    int? semestre,
+    DateTime? nacimiento,
+    String? preferencias,
+    String? avatarUrl,
+    String? descripcion,
   }) async {
     UsuarioDto? dto;
 
@@ -106,6 +112,12 @@ class AuthRepositoryImpl implements AuthRepository {
           'username': generatedUsername,
           'rol': rol,
           if (programa != null) 'programa': programa,
+          if (celular != null) 'celular': celular,
+          if (semestre != null) 'semestre': semestre,
+          if (nacimiento != null) 'nacimiento': nacimiento.toIso8601String().split('T').first,
+          if (preferencias != null) 'preferencias': preferencias,
+          if (avatarUrl != null) 'avatar_url': avatarUrl,
+          if (descripcion != null) 'descripcion': descripcion,
           'activo': true,
         }).select().single();
 
@@ -146,8 +158,13 @@ class AuthRepositoryImpl implements AuthRepository {
         username: generatedUsername,
         rol: rol,
         programa: programa,
+        celular: celular,
+        semestre: semestre,
+        nacimiento: nacimiento,
+        preferencias: preferencias,
+        descripcion: descripcion,
         activo: true,
-        avatarUrl: null,
+        avatarUrl: avatarUrl,
       );
 
       _service.usuariosDto.add(dto);

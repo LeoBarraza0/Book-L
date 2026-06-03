@@ -13,6 +13,12 @@ abstract class AuthRepository {
     required String contrasena,
     required String rol,
     String? programa,
+    int? celular,
+    int? semestre,
+    DateTime? nacimiento,
+    String? preferencias,
+    String? avatarUrl,
+    String? descripcion,
   });
 
   /// Cierra sesión — limpia AppSession.

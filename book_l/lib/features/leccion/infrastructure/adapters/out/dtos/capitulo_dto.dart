@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:book_l/features/leccion/domain/models/capitulo.dart';
 
 class CapituloDto {
@@ -22,7 +23,9 @@ class CapituloDto {
       'idcapitulo': capitulo.idCapitulo,
       'idleccion': capitulo.idLeccion,
       'nombre': capitulo.nombre,
-      'contenido': capitulo.contenido,
+      'contenido': capitulo.contenido != null
+          ? jsonDecode(jsonEncode(capitulo.contenido))
+          : null,
       'tiempo_total': capitulo.tiempoTotal,
       'created_at': capitulo.createdAt?.toIso8601String(),
       'updated_at': capitulo.updatedAt?.toIso8601String(),

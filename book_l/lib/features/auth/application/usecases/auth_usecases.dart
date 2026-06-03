@@ -22,6 +22,12 @@ class RegisterUseCase {
     required String contrasena,
     required String rol,
     String? programa,
+    int? celular,
+    int? semestre,
+    DateTime? nacimiento,
+    String? preferencias,
+    String? avatarUrl,
+    String? descripcion,
   }) =>
       _repo.registrar(
         nombreCompleto: nombreCompleto,
@@ -29,6 +35,12 @@ class RegisterUseCase {
         contrasena: contrasena,
         rol: rol,
         programa: programa,
+        celular: celular,
+        semestre: semestre,
+        nacimiento: nacimiento,
+        preferencias: preferencias,
+        avatarUrl: avatarUrl,
+        descripcion: descripcion,
       );
 }
 

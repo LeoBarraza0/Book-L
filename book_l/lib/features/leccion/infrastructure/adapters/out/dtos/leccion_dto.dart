@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:book_l/features/leccion/domain/models/leccion.dart';
 
 class LeccionDto {
@@ -29,7 +30,9 @@ class LeccionDto {
       'idleccion': leccion.idLeccion,
       'idusuariofk': leccion.idUsuarioFk,
       'nombre': leccion.nombre,
-      'contenido': leccion.contenido,
+      'contenido': leccion.contenido != null
+          ? jsonDecode(jsonEncode(leccion.contenido))
+          : null,
       'imagen_url': leccion.imagenUrl,
       'rating': leccion.rating,
       'duracion': leccion.duracion,

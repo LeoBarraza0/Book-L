@@ -12,6 +12,7 @@ class Usuario {
   final bool activo;
   final String? rol;
   final String? avatarUrl; // Extra field for UI
+  final String? descripcion;
 
   Usuario({
     required this.idUsuario,
@@ -27,6 +28,7 @@ class Usuario {
     this.activo = true,
     this.rol,
     this.avatarUrl,
+    this.descripcion,
   });
 
   // Factory constructor for creating a Usuario from JSON could be added later in a DTO

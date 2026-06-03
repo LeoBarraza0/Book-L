@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:book_l/features/curso/domain/models/curso.dart';
 
 // Único archivo autorizado a usar fromJson/toJson para Curso.
@@ -31,7 +32,9 @@ class CursoDto {
       'idcurso': curso.idCurso,
       'idusuariofk': curso.idUsuarioFk,
       'nombre': curso.nombre,
-      'contenido': curso.contenido,
+      'contenido': curso.contenido != null
+          ? jsonDecode(jsonEncode(curso.contenido))
+          : null,
       'imagen_url': curso.imagenUrl,
       'rating': curso.rating,
       'duracion': curso.duracion,

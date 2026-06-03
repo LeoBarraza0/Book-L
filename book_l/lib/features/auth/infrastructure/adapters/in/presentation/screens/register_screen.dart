@@ -5,6 +5,7 @@ import 'package:book_l/core/infrastructure/services/bookl_service.dart';
 import 'package:book_l/shared/widgets/custom_button.dart';
 import 'package:book_l/shared/widgets/custom_text_field.dart';
 import '../controller/auth_controller.dart';
+import 'dart:convert';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -84,6 +85,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       contrasena: pass,
       rol: 'Estudiante', // Default en registro de esta pantalla
       programa: programa,
+      celular: _celularController.text.trim().isNotEmpty ? int.tryParse(_celularController.text.trim()) : null,
+      semestre: _semestreSeleccionado != null ? int.tryParse(_semestreSeleccionado!) : null,
+      nacimiento: _fechaController.text.trim().isNotEmpty 
+          ? _parseDate(_fechaController.text.trim()) 
+          : null,
+      preferencias: _preferenciasController.text.trim().isNotEmpty 
+          ? _buildPreferenciasJson(_preferenciasController.text.trim()) 
+          : null,
+      avatarUrl: 'http://localhost:3845/assets/c270ee2cfdb6c5fb68db02bf4810d35ed9ae8468.png',
     );
 
     if (!mounted) return;
@@ -101,6 +111,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       _ctrl.clearError();
     }
+  }
+
+  DateTime? _parseDate(String dateStr) {
+    try {
+      final parts = dateStr.split('/');
+      if (parts.length == 3) {
+        return DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+      }
+    } catch (e) {
+      // Ignorar error de parsing
+    }
+    return null;
+  }
+
+  String _buildPreferenciasJson(String interesesTexto) {
+    final intereses = interesesTexto
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    return jsonEncode({'intereses': intereses});
   }
 
   @override

@@ -46,11 +46,11 @@ class EjercicioRepositoryImpl implements EjercicioRepository {
       Ejercicio ejercicio, List<Pregunta> preguntas, List<Opcion> opciones) {
     // Persiste opciones
     for (final o in opciones) {
-      _service.opciones.add(o);
+      _service.addOpcion(o);
     }
     // Persiste preguntas
     for (final p in preguntas) {
-      _service.preguntas.add(p);
+      _service.addPregunta(p);
     }
     // Persiste ejercicio
     _service.addEjercicio(ejercicio);

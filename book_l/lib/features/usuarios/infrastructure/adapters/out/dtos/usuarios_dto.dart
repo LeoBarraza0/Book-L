@@ -28,6 +28,7 @@ class UsuarioDto {
       activo: (json['activo'] as bool?) ?? true,
       rol: json['rol'] as String?,
       avatarUrl: json['avatar_url'] as String?,
+      descripcion: json['descripcion'] as String?,
     );
   }
 
@@ -46,6 +47,7 @@ class UsuarioDto {
       'activo': u.activo,
       if (u.rol != null) 'rol': u.rol,
       if (u.avatarUrl != null) 'avatar_url': u.avatarUrl,
+      if (u.descripcion != null) 'descripcion': u.descripcion,
     };
   }
 }

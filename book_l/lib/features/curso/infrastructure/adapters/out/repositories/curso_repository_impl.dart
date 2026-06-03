@@ -41,48 +41,32 @@ class CursoRepositoryImpl implements CursoRepository {
   @override
   Future<void> addCurso(Curso curso) async {
     final nuevo = curso.copyWith(idCurso: _service.nextCursoId());
-    _service.cursos.add(nuevo);
-    _service.notifyDataChanged();
+    _service.addCurso(nuevo);
   }
 
   // ── UPDATE ─────────────────────────────────────────────────────────────────
 
   @override
   Future<void> updateCurso(Curso curso) async {
-    final index = _service.cursos.indexWhere((c) => c.idCurso == curso.idCurso);
-    if (index != -1) {
-      _service.cursos[index] = curso;
-      _service.notifyDataChanged();
-    }
+    _service.updateCurso(curso);
   }
 
   // ── DELETE ─────────────────────────────────────────────────────────────────
 
   @override
   Future<void> deleteCurso(int id) async {
-    _service.cursos.removeWhere((c) => c.idCurso == id);
-    // Limpiar pivote
-    _service.leccionesCursos.removeWhere((e) => e['id_curso'] == id);
-    _service.notifyDataChanged();
+    _service.removeCurso(id);
   }
 
   // ── PIVOTE M:N ────────────────────────────────────────────────────────────
 
   @override
   Future<void> asociarLeccion(int idCurso, int idLeccion) async {
-    final yaExiste = _service.leccionesCursos.any(
-      (e) => e['id_curso'] == idCurso && e['id_leccion'] == idLeccion,
-    );
-    if (!yaExiste) {
-      _service.leccionesCursos
-          .add({'id_curso': idCurso, 'id_leccion': idLeccion});
-    }
+    _service.asociarLeccion(idCurso, idLeccion);
   }
 
   @override
   Future<void> desasociarLeccion(int idCurso, int idLeccion) async {
-    _service.leccionesCursos.removeWhere(
-      (e) => e['id_curso'] == idCurso && e['id_leccion'] == idLeccion,
-    );
+    _service.desasociarLeccion(idCurso, idLeccion);
   }
 }

@@ -146,6 +146,12 @@ class AuthController extends ChangeNotifier {
     required String contrasena,
     required String rol,
     String? programa,
+    int? celular,
+    int? semestre,
+    DateTime? nacimiento,
+    String? preferencias,
+    String? avatarUrl,
+    String? descripcion,
   }) async {
     _setLoading();
     try {
@@ -155,6 +161,12 @@ class AuthController extends ChangeNotifier {
         contrasena: contrasena,
         rol: rol,
         programa: programa,
+        celular: celular,
+        semestre: semestre,
+        nacimiento: nacimiento,
+        preferencias: preferencias,
+        avatarUrl: avatarUrl,
+        descripcion: descripcion,
       );
       usuarioActual = usuario;
       BooklService().setRole(usuario.rol);

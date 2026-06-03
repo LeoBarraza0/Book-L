@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:book_l/features/usuarios/domain/models/usuarios.dart';
 import 'package:book_l/features/usuarios/application/ports/out/usuarios_repository.dart';
 import 'package:book_l/features/usuarios/infrastructure/adapters/out/dtos/usuarios_dto.dart';
+import 'package:book_l/core/infrastructure/services/supabase_client.dart';
+import 'package:flutter/foundation.dart';
 
 /// Implementación concreta de [UsuariosRepository].
 ///
@@ -44,6 +46,38 @@ class UsuariosRepositoryImpl implements UsuariosRepository {
   Future<List<Usuario>> addUsuario(Usuario usuario) async {
     final list = await _loadFromJson();
     list.add(usuario);
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        final userMap = <String, Object?>{
+          'nombrecompleto': usuario.nombreCompleto,
+          'correo': usuario.correo,
+          'contrasena': usuario.password ??
+              '12345678', // Password fallback since it might not be in the model
+          'rol': usuario.rol,
+          if (usuario.username != null) 'username': usuario.username,
+          if (usuario.programa != null) 'programa': usuario.programa,
+          if (usuario.celular != null) 'celular': usuario.celular,
+          if (usuario.semestre != null) 'semestre': usuario.semestre,
+          if (usuario.nacimiento != null)
+            'nacimiento': usuario.nacimiento!.toIso8601String().split('T')[0],
+          if (usuario.preferencias != null)
+            'preferencias': usuario.preferencias,
+          if (usuario.avatarUrl != null) 'avatar_url': usuario.avatarUrl,
+          if (usuario.descripcion != null) 'descripcion': usuario.descripcion,
+          'activo': usuario.activo,
+        }..removeWhere((_, v) => v == null);
+
+        await SupabaseClientHelper.client
+            .from('tbl_usuario')
+            .insert(userMap.cast<String, Object>());
+      } catch (e) {
+        if (kDebugMode) {
+          print("Error inserting usuario in Supabase: $e");
+        }
+      }
+    }
+
     return List.unmodifiable(list);
   }
 
@@ -54,6 +88,37 @@ class UsuariosRepositoryImpl implements UsuariosRepository {
     if (index != -1) {
       list[index] = usuario;
     }
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        final userMap = <String, Object?>{
+          'nombrecompleto': usuario.nombreCompleto,
+          'correo': usuario.correo,
+          'rol': usuario.rol,
+          if (usuario.username != null) 'username': usuario.username,
+          if (usuario.programa != null) 'programa': usuario.programa,
+          if (usuario.celular != null) 'celular': usuario.celular,
+          if (usuario.semestre != null) 'semestre': usuario.semestre,
+          if (usuario.nacimiento != null)
+            'nacimiento': usuario.nacimiento!.toIso8601String().split('T')[0],
+          if (usuario.preferencias != null)
+            'preferencias': usuario.preferencias,
+          if (usuario.avatarUrl != null) 'avatar_url': usuario.avatarUrl,
+          if (usuario.descripcion != null) 'descripcion': usuario.descripcion,
+          'activo': usuario.activo,
+        }..removeWhere((_, v) => v == null);
+
+        await SupabaseClientHelper.client
+            .from('tbl_usuario')
+            .update(userMap.cast<String, Object>())
+            .eq('idusuario', usuario.idUsuario);
+      } catch (e) {
+        if (kDebugMode) {
+          print("Error updating usuario in Supabase: $e");
+        }
+      }
+    }
+
     return List.unmodifiable(list);
   }
 
