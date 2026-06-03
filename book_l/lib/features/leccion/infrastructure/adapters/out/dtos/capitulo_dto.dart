@@ -7,7 +7,9 @@ class CapituloDto {
       idCapitulo: (json['idcapitulo'] ?? json['id_capitulo']) as int,
       idLeccion: (json['idleccion'] ?? json['id_leccion']) as int,
       nombre: json['nombre'] as String,
-      contenido: (json['contenido'] as List<dynamic>?),
+      contenido: json['contenido'] is String
+          ? jsonDecode(json['contenido']) as List<dynamic>?
+          : json['contenido'] as List<dynamic>?,
       tiempoTotal: json['tiempo_total'] as int? ?? 0,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'] as String)

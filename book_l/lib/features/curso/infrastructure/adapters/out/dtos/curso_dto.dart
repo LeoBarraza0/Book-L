@@ -9,7 +9,9 @@ class CursoDto {
       idCurso: (json['idcurso'] ?? json['id_curso']) as int,
       idUsuarioFk: (json['idusuariofk'] ?? json['id_usuario_fk']) as int? ?? 1,
       nombre: json['nombre'] as String,
-      contenido: (json['contenido'] as List<dynamic>?),
+      contenido: json['contenido'] is String
+          ? jsonDecode(json['contenido']) as List<dynamic>?
+          : json['contenido'] as List<dynamic>?,
       imagenUrl: json['imagen_url'] as String?,
       rating: (json['rating'] ?? 0.0).toDouble(),
       duracion: json['duracion'] ?? '',

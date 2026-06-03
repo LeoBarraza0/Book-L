@@ -25,18 +25,25 @@ class ConfiguracionDto {
     required this.perfilPublico,
   });
 
+  static int _parseIntOrBool(dynamic value, {int defaultValue = 0}) {
+    if (value is bool) return value ? 1 : 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? defaultValue;
+    return defaultValue;
+  }
+
   factory ConfiguracionDto.fromJson(Map<String, dynamic> json) {
     return ConfiguracionDto(
-      idConfig: (json['idconfig'] ?? json['id_config']) as int? ?? 0,
-      idUsuario: (json['idusuario'] ?? json['id_usuario']) as int? ?? 0,
-      tema: json['tema'] as int? ?? 0,
+      idConfig: _parseIntOrBool(json['idconfig'] ?? json['id_config'], defaultValue: 0),
+      idUsuario: _parseIntOrBool(json['idusuario'] ?? json['id_usuario'], defaultValue: 0),
+      tema: _parseIntOrBool(json['tema'], defaultValue: 0),
       idioma: json['idioma'] as String? ?? 'es',
-      notificacionesPush: json['notificaciones_push'] as int? ?? 1,
-      notificacionesEmail: json['notificaciones_email'] as int? ?? 1,
-      notificacionesRacha: json['notificaciones_racha'] as int? ?? 1,
+      notificacionesPush: _parseIntOrBool(json['notificaciones_push'], defaultValue: 1),
+      notificacionesEmail: _parseIntOrBool(json['notificaciones_email'], defaultValue: 1),
+      notificacionesRacha: _parseIntOrBool(json['notificaciones_racha'], defaultValue: 1),
       tamanoFuente: json['tamano_fuente'] as String? ?? 'normal',
-      reproduccionAuto: json['reproduccion_auto'] as int? ?? 1,
-      perfilPublico: json['perfil_publico'] as int? ?? 1,
+      reproduccionAuto: _parseIntOrBool(json['reproduccion_auto'], defaultValue: 1),
+      perfilPublico: _parseIntOrBool(json['perfil_publico'], defaultValue: 1),
     );
   }
 
