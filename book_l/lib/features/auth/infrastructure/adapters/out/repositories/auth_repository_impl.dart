@@ -54,7 +54,16 @@ class AuthRepositoryImpl implements AuthRepository {
 
     if (found == null) return null; // credenciales incorrectas
 
+    // Sincronizar en el servicio local si el usuario vino de Supabase y no estaba en la cache
+    if (!_service.usuariosDto.any((u) => u.idUsuario == found!.idUsuario)) {
+      _service.usuariosDto.add(found);
+      _service.usuarios.add(found.toEntity());
+    }
+
     final usuario = found.toEntity();
+    
+    // Actualizar el rol en el servicio global
+    _service.setRole(usuario.rol);
 
     await _session.guardarSesion(
       token: 'supabase_${found.idUsuario}',
@@ -173,6 +182,9 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     final usuario = dto.toEntity();
+    
+    // Actualizar el rol en el servicio global
+    _service.setRole(usuario.rol);
 
     // Guardar sesión automáticamente al registrarse
     await _session.guardarSesion(
