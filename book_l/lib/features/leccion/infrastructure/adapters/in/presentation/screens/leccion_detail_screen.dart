@@ -505,7 +505,9 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                   Text(
                     '$percent%',
                     style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: Colors.black),
                   ),
                 ],
               ),

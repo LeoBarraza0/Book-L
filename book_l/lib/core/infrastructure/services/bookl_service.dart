@@ -358,30 +358,40 @@ class BooklService extends ChangeNotifier {
     try {
       final client = SupabaseClientHelper.client;
 
+      // Función auxiliar para atrapar errores por tabla
+      Future<List<dynamic>> safeSelect(String table) async {
+        try {
+          return await client.from(table).select();
+        } catch (e) {
+          if (kDebugMode) print('Error fetching $table: $e');
+          return [];
+        }
+      }
+
       // Carga en paralelo
       final results = await Future.wait([
-        client.from('tbl_usuario').select(),
-        client.from('tbl_curso').select(),
-        client.from('tbl_leccion').select(),
-        client.from('tbl_capitulo').select(),
-        client.from('tbl_material').select(),
-        client.from('tbl_configuracion').select(),
-        client.from('tbl_lecciones_cursos').select(),
-        client.from('tbl_seguidores').select(),
-        client.from('tbl_discusion').select(),
-        client.from('tbl_comentario').select(),
-        client.from('tbl_ejercicio').select(),
-        client.from('tbl_pregunta').select(),
-        client.from('tbl_opcion').select(),
-        client.from('tbl_reporte').select(),
-        client.from('tbl_calificacion_leccion').select(),
-        client.from('tbl_calificacion_curso').select(),
-        client.from('tbl_progreso_usuario').select(),
-        client.from('tbl_respuesta_usuario').select(),
-        client.from('tbl_guardado_leccion').select(),
-        client.from('tbl_guardado_curso').select(),
-        client.from('tbl_racha').select(),
-        client.from('tbl_notificacion').select(),
+        safeSelect('tbl_usuario'),
+        safeSelect('tbl_curso'),
+        safeSelect('tbl_leccion'),
+        safeSelect('tbl_capitulo'),
+        safeSelect('tbl_material'),
+        safeSelect('tbl_configuracion'),
+        safeSelect('tbl_lecciones_cursos'),
+        safeSelect('tbl_seguidores'),
+        safeSelect('tbl_discusion'),
+        safeSelect('tbl_comentario'),
+        safeSelect('tbl_ejercicio'),
+        safeSelect('tbl_pregunta'),
+        safeSelect('tbl_opcion'),
+        safeSelect('tbl_reporte'),
+        safeSelect('tbl_calificacion_leccion'),
+        safeSelect('tbl_calificacion_curso'),
+        safeSelect('tbl_progreso_usuario'),
+        safeSelect('tbl_respuesta_usuario'),
+        safeSelect('tbl_guardado_leccion'),
+        safeSelect('tbl_guardado_curso'),
+        safeSelect('tbl_racha'),
+        safeSelect('tbl_notificacion'),
       ]);
 
       usuariosDto =
@@ -1157,24 +1167,6 @@ class BooklService extends ChangeNotifier {
     }
     _save();
     notifyListeners();
-
-    if (SupabaseClientHelper.isConfigured) {
-      try {
-        SupabaseClientHelper.client
-            .from('tbl_ejercicio')
-            .insert(Map<String, dynamic>.from(<String, dynamic>{
-              'idejercicio': e.idEjercicio,
-              'idcapitulo': e.idCapitulo,
-              'tipo': e.tipo.name,
-              'titulo': e.titulo,
-              'descripcion': e.descripcion,
-            }))
-            .then((_) => null,
-                onError: (e) => debugPrint("Supabase error: $e"));
-      } catch (ex) {
-        debugPrint("Error adding ejercicio: $ex");
-      }
-    }
   }
 
   void updateEjercicio(Ejercicio e) {
@@ -1243,19 +1235,6 @@ class BooklService extends ChangeNotifier {
     }
     _save();
     notifyListeners();
-
-    if (SupabaseClientHelper.isConfigured) {
-      try {
-        SupabaseClientHelper.client
-            .from('tbl_ejercicio')
-            .delete()
-            .eq('idejercicio', idEjercicio)
-            .then((_) => null,
-                onError: (e) => debugPrint("Supabase error: $e"));
-      } catch (ex) {
-        debugPrint("Error removing ejercicio: $ex");
-      }
-    }
   }
 
   void addPregunta(Pregunta p) {
@@ -1275,24 +1254,6 @@ class BooklService extends ChangeNotifier {
     }
     _save();
     notifyListeners();
-
-    if (SupabaseClientHelper.isConfigured) {
-      try {
-        final pregMap = <String, dynamic>{
-          'idpregunta': p.idPregunta,
-          'idejerciciofk': p.idEjercicioFk,
-          'contenido': p.contenido,
-          'explicacion': p.explicacion,
-        }..removeWhere((_, v) => v == null);
-        SupabaseClientHelper.client
-            .from('tbl_pregunta')
-            .insert(Map<String, dynamic>.from(pregMap))
-            .then((_) => null,
-                onError: (e) => debugPrint("Supabase error: $e"));
-      } catch (ex) {
-        debugPrint("Error adding pregunta: $ex");
-      }
-    }
   }
 
   void addOpcion(Opcion o) {
@@ -1310,23 +1271,6 @@ class BooklService extends ChangeNotifier {
     }
     _save();
     notifyListeners();
-
-    if (SupabaseClientHelper.isConfigured) {
-      try {
-        SupabaseClientHelper.client
-            .from('tbl_opcion')
-            .insert(Map<String, dynamic>.from(<String, dynamic>{
-              'idopcion': o.idOpcion,
-              'idpreguntafk': o.idPreguntaFk,
-              'contenido': o.contenido,
-              'correcta': o.correcta,
-            }))
-            .then((_) => null,
-                onError: (e) => debugPrint("Supabase error: $e"));
-      } catch (ex) {
-        debugPrint("Error adding opcion: $ex");
-      }
-    }
   }
 
   // ── Operaciones Discusión ─────────────────────────────────────────────────
@@ -1436,14 +1380,13 @@ class BooklService extends ChangeNotifier {
         try {
           SupabaseClientHelper.client
               .from('tbl_notificacion')
-              .insert(Map<String, dynamic>.from(<String, dynamic>{
-                'idnotificacion': notifId,
+              .insert({
                 'idusuariofk': idSeguido,
                 'tipo': 'follow',
                 'idreferencia': idSeguidor,
                 'mensaje': '$nombreSeguidor ha comenzado a seguirte.',
                 'leida': false,
-              }))
+              })
               .then((_) => null,
                   onError: (e) => debugPrint("Supabase notif error: $e"));
         } catch (e) {
@@ -1498,6 +1441,56 @@ class BooklService extends ChangeNotifier {
   }
 
   // ── Notificaciones ────────────────────────────────────────────────────────
+
+  void generarNotificacion({
+    required int idUsuarioDestino,
+    required String tipo,
+    required String mensaje,
+    int? idReferencia,
+    int? idCursoFk,
+    int? idLeccionFk,
+    int? idComentarioFk,
+  }) {
+    final notifId = generateId();
+    final notifMap = {
+      'id': notifId,
+      'id_usuario_fk': idUsuarioDestino,
+      'tipo': tipo,
+      'mensaje': mensaje,
+      'id_referencia': idReferencia,
+      'id_curso_fk': idCursoFk,
+      'id_leccion_fk': idLeccionFk,
+      'id_comentario_fk': idComentarioFk,
+      'leida': false,
+      'created_at': DateTime.now().toIso8601String(),
+    };
+
+    notificaciones.insert(0, notifMap);
+    _save();
+    notifyListeners();
+
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        SupabaseClientHelper.client
+            .from('tbl_notificacion')
+            .insert({
+              'idusuariofk': idUsuarioDestino,
+              'tipo': tipo,
+              'mensaje': mensaje,
+              if (idReferencia != null) 'idreferencia': idReferencia,
+              if (idCursoFk != null) 'idcursofk': idCursoFk,
+              if (idLeccionFk != null) 'idleccionfk': idLeccionFk,
+              if (idComentarioFk != null) 'idcomentariofk': idComentarioFk,
+              'leida': false,
+            })
+            .then((_) => null,
+                onError: (e) => debugPrint("Supabase notif error: $e"));
+      } catch (e) {
+        debugPrint("Error syncing notification: $e");
+      }
+    }
+  }
+
   void marcarNotificacionesComoLeidas(int idUsuario) {
     bool changed = false;
     for (var n in notificaciones) {

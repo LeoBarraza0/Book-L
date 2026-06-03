@@ -44,80 +44,69 @@ class EjercicioRepositoryImpl implements EjercicioRepository {
   int nextOpcionId() => _service.nextOpcionId();
 
   @override
-  void addEjercicio(
-      Ejercicio ejercicio, List<Pregunta> preguntas, List<Opcion> opciones) {
+  Future<void> addEjercicio(
+      Ejercicio ejercicio, List<Pregunta> preguntas, List<Opcion> opciones) async {
     if (SupabaseClientHelper.isConfigured) {
-      SupabaseClientHelper.client
-          .from('tbl_ejercicio')
-          .insert({
-            'idcapitulo': ejercicio.idCapitulo,
-            'tipo': ejercicio.tipo,
-            'titulo': ejercicio.titulo,
-            'descripcion': ejercicio.descripcion,
-          })
-          .select()
-          .single()
-          .then((ejRes) {
-            final insertedEj = EjercicioDto.fromJson(ejRes);
-            _service.addEjercicio(insertedEj);
+      try {
+        final ejRes = await SupabaseClientHelper.client
+            .from('tbl_ejercicio')
+            .insert({
+              'idcapitulo': ejercicio.idCapitulo,
+              'tipo': ejercicio.tipo.name,
+              'titulo': ejercicio.titulo,
+              'descripcion': ejercicio.descripcion,
+            })
+            .select()
+            .single();
 
-            // Agregar preguntas y opciones en cadena
-            for (var p in preguntas) {
-              SupabaseClientHelper.client
-                  .from('tbl_pregunta')
-                  .insert({
-                    'idejerciciofk': insertedEj.idEjercicio,
-                    'contenido': p.contenido,
-                    'explicacion': p.explicacion,
-                  })
-                  .select()
-                  .single()
-                  .then((pRes) {
-                    // Se asume mapeo simple a local
-                    final localP = Pregunta(
-                      idPregunta: pRes['idpregunta'],
-                      idEjercicioFk: p.idEjercicioFk,
-                      contenido: p.contenido,
-                      explicacion: p.explicacion,
-                      opciones: p.opciones,
-                    );
-                    _service.addPregunta(localP);
+        final insertedEj = EjercicioDto.fromJson(ejRes);
+        _service.addEjercicio(insertedEj);
 
-                    final ops =
-                        opciones.where((o) => o.idPreguntaFk == p.idPregunta);
-                    for (var o in ops) {
-                      SupabaseClientHelper.client
-                          .from('tbl_opcion')
-                          .insert({
-                            'idpreguntafk': pRes['idpregunta'],
-                            'contenido': o.contenido,
-                            'correcta': o.correcta,
-                          })
-                          .select()
-                          .single()
-                          .then((oRes) {
-                            final localO = Opcion(
-                              idOpcion: oRes['idopcion'],
-                              idPreguntaFk: o.idPreguntaFk,
-                              contenido: o.contenido,
-                              correcta: o.correcta,
-                            );
-                            _service.addOpcion(localO);
-                          })
-                          .catchError((e) {
-                            if (kDebugMode)
-                              print('Error insert Opcion Supabase: $e');
-                          });
-                    }
-                  })
-                  .catchError((e) {
-                    if (kDebugMode) print('Error insert Pregunta Supabase: $e');
-                  });
-            }
-          })
-          .catchError((e) {
-            if (kDebugMode) print('Error insert Ejercicio Supabase: $e');
-          });
+        // Agregar preguntas y opciones
+        for (var p in preguntas) {
+          final pRes = await SupabaseClientHelper.client
+              .from('tbl_pregunta')
+              .insert({
+                'idejerciciofk': insertedEj.idEjercicio,
+                'contenido': p.contenido,
+                'explicacion': p.explicacion,
+              })
+              .select()
+              .single();
+
+          final localP = Pregunta(
+            idPregunta: pRes['idpregunta'],
+            idEjercicioFk: insertedEj.idEjercicio,
+            contenido: p.contenido,
+            explicacion: p.explicacion,
+            opciones: p.opciones,
+          );
+          _service.addPregunta(localP);
+
+          final ops = opciones.where((o) => o.idPreguntaFk == p.idPregunta);
+          for (var o in ops) {
+            final oRes = await SupabaseClientHelper.client
+                .from('tbl_opcion')
+                .insert({
+                  'idpreguntafk': pRes['idpregunta'],
+                  'contenido': o.contenido,
+                  'correcta': o.correcta,
+                })
+                .select()
+                .single();
+
+            final localO = Opcion(
+              idOpcion: oRes['idopcion'],
+              idPreguntaFk: pRes['idpregunta'],
+              contenido: o.contenido,
+              correcta: o.correcta,
+            );
+            _service.addOpcion(localO);
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error insert Ejercicio Supabase: $e');
+      }
     } else {
       // Persiste opciones
       for (final o in opciones) {
@@ -133,15 +122,16 @@ class EjercicioRepositoryImpl implements EjercicioRepository {
   }
 
   @override
-  void removeEjercicio(int idEjercicio) {
+  Future<void> removeEjercicio(int idEjercicio) async {
     if (SupabaseClientHelper.isConfigured) {
-      SupabaseClientHelper.client
-          .from('tbl_ejercicio')
-          .delete()
-          .eq('idejercicio', idEjercicio)
-          .catchError((e) {
+      try {
+        await SupabaseClientHelper.client
+            .from('tbl_ejercicio')
+            .delete()
+            .eq('idejercicio', idEjercicio);
+      } catch (e) {
         if (kDebugMode) print('Error remove Ejercicio Supabase: $e');
-      });
+      }
     }
     _service.removeEjercicio(idEjercicio);
   }

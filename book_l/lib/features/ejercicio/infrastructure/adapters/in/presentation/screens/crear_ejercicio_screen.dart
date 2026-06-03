@@ -817,7 +817,7 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
   }
 
   // ── Lógica de guardado ──────────────────────────────────────────────────────
-  void _guardar() {
+  Future<void> _guardar() async {
     if (_tituloCtrl.text.trim().isEmpty) {
       _showError('Ingresa un título para el ejercicio');
       return;
@@ -854,7 +854,7 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
       );
     }).toList();
 
-    EjerciciosController().crearEjercicioCompleto(
+    await EjerciciosController().crearEjercicioCompleto(
       idCapitulo: widget.idCapitulo,
       tipo: widget.tipo,
       titulo: _tituloCtrl.text.trim(),
@@ -864,10 +864,10 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
       preguntasInput: preguntasInput,
     );
 
+    if (!mounted) return;
     setState(() => _guardando = false);
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(children: [
             const Icon(Icons.check_circle, color: Colors.white),
@@ -884,7 +884,6 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
         ),
       );
       Navigator.pop(context, true);
-    }
   }
 
   void _showError(String msg) {

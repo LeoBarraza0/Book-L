@@ -112,29 +112,70 @@ class DiscusionRepositoryImpl implements DiscusionRepository {
   }
 
   @override
-  Comentario agregarComentario({
+  Future<Comentario> agregarComentario({
     required int idDiscusion,
     required int idUsuario,
     required String contenido,
     int? idPadre,
-  }) {
+  }) async {
     if (SupabaseClientHelper.isConfigured) {
-      SupabaseClientHelper.client.from('tbl_comentario').insert({
-        'id_discusionfk': idDiscusion,
-        'id_usuariofk': idUsuario,
-        'contenido': contenido,
-        'id_padre': idPadre,
-      }).select().single().then((res) {
+      try {
+        final res = await SupabaseClientHelper.client.from('tbl_comentario').insert({
+          'id_discusionfk': idDiscusion,
+          'id_usuariofk': idUsuario,
+          'contenido': contenido,
+          'id_padre': idPadre,
+        }).select().single();
+        
         final ins = ComentarioDto.fromJson(res);
-        final idx = _service.comentarios.indexWhere((c) => c.contenido == contenido && c.idUsuarioFk == idUsuario);
+        final idx = _service.comentarios.indexWhere((c) => c.contenido == contenido && c.idUsuarioFk == idUsuario && c.idDiscusionFk == idDiscusion);
         if (idx != -1) {
           _service.comentarios[idx] = ins;
         } else {
           _service.addComentario(ins);
         }
-      }).catchError((e) {
+
+        // --- Enviar Notificación ---
+        try {
+          final disc = _service.discusiones.firstWhere((d) => d.idDiscusion == idDiscusion);
+          int? idDestino;
+          String tipoNotif = 'comment';
+          String msj = 'Han comentado en tu contenido.';
+
+          if (idPadre != null) {
+            final padre = _service.comentarios.firstWhere((c) => c.idComentario == idPadre);
+            idDestino = padre.idUsuarioFk;
+            tipoNotif = 'reply';
+            msj = 'Alguien ha respondido a tu comentario.';
+          } else {
+            if (disc.idCursoFk != null) {
+              final curso = _service.cursos.firstWhere((c) => c.idCurso == disc.idCursoFk);
+              idDestino = curso.idUsuarioFk;
+              msj = 'Han comentado en tu curso.';
+            } else if (disc.idLeccionFk != null) {
+              final leccion = _service.lecciones.firstWhere((l) => l.idLeccion == disc.idLeccionFk);
+              idDestino = leccion.idUsuarioFk;
+              msj = 'Han comentado en tu lección.';
+            }
+          }
+
+          if (idDestino != null && idDestino != idUsuario) {
+            _service.generarNotificacion(
+              idUsuarioDestino: idDestino,
+              tipo: tipoNotif,
+              mensaje: msj,
+              idReferencia: idUsuario,
+              idCursoFk: disc.idCursoFk,
+              idLeccionFk: disc.idLeccionFk,
+              idComentarioFk: ins.idComentario,
+            );
+          }
+        } catch (_) {}
+
+        return ins;
+      } catch (e) {
         if (kDebugMode) print('Error agregarComentario Supabase: $e');
-      });
+      }
     }
 
     final newId = (_service.comentarios.isEmpty)

@@ -12,7 +12,7 @@ abstract class DiscusionRepository {
   List<Comentario> getRespuestas(int idComentarioPadre);
 
   /// Agrega un comentario o respuesta.
-  Comentario agregarComentario({
+  Future<Comentario> agregarComentario({
     required int idDiscusion,
     required int idUsuario,
     required String contenido,

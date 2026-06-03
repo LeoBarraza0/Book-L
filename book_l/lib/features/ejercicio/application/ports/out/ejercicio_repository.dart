@@ -23,9 +23,9 @@ abstract class EjercicioRepository {
   int nextOpcionId();
 
   /// Persiste un ejercicio con sus preguntas y opciones.
-  void addEjercicio(
+  Future<void> addEjercicio(
       Ejercicio ejercicio, List<Pregunta> preguntas, List<Opcion> opciones);
 
   /// Elimina un ejercicio por su ID.
-  void removeEjercicio(int idEjercicio);
+  Future<void> removeEjercicio(int idEjercicio);
 }

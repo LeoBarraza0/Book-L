@@ -122,13 +122,13 @@ class EjerciciosController extends ChangeNotifier {
 
   /// Crea un ejercicio completo con sus preguntas y opciones.
   /// Retorna el ID del ejercicio creado.
-  int crearEjercicioCompleto({
+  Future<int> crearEjercicioCompleto({
     required int idCapitulo,
     required TipoEjercicio tipo,
     required String titulo,
     required String descripcion,
     required List<PreguntaInput> preguntasInput,
-  }) {
+  }) async {
     final idEjercicio = _repo.nextEjercicioId();
     final List<Pregunta> preguntasFinales = [];
     final List<Opcion> opcionesFinales = [];
@@ -169,7 +169,7 @@ class EjerciciosController extends ChangeNotifier {
     );
 
     // Delegar persistencia al repositorio
-    _repo.addEjercicio(ejercicio, preguntasFinales, opcionesFinales);
+    await _repo.addEjercicio(ejercicio, preguntasFinales, opcionesFinales);
     notifyListeners();
     return idEjercicio;
   }
