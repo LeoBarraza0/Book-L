@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
+import 'package:book_l/core/infrastructure/services/supabase_client.dart';
 
 class SeccionData {
   final TextEditingController tituloCtrl;
@@ -597,10 +598,21 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
   Future<void> _agregarImagen() async {
     final picker = ImagePicker();
     final img = await picker.pickImage(source: ImageSource.gallery);
+    if (img == null) return;
+
+    // Mostramos preview local inmediatamente
     setState(() {
       widget.data.tieneImagen = true;
-      widget.data.imagenPath = img?.path;
+      widget.data.imagenPath = img.path;
     });
+
+    // Subir a Supabase para obtener URL pública permanente
+    final url = await SupabaseClientHelper.uploadFile('bookl-medias', img.path, fileName: img.name);
+    if (url != null && mounted) {
+      setState(() {
+        widget.data.imagenPath = url;
+      });
+    }
   }
 
   Future<void> _agregarVideo() async {
@@ -660,20 +672,33 @@ class _SeccionEditorWidgetState extends State<SeccionEditorWidget>
         final picker = ImagePicker();
         final vid = await picker.pickVideo(source: ImageSource.gallery);
         if (vid != null) {
+          // Mostramos preview local inmediatamente
           setState(() {
             widget.data.tieneVideo = true;
             widget.data.videoPath = vid.path;
             _videoInitialized = false;
           });
-          _initVideoPreview(vid.path);
+          // Subir a Supabase para obtener URL pública permanente
+          final url = await SupabaseClientHelper.uploadFile('bookl-medias', vid.path, fileName: vid.name);
+          if (url != null && mounted) {
+            setState(() {
+              widget.data.videoPath = url;
+            });
+          } else {
+            _initVideoPreview(vid.path);
+          }
         }
       } else if (result != null && result is String) {
+        // URL externa: asegurarnos que tenga protocolo
+        String videoUrl = result.trim();
+        if (videoUrl.isNotEmpty && !videoUrl.startsWith('http')) {
+          videoUrl = 'https://$videoUrl';
+        }
         setState(() {
           widget.data.tieneVideo = true;
-          widget.data.videoPath = result;
+          widget.data.videoPath = videoUrl;
           _videoInitialized = false;
         });
-        // Para youtube u otras web url no locales, desactivamos _initVideoPreview si falla,
         // o lo intentamos aislar. La UI mostrará el preview de _buildImageWidget(path) o fallará seguro,
         // pero como _videoInitialized quedará falso, mostrará el _buildIconContent.
       }

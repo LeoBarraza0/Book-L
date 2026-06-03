@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 import 'package:book_l/shared/widgets/reporte_modal.dart';
@@ -727,7 +728,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                                               Icons.image,
                                               'Imagen adjunta',
                                               const Color(0xFF4DC130)))
-                                  : Image.file(File(imagenPath),
+                                  : (kIsWeb ? Image.network(imagenPath,
                                       width: double.infinity,
                                       height: 200,
                                       fit: BoxFit.cover,
@@ -736,6 +737,15 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                                               Icons.image,
                                               'Imagen adjunta',
                                               const Color(0xFF4DC130)))
+                                    : Image.file(File(imagenPath),
+                                      width: double.infinity,
+                                      height: 200,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          _buildMediaItem(
+                                              Icons.image,
+                                              'Imagen adjunta',
+                                              const Color(0xFF4DC130))))
                               : _buildMediaItem(Icons.image, 'Imagen adjunta',
                                   const Color(0xFF4DC130)),
                         ),

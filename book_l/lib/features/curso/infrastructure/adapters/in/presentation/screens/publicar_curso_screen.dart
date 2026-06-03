@@ -7,6 +7,7 @@ import 'package:book_l/core/infrastructure/storage/local_storage.dart';
 import 'package:book_l/shared/widgets/seccion_editor_widget.dart';
 import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/widgets/agregar_seccion_button.dart';
 import '../controller/curso_controller.dart';
+import 'package:book_l/core/infrastructure/services/supabase_client.dart';
 
 class PublicarCursoScreen extends StatefulWidget {
   const PublicarCursoScreen({super.key});
@@ -376,13 +377,33 @@ class _PublicarCursoScreenState extends State<PublicarCursoScreen>
     setState(() => _guardando = true);
     try {
       final idUsuario = AppSession().usuarioId ?? 1;
+
+      // Subir imagen de portada si es local
+      String? portadaUrl = _imagenPath;
+      if (portadaUrl != null && !portadaUrl.startsWith('http') && !portadaUrl.startsWith('assets/')) {
+        final url = await SupabaseClientHelper.uploadFile('bookl-medias', portadaUrl);
+        if (url != null) portadaUrl = url;
+      }
+
+      // Subir media de secciones si es local
+      for (var sec in _secciones) {
+        if (sec.tieneImagen && sec.imagenPath != null && !sec.imagenPath!.startsWith('http') && !sec.imagenPath!.startsWith('assets/')) {
+          final url = await SupabaseClientHelper.uploadFile('bookl-medias', sec.imagenPath!);
+          if (url != null) sec.imagenPath = url;
+        }
+        if (sec.tieneVideo && sec.videoPath != null && !sec.videoPath!.startsWith('http') && !sec.videoPath!.startsWith('assets/')) {
+          final url = await SupabaseClientHelper.uploadFile('bookl-medias', sec.videoPath!);
+          if (url != null) sec.videoPath = url;
+        }
+      }
+
       final contenido = _secciones.map((s) => s.toJson()).toList();
 
       await _cursoCtrl.agregarCurso(
         idUsuario: idUsuario,
         nombre: nombre,
         contenido: contenido,
-        imagenUrl: _imagenPath,
+        imagenUrl: portadaUrl,
       );
 
       if (mounted) {

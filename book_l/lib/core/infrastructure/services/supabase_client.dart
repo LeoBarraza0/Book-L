@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Helper de conexión para Supabase.
@@ -20,5 +23,76 @@ class SupabaseClientHelper {
   /// credenciales actuales son válidas (no placeholders).
   static bool get isConfigured {
     return url.isNotEmpty && anonKey.isNotEmpty;
+  }
+
+  /// Sube un archivo a Supabase Storage y retorna su URL pública.
+  /// Soporta rutas locales (móvil) y URLs blob (Flutter Web).
+  static Future<String?> uploadFile(String bucket, String path, {String? fileName}) async {
+    if (!isConfigured) return null;
+    try {
+      final isBlob = path.startsWith('blob:');
+      String name;
+      if (fileName != null) {
+        name = '${DateTime.now().millisecondsSinceEpoch}_$fileName';
+      } else {
+        name = '${DateTime.now().millisecondsSinceEpoch}';
+      }
+
+      if (!name.contains('.')) {
+        if (!isBlob) {
+          final ext = path.split('.').last;
+          name = '$name.$ext';
+        } else {
+          name = '$name.jpg'; // Solo por defecto si no tenemos fileName ni extensión
+        }
+      }
+
+      if (kIsWeb && isBlob) {
+        // En Web, ImagePicker devuelve una URL blob. Descargamos los bytes:
+        final response = await http.get(Uri.parse(path));
+        final bytes = response.bodyBytes;
+        await client.storage.from(bucket).uploadBinary(
+          name,
+          bytes,
+          fileOptions: const FileOptions(upsert: true),
+        );
+      } else {
+        // En Móvil, leemos el archivo localmente
+        final file = File(path);
+        await client.storage.from(bucket).upload(
+          name,
+          file,
+          fileOptions: const FileOptions(upsert: true),
+        );
+      }
+
+      return client.storage.from(bucket).getPublicUrl(name);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error uploading to Supabase: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Sube un archivo usando sus bytes directamente (útil para Web con FilePicker).
+  static Future<String?> uploadBytes(String bucket, Uint8List bytes, String fileName) async {
+    if (!isConfigured) return null;
+    try {
+      final name = '${DateTime.now().millisecondsSinceEpoch}_$fileName';
+
+      await client.storage.from(bucket).uploadBinary(
+        name,
+        bytes,
+        fileOptions: const FileOptions(upsert: true),
+      );
+
+      return client.storage.from(bucket).getPublicUrl(name);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error uploading bytes to Supabase: $e');
+      }
+      return null;
+    }
   }
 }

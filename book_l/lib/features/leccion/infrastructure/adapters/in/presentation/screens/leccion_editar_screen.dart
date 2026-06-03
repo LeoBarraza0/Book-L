@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:book_l/core/utils/feedback_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
@@ -14,6 +15,7 @@ import '../controller/leccion_controller.dart';
 import 'package:book_l/features/leccion/domain/models/leccion.dart';
 import 'package:book_l/features/leccion/domain/models/capitulo.dart';
 import 'package:book_l/features/leccion/domain/models/material_educativo.dart';
+import 'package:book_l/core/infrastructure/services/supabase_client.dart';
 
 class LeccionEditarScreen extends StatefulWidget {
   final int? idLeccion;
@@ -29,6 +31,9 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
   int _selectedTab = 0; // 0: Contenido, 1: Ejercicios, 2: Discusión
   final _tituloCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
+
+  final Map<String, Uint8List> _pdfBytesCache = {};
+
   final List<SeccionData> _secciones = [];
   final List<Capitulo> _capitulosEnMemoria = [];
   final List<int> _capitulosAEliminar = [];
@@ -743,6 +748,35 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
     if (nombre.isEmpty) return;
     setState(() => _guardando = true);
     try {
+      // Subir media de secciones si es local
+      for (var sec in _secciones) {
+        if (sec.tieneImagen && sec.imagenPath != null && !sec.imagenPath!.startsWith('http') && !sec.imagenPath!.startsWith('assets/')) {
+          final url = await SupabaseClientHelper.uploadFile('bookl-medias', sec.imagenPath!);
+          if (url != null) sec.imagenPath = url;
+        }
+        if (sec.tieneVideo && sec.videoPath != null && !sec.videoPath!.startsWith('http') && !sec.videoPath!.startsWith('assets/')) {
+          final url = await SupabaseClientHelper.uploadFile('bookl-medias', sec.videoPath!);
+          if (url != null) sec.videoPath = url;
+        }
+      }
+
+      // Subir url de materiales si es local
+      for (int i = 0; i < _materialesEnMemoria.length; i++) {
+        final mat = _materialesEnMemoria[i];
+        if (mat.url != null && !mat.url!.startsWith('http') && !mat.url!.startsWith('assets/')) {
+          String? url;
+          if (kIsWeb && _pdfBytesCache.containsKey(mat.url!)) {
+            final bytes = _pdfBytesCache[mat.url!];
+            url = await SupabaseClientHelper.uploadBytes('bookl-medias', bytes!, mat.url!);
+          } else {
+            url = await SupabaseClientHelper.uploadFile('bookl-medias', mat.url!);
+          }
+          if (url != null) {
+            _materialesEnMemoria[i] = mat.copyWith(url: url);
+          }
+        }
+      }
+
       if (_leccionActual != null) {
         // 1. Guardar cambios básicos de la lección
         await _leccionCtrl.editarLeccion(
@@ -1090,14 +1124,23 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
                                   await FilePicker.platform.pickFiles(
                                 type: FileType.custom,
                                 allowedExtensions: ['pdf'],
+                                withData: kIsWeb,
                               );
-                              if (result != null &&
-                                  result.files.single.path != null) {
+                              if (result != null) {
+                                final single = result.files.single;
                                 setModalState(() {
-                                  filePath = result.files.single.path;
-                                  tamano = result.files.single.size;
+                                  if (kIsWeb && single.bytes != null) {
+                                    filePath = single.name;
+                                    tamano = single.size;
+                                    _pdfBytesCache[single.name] = single.bytes!;
+                                  } else {
+                                    if (single.path != null) {
+                                      filePath = single.path;
+                                      tamano = single.size;
+                                    }
+                                  }
                                   if (nombreCtrl.text.isEmpty) {
-                                    nombreCtrl.text = result.files.single.name;
+                                    nombreCtrl.text = single.name;
                                   }
                                 });
                               }
@@ -1179,11 +1222,20 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
                                 : descCtrl.text.trim(),
                             tamanoBytes: tamano,
                           );
+
+                          // Asegurarnos de que el material de tipo video tenga protocolo http/https
+                          MaterialEducativo finalMat = mat;
+                          if (mat.tipo == 'video' || mat.tipo == 'enlace') {
+                            if (mat.url != null && mat.url!.isNotEmpty && !mat.url!.startsWith('http')) {
+                              finalMat = mat.copyWith(url: 'https://${mat.url}');
+                            }
+                          }
+
                           setState(() {
                             if (index != null) {
-                              _materialesEnMemoria[index] = mat;
+                              _materialesEnMemoria[index] = finalMat;
                             } else {
-                              _materialesEnMemoria.add(mat);
+                              _materialesEnMemoria.add(finalMat);
                             }
                           });
                           Navigator.pop(ctx);
