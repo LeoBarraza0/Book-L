@@ -14,6 +14,7 @@ import 'package:book_l/features/leccion/domain/models/material_educativo.dart';
 import 'package:book_l/core/infrastructure/services/supabase_client.dart';
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
 import 'package:book_l/features/ejercicio/infrastructure/adapters/out/repositories/ejercicio_repository_impl.dart';
+
 class PublicarLeccionScreen extends StatefulWidget {
   const PublicarLeccionScreen({super.key});
 
@@ -848,19 +849,30 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
 
       // Subir imagen de portada si es local
       String? portadaUrl = _imagenPath;
-      if (portadaUrl != null && !portadaUrl.startsWith('http') && !portadaUrl.startsWith('assets/')) {
-        final url = await SupabaseClientHelper.uploadFile('bookl-medias', portadaUrl);
+      if (portadaUrl != null &&
+          !portadaUrl.startsWith('http') &&
+          !portadaUrl.startsWith('assets/')) {
+        final url =
+            await SupabaseClientHelper.uploadFile('bookl-medias', portadaUrl);
         if (url != null) portadaUrl = url;
       }
 
       // Subir media de secciones si es local
       for (var sec in _secciones) {
-        if (sec.tieneImagen && sec.imagenPath != null && !sec.imagenPath!.startsWith('http') && !sec.imagenPath!.startsWith('assets/')) {
-          final url = await SupabaseClientHelper.uploadFile('bookl-medias', sec.imagenPath!);
+        if (sec.tieneImagen &&
+            sec.imagenPath != null &&
+            !sec.imagenPath!.startsWith('http') &&
+            !sec.imagenPath!.startsWith('assets/')) {
+          final url = await SupabaseClientHelper.uploadFile(
+              'bookl-medias', sec.imagenPath!);
           if (url != null) sec.imagenPath = url;
         }
-        if (sec.tieneVideo && sec.videoPath != null && !sec.videoPath!.startsWith('http') && !sec.videoPath!.startsWith('assets/')) {
-          final url = await SupabaseClientHelper.uploadFile('bookl-medias', sec.videoPath!);
+        if (sec.tieneVideo &&
+            sec.videoPath != null &&
+            !sec.videoPath!.startsWith('http') &&
+            !sec.videoPath!.startsWith('assets/')) {
+          final url = await SupabaseClientHelper.uploadFile(
+              'bookl-medias', sec.videoPath!);
           if (url != null) sec.videoPath = url;
         }
       }
@@ -891,32 +903,40 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
         if (idCapituloTemporal != 0 && idCapituloTemporal != newIdCapitulo) {
           try {
             final service = BooklService();
-            final pendingEjercicios = service.ejercicios.where((e) => e.idCapitulo == idCapituloTemporal).toList();
-            
+            final pendingEjercicios = service.ejercicios
+                .where((e) => e.idCapitulo == idCapituloTemporal)
+                .toList();
+
             final ejRepo = EjercicioRepositoryImpl();
 
             for (final ej in pendingEjercicios) {
               // Obtener las preguntas y opciones relacionadas de memoria local
-              final preguntas = service.preguntas.where((p) => p.idEjercicioFk == ej.idEjercicio).toList();
-              final opciones = service.opciones.where((o) => preguntas.map((p) => p.idPregunta).contains(o.idPreguntaFk)).toList();
-              
+              final preguntas = service.preguntas
+                  .where((p) => p.idEjercicioFk == ej.idEjercicio)
+                  .toList();
+              final opciones = service.opciones
+                  .where((o) => preguntas
+                      .map((p) => p.idPregunta)
+                      .contains(o.idPreguntaFk))
+                  .toList();
+
               // Actualizar el ejercicio con el ID real del capítulo
               final ejercicioCorregido = ej.copyWith(idCapitulo: newIdCapitulo);
-              
+
               // Eliminar la versión fallida de memoria antes de re-insertar
               // (removeEjercicio internamente elimina también sus preguntas y opciones)
               service.removeEjercicio(ej.idEjercicio);
-              
+
               // Re-insertar correctamente a través del repositorio,
               // el cual ahora guardará en Supabase sin error de FK
-              await ejRepo.addEjercicio(ejercicioCorregido, preguntas, opciones);
+              await ejRepo.addEjercicio(
+                  ejercicioCorregido, preguntas, opciones);
             }
           } catch (e) {
             debugPrint('[PublicarLeccion] Error re-vinculando ejercicios: $e');
           }
         }
       }
-
 
       // Agregar materiales relacionados
       for (final mat in _materialesEnMemoria) {

@@ -42,18 +42,56 @@ class _MisContenidosTabWidgetState extends State<MisContenidosTabWidget> {
         final misLecciones = PerfilController().getLeccionesDeUsuario(userId);
         final misCursos = PerfilController().getCursosDeUsuario(userId);
 
-        final filteredLecciones = _query.isEmpty
-            ? misLecciones
+        var filteredLecciones = _query.isEmpty
+            ? misLecciones.toList()
             : misLecciones
                 .where((l) =>
                     l.nombre.toLowerCase().contains(_query.toLowerCase()))
                 .toList();
-        final filteredCursos = _query.isEmpty
-            ? misCursos
+        var filteredCursos = _query.isEmpty
+            ? misCursos.toList()
             : misCursos
                 .where((c) =>
                     c.nombre.toLowerCase().contains(_query.toLowerCase()))
                 .toList();
+
+        int parseDuracion(String duracionStr) {
+          if (duracionStr.isEmpty) return 0;
+          int totalMinutes = 0;
+          final hourMatch = RegExp(r'(\d+)\s*h').firstMatch(duracionStr);
+          if (hourMatch != null) {
+            totalMinutes += (int.tryParse(hourMatch.group(1) ?? '0') ?? 0) * 60;
+          }
+          final minMatch = RegExp(r'(\d+)\s*m').firstMatch(duracionStr);
+          if (minMatch != null) {
+            totalMinutes += int.tryParse(minMatch.group(1) ?? '0') ?? 0;
+          }
+          return totalMinutes;
+        }
+
+        void aplicarOrden(List<dynamic> lista) {
+          switch (_filtroSeleccionado) {
+            case 1: // Recientes
+              lista.sort((a, b) {
+                final dateA = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+                final dateB = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+                return dateB.compareTo(dateA);
+              });
+              break;
+            case 2: // Calificación
+              lista.sort((a, b) => (b.rating as double).compareTo(a.rating as double));
+              break;
+            case 3: // Populares
+              lista.sort((a, b) => (b.estudiantes as int).compareTo(a.estudiantes as int));
+              break;
+            case 4: // Duración
+              lista.sort((a, b) => parseDuracion(b.duracion).compareTo(parseDuracion(a.duracion)));
+              break;
+          }
+        }
+
+        aplicarOrden(filteredLecciones);
+        aplicarOrden(filteredCursos);
 
         return DefaultTabController(
           length: 2,
