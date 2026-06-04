@@ -270,8 +270,7 @@ class _RespuestaTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final usuario = ctrl.getUserSync(respuesta.idUsuarioFk);
     final nombre = usuario?.nombreCompleto ?? 'Usuario';
-    final avatar = usuario?.avatarUrl as String? ??
-        'https://ui-avatars.com/api/?name=${nombre.replaceAll(" ", "+")}&background=4DC130&color=fff';
+    final avatar = usuario?.avatarUrl as String?;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -288,11 +287,11 @@ class _RespuestaTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(1),
             ),
           ),
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: const Color(0xFF4DC130),
-            backgroundImage: NetworkImage(avatar),
-            onBackgroundImageError: (_, __) {},
+          CustomAvatar(
+            radius: 45,
+            url: avatar,
+            nombre: nombre,
+            backgroundColor: Colors.white,
           ),
           const SizedBox(width: 8),
           Expanded(
