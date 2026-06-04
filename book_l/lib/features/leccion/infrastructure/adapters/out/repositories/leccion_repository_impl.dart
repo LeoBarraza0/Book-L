@@ -47,7 +47,11 @@ class LeccionRepositoryImpl implements LeccionRepository {
       try {
         final res =
             await SupabaseClientHelper.client.from('tbl_leccion').select();
-        final lecciones = res.map((e) => LeccionDto.fromJson(e)).toList();
+        final leccionesRaw = res.map((e) => LeccionDto.fromJson(e)).toList();
+        final lecciones = leccionesRaw.map((l) {
+          final rating = _service.obtenerRatingLeccion(l.idLeccion);
+          return l.copyWith(rating: rating);
+        }).toList();
 
         for (var l in lecciones) {
           final idx = _service.lecciones
@@ -76,7 +80,9 @@ class LeccionRepositoryImpl implements LeccionRepository {
             .eq('idleccion', id)
             .maybeSingle();
         if (res != null) {
-          return LeccionDto.fromJson(res);
+          final l = LeccionDto.fromJson(res);
+          final rating = _service.obtenerRatingLeccion(l.idLeccion);
+          return l.copyWith(rating: rating);
         }
       } catch (e) {
         if (kDebugMode) print('Error getLeccionById Supabase: $e');
@@ -122,7 +128,9 @@ class LeccionRepositoryImpl implements LeccionRepository {
             .select()
             .single();
         final insertada = LeccionDto.fromJson(res);
-        _service.addLeccion(insertada);
+        final rating = _service.obtenerRatingLeccion(insertada.idLeccion);
+        final insertadaConRating = insertada.copyWith(rating: rating);
+        _service.addLeccion(insertadaConRating);
         return insertada.idLeccion;
       } catch (e) {
         if (kDebugMode) print('Error addLeccion Supabase: $e');

@@ -33,7 +33,11 @@ class CursoRepositoryImpl implements CursoRepository {
     if (SupabaseClientHelper.isConfigured) {
       try {
         final res = await SupabaseClientHelper.client.from('tbl_curso').select();
-        final cursos = res.map((e) => CursoDto.fromJson(e)).toList();
+        final cursosRaw = res.map((e) => CursoDto.fromJson(e)).toList();
+        final cursos = cursosRaw.map((c) {
+          final rating = _service.obtenerRatingCurso(c.idCurso);
+          return c.copyWith(rating: rating);
+        }).toList();
         
         // Sync local
         for (var c in cursos) {
@@ -56,7 +60,9 @@ class CursoRepositoryImpl implements CursoRepository {
       try {
         final res = await SupabaseClientHelper.client.from('tbl_curso').select().eq('idcurso', id).maybeSingle();
         if (res != null) {
-          return CursoDto.fromJson(res);
+          final c = CursoDto.fromJson(res);
+          final rating = _service.obtenerRatingCurso(c.idCurso);
+          return c.copyWith(rating: rating);
         }
       } catch (e) {
         if (kDebugMode) print('Error getCursoById Supabase: $e');
@@ -81,7 +87,9 @@ class CursoRepositoryImpl implements CursoRepository {
         final List<Leccion> lecciones = [];
         for (var r in res) {
           if (r['tbl_leccion'] != null) {
-            lecciones.add(LeccionDto.fromJson(r['tbl_leccion']));
+            final l = LeccionDto.fromJson(r['tbl_leccion']);
+            final rating = _service.obtenerRatingLeccion(l.idLeccion);
+            lecciones.add(l.copyWith(rating: rating));
           }
         }
         return lecciones;
