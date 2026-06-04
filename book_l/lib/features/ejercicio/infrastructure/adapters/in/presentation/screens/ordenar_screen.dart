@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 import 'package:book_l/features/calificacion/infrastructure/adapters/in/presentation/screens/resultado_screen.dart';
 import 'package:book_l/features/ejercicio/domain/models/ejercicio.dart';
+import 'package:book_l/core/infrastructure/storage/local_storage.dart';
+import 'package:book_l/features/ejercicio/infrastructure/adapters/in/presentation/controller/ejercicios_controller.dart';
 
 /// Pantalla para resolver ejercicios de tipo Ordenar.
 /// El usuario arrastra los elementos hasta colocarlos en el orden correcto.
@@ -307,6 +309,12 @@ class _OrdenarScreenState extends State<OrdenarScreen> {
                 _hasAnswered = true;
                 if (_isCorrectOrder) _respuestasCorrectas++;
               });
+              EjerciciosController().guardarRespuesta(
+                AppSession().usuarioId ?? 0,
+                widget.ejercicio.preguntas[_currentQuestionIndex].idPregunta,
+                null,
+                _isCorrectOrder,
+              );
             } else {
               if (_currentQuestionIndex <
                   widget.ejercicio.preguntas.length - 1) {

@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 import 'package:book_l/features/calificacion/infrastructure/adapters/in/presentation/screens/resultado_screen.dart';
 import 'package:book_l/features/ejercicio/domain/models/ejercicio.dart';
+import 'package:book_l/core/infrastructure/storage/local_storage.dart';
+import 'package:book_l/features/ejercicio/infrastructure/adapters/in/presentation/controller/ejercicios_controller.dart';
 
 /// Pantalla para resolver ejercicios de tipo Rellenar.
 /// Muestra el enunciado con espacios en blanco y el usuario escribe las palabras faltantes.
@@ -61,6 +63,13 @@ class _RellenarScreenState extends State<RellenarScreen> {
     }
     if (allCorrect) _respuestasCorrectas++;
     setState(() => _hasAnswered = true);
+    
+    EjerciciosController().guardarRespuesta(
+      AppSession().usuarioId ?? 0,
+      pregunta.idPregunta,
+      null,
+      allCorrect,
+    );
   }
 
   @override

@@ -829,45 +829,46 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
 
     setState(() => _guardando = true);
 
-    final preguntasInput = _preguntas.map((q) {
-      final opcionesInput = q.opciones
-          .map((o) {
-            // Para ordenar y rellenar, todas son "correctas" por estar en la lista final
-            bool esCorrecta = o.correcta;
-            if (widget.tipo == TipoEjercicio.respuestaCorta ||
-                widget.tipo == TipoEjercicio.ordenar ||
-                widget.tipo == TipoEjercicio.rellenar) {
-              esCorrecta = true;
-            }
-            return OpcionInput(
-                contenido: o.ctrl.text.trim(), correcta: esCorrecta);
-          })
-          .where((o) => o.contenido.isNotEmpty)
-          .toList();
+    try {
+      final preguntasInput = _preguntas.map((q) {
+        final opcionesInput = q.opciones
+            .map((o) {
+              // Para ordenar y rellenar, todas son "correctas" por estar en la lista final
+              bool esCorrecta = o.correcta;
+              if (widget.tipo == TipoEjercicio.respuestaCorta ||
+                  widget.tipo == TipoEjercicio.ordenar ||
+                  widget.tipo == TipoEjercicio.rellenar) {
+                esCorrecta = true;
+              }
+              return OpcionInput(
+                  contenido: o.ctrl.text.trim(), correcta: esCorrecta);
+            })
+            .where((o) => o.contenido.isNotEmpty)
+            .toList();
 
-      return PreguntaInput(
-        contenido: q.contenidoCtrl.text.trim(),
-        explicacion: q.explicacionCtrl.text.trim().isEmpty
-            ? null
-            : q.explicacionCtrl.text.trim(),
-        opciones: opcionesInput,
+        return PreguntaInput(
+          contenido: q.contenidoCtrl.text.trim(),
+          explicacion: q.explicacionCtrl.text.trim().isEmpty
+              ? null
+              : q.explicacionCtrl.text.trim(),
+          opciones: opcionesInput,
+        );
+      }).toList();
+
+      await EjerciciosController().crearEjercicioCompleto(
+        idCapitulo: widget.idCapitulo,
+        tipo: widget.tipo,
+        titulo: _tituloCtrl.text.trim(),
+        descripcion: _descripcionCtrl.text.trim().isEmpty
+            ? 'Ejercicio de ${widget.tipo.displayName}'
+            : _descripcionCtrl.text.trim(),
+        preguntasInput: preguntasInput,
       );
-    }).toList();
 
-    await EjerciciosController().crearEjercicioCompleto(
-      idCapitulo: widget.idCapitulo,
-      tipo: widget.tipo,
-      titulo: _tituloCtrl.text.trim(),
-      descripcion: _descripcionCtrl.text.trim().isEmpty
-          ? 'Ejercicio de ${widget.tipo.displayName}'
-          : _descripcionCtrl.text.trim(),
-      preguntasInput: preguntasInput,
-    );
+      if (!mounted) return;
+      setState(() => _guardando = false);
 
-    if (!mounted) return;
-    setState(() => _guardando = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(children: [
             const Icon(Icons.check_circle, color: Colors.white),
@@ -884,6 +885,12 @@ class _CrearEjercicioScreenState extends State<CrearEjercicioScreen> {
         ),
       );
       Navigator.pop(context, true);
+    } catch (e) {
+      debugPrint('[CrearEjercicio] Error al guardar: $e');
+      if (!mounted) return;
+      setState(() => _guardando = false);
+      _showError('Error al guardar el ejercicio. Intenta de nuevo.');
+    }
   }
 
   void _showError(String msg) {
