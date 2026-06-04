@@ -34,8 +34,8 @@ class _MisFavoritosTabWidgetState extends State<MisFavoritosTabWidget> {
       listenable: GuardadoController(),
       builder: (context, _) {
         final ctrl = GuardadoController();
-        var misLecciones = ctrl.getSavedLecciones();
-        var misCursos = ctrl.getSavedCursos();
+        var misLecciones = ctrl.getSavedLecciones().toList();
+        var misCursos = ctrl.getSavedCursos().toList();
 
         // Aplicamos la búsqueda local
         if (_query.isNotEmpty) {
@@ -47,6 +47,44 @@ class _MisFavoritosTabWidgetState extends State<MisFavoritosTabWidget> {
               .where((c) => c.nombre.toLowerCase().contains(q))
               .toList();
         }
+
+        int parseDuracion(String duracionStr) {
+          if (duracionStr.isEmpty) return 0;
+          int totalMinutes = 0;
+          final hourMatch = RegExp(r'(\d+)\s*h').firstMatch(duracionStr);
+          if (hourMatch != null) {
+            totalMinutes += (int.tryParse(hourMatch.group(1) ?? '0') ?? 0) * 60;
+          }
+          final minMatch = RegExp(r'(\d+)\s*m').firstMatch(duracionStr);
+          if (minMatch != null) {
+            totalMinutes += int.tryParse(minMatch.group(1) ?? '0') ?? 0;
+          }
+          return totalMinutes;
+        }
+
+        void aplicarOrden(List<dynamic> lista) {
+          switch (_filtroSeleccionado) {
+            case 1: // Recientes
+              lista.sort((a, b) {
+                final dateA = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+                final dateB = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+                return dateB.compareTo(dateA);
+              });
+              break;
+            case 2: // Calificación
+              lista.sort((a, b) => (b.rating as double).compareTo(a.rating as double));
+              break;
+            case 3: // Populares
+              lista.sort((a, b) => (b.estudiantes as int).compareTo(a.estudiantes as int));
+              break;
+            case 4: // Duración
+              lista.sort((a, b) => parseDuracion(b.duracion).compareTo(parseDuracion(a.duracion)));
+              break;
+          }
+        }
+
+        aplicarOrden(misLecciones);
+        aplicarOrden(misCursos);
 
         return DefaultTabController(
           length: 2,

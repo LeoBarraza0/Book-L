@@ -5,6 +5,7 @@ import 'package:book_l/core/infrastructure/services/supabase_client.dart';
 import 'package:book_l/features/auth/infrastructure/adapters/out/dtos/usuario_dto.dart';
 import 'package:book_l/features/auth/domain/models/usuario.dart';
 import 'package:book_l/features/auth/application/ports/out/auth_repository.dart';
+import 'package:book_l/core/utils/password_utils.dart';
 import 'package:flutter/foundation.dart';
 
 // Adaptador secundario — implementa el contrato AuthRepository usando
@@ -18,6 +19,7 @@ class AuthRepositoryImpl implements AuthRepository {
   // ── Login ──────────────────────────────────────────────────────────────────
   @override
   Future<Usuario?> login(String correo, String contrasena) async {
+    final String hashedPassword = PasswordUtils.hashPassword(contrasena);
     UsuarioDto? found;
 
     if (SupabaseClientHelper.isConfigured) {
@@ -27,7 +29,7 @@ class AuthRepositoryImpl implements AuthRepository {
             .from('tbl_usuario')
             .select()
             .eq('correo', correo.trim().toLowerCase())
-            .eq('contrasena', contrasena)
+            .eq('contrasena', hashedPassword)
             .eq('activo', true)
             .maybeSingle();
 
@@ -45,7 +47,7 @@ class AuthRepositoryImpl implements AuthRepository {
     if (found == null) {
       for (final u in _service.usuariosDto) {
         if (u.correo.toLowerCase() == correo.trim().toLowerCase() &&
-            u.contrasena == contrasena &&
+            u.contrasena == hashedPassword &&
             u.activo) {
           found = u;
           break;
@@ -93,6 +95,7 @@ class AuthRepositoryImpl implements AuthRepository {
     String? avatarUrl,
     String? descripcion,
   }) async {
+    final String hashedPassword = PasswordUtils.hashPassword(contrasena);
     UsuarioDto? dto;
 
     if (SupabaseClientHelper.isConfigured) {
@@ -118,14 +121,14 @@ class AuthRepositoryImpl implements AuthRepository {
         final insertRes = await client.from('tbl_usuario').insert(Map<String, dynamic>.from({
           'nombrecompleto': nombreCompleto.trim(),
           'correo': correo.trim().toLowerCase(),
-          'contrasena': contrasena,
+          'contrasena': hashedPassword,
           'username': baseUsername,
           'rol': rol,
           if (programa != null) 'programa': programa,
           if (celular != null) 'celular': celular,
           if (semestre != null) 'semestre': semestre,
           if (nacimiento != null) 'nacimiento': nacimiento.toIso8601String().split('T').first,
-          if (preferencias != null) 'preferencias': jsonDecode(preferencias),
+          if (preferencias != null) 'preferencias': jsonDecode(preferencias!),
           if (avatarUrl != null) 'avatar_url': avatarUrl,
           if (descripcion != null) 'descripcion': descripcion,
           'activo': true,
@@ -164,7 +167,7 @@ class AuthRepositoryImpl implements AuthRepository {
         idUsuario: nuevoId,
         nombreCompleto: nombreCompleto.trim(),
         correo: correo.trim().toLowerCase(),
-        contrasena: contrasena,
+        contrasena: hashedPassword,
         username: baseUsername,
         rol: rol,
         programa: programa,
