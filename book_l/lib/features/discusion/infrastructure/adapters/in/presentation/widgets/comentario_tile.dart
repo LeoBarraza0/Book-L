@@ -288,7 +288,7 @@ class _RespuestaTile extends StatelessWidget {
             ),
           ),
           CustomAvatar(
-            radius: 45,
+            radius: 18,
             url: avatar,
             nombre: nombre,
             backgroundColor: Colors.white,
