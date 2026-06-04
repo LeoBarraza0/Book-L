@@ -12,7 +12,8 @@ import '../widgets/material_editor_tile.dart';
 import 'package:book_l/features/leccion/domain/models/capitulo.dart';
 import 'package:book_l/features/leccion/domain/models/material_educativo.dart';
 import 'package:book_l/core/infrastructure/services/supabase_client.dart';
-
+import 'package:book_l/core/infrastructure/services/bookl_service.dart';
+import 'package:book_l/features/ejercicio/infrastructure/adapters/out/repositories/ejercicio_repository_impl.dart';
 class PublicarLeccionScreen extends StatefulWidget {
   const PublicarLeccionScreen({super.key});
 
@@ -875,13 +876,47 @@ class _PublicarLeccionScreenState extends State<PublicarLeccionScreen>
 
       // Agregar los capítulos vinculados a la verdadera nueva ID de lección
       for (final cap in _capitulosEnMemoria) {
-        await _leccionCtrl.agregarCapitulo(
+        // cap.idCapitulo es el ID temporal generado en CrearCapituloScreen
+        final idCapituloTemporal = cap.idCapitulo;
+
+        final newIdCapitulo = await _leccionCtrl.agregarCapitulo(
           idLeccion: newIdLeccion,
           nombre: cap.nombre,
           contenido: cap.contenido,
           tiempoTotal: cap.tiempoTotal,
         );
+
+        // Si el ID temporal tiene ejercicios ya guardados en memoria,
+        // reinsertarlos para que apunten al ID real del capítulo y se guarden en Supabase.
+        if (idCapituloTemporal != 0 && idCapituloTemporal != newIdCapitulo) {
+          try {
+            final service = BooklService();
+            final pendingEjercicios = service.ejercicios.where((e) => e.idCapitulo == idCapituloTemporal).toList();
+            
+            final ejRepo = EjercicioRepositoryImpl();
+
+            for (final ej in pendingEjercicios) {
+              // Obtener las preguntas y opciones relacionadas de memoria local
+              final preguntas = service.preguntas.where((p) => p.idEjercicioFk == ej.idEjercicio).toList();
+              final opciones = service.opciones.where((o) => preguntas.map((p) => p.idPregunta).contains(o.idPreguntaFk)).toList();
+              
+              // Actualizar el ejercicio con el ID real del capítulo
+              final ejercicioCorregido = ej.copyWith(idCapitulo: newIdCapitulo);
+              
+              // Eliminar la versión fallida de memoria antes de re-insertar
+              // (removeEjercicio internamente elimina también sus preguntas y opciones)
+              service.removeEjercicio(ej.idEjercicio);
+              
+              // Re-insertar correctamente a través del repositorio,
+              // el cual ahora guardará en Supabase sin error de FK
+              await ejRepo.addEjercicio(ejercicioCorregido, preguntas, opciones);
+            }
+          } catch (e) {
+            debugPrint('[PublicarLeccion] Error re-vinculando ejercicios: $e');
+          }
+        }
       }
+
 
       // Agregar materiales relacionados
       for (final mat in _materialesEnMemoria) {

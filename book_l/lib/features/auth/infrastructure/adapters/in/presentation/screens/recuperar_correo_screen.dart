@@ -145,38 +145,6 @@ class RecuperarCorreoScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  Center(
-                    child: Column(
-                      children: [
-                        const Text(
-                          '¿No es correcto el correo?',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF828282),
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pushReplacementNamed(
-                              context, '/recuperar_numero'),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                          ),
-                          child: const Text(
-                            'Usar número de teléfono',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF4DC130),
-                              fontFamily: 'Inter',
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 45),
                   const AuthProTip(),
                   const SizedBox(height: 40),

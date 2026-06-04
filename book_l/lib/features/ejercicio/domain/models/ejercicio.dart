@@ -55,4 +55,22 @@ class Ejercicio {
     required this.descripcion,
     this.preguntas = const [],
   });
+
+  Ejercicio copyWith({
+    int? idEjercicio,
+    int? idCapitulo,
+    TipoEjercicio? tipo,
+    String? titulo,
+    String? descripcion,
+    List<Pregunta>? preguntas,
+  }) {
+    return Ejercicio(
+      idEjercicio: idEjercicio ?? this.idEjercicio,
+      idCapitulo: idCapitulo ?? this.idCapitulo,
+      tipo: tipo ?? this.tipo,
+      titulo: titulo ?? this.titulo,
+      descripcion: descripcion ?? this.descripcion,
+      preguntas: preguntas ?? this.preguntas,
+    );
+  }
 }

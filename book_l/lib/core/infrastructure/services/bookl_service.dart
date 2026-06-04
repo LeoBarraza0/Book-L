@@ -1710,7 +1710,7 @@ class BooklService extends ChangeNotifier {
         1;
   }
 
-  int generateId() => DateTime.now().microsecondsSinceEpoch;
+  int generateId() => DateTime.now().millisecondsSinceEpoch & 0x3FFFFFFF;
 
   // ── Operaciones de Reportes ────────────────────────────────────────────────
   void addReporte({
