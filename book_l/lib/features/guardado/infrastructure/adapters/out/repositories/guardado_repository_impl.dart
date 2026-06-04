@@ -27,60 +27,12 @@ class GuardadoRepositoryImpl implements GuardadoRepository {
 
   @override
   void toggleSavedLeccion(int idLeccion) {
-    final isSaved = _session.savedLecciones.value.contains(idLeccion);
     _session.toggleSavedLeccion(idLeccion);
-    
-    final userId = _session.usuarioId;
-    if (userId != null && SupabaseClientHelper.isConfigured) {
-      if (!isSaved) {
-        // We are saving it now
-        SupabaseClientHelper.client.from('tbl_guardado_leccion').insert({
-          'idusuario': userId,
-          'idleccion': idLeccion,
-        }).catchError((e) {
-          if (kDebugMode) print('Error guardar leccion Supabase: $e');
-        });
-      } else {
-        // We are unsaving it
-        SupabaseClientHelper.client
-            .from('tbl_guardado_leccion')
-            .delete()
-            .eq('idusuario', userId)
-            .eq('idleccion', idLeccion)
-            .catchError((e) {
-          if (kDebugMode) print('Error desguardar leccion Supabase: $e');
-        });
-      }
-    }
   }
 
   @override
   void toggleSavedCurso(int idCurso) {
-    final isSaved = _session.savedCursos.value.contains(idCurso);
     _session.toggleSavedCurso(idCurso);
-    
-    final userId = _session.usuarioId;
-    if (userId != null && SupabaseClientHelper.isConfigured) {
-      if (!isSaved) {
-        // We are saving it now
-        SupabaseClientHelper.client.from('tbl_guardado_curso').insert({
-          'idusuario': userId,
-          'idcurso': idCurso,
-        }).catchError((e) {
-          if (kDebugMode) print('Error guardar curso Supabase: $e');
-        });
-      } else {
-        // We are unsaving it
-        SupabaseClientHelper.client
-            .from('tbl_guardado_curso')
-            .delete()
-            .eq('idusuario', userId)
-            .eq('idcurso', idCurso)
-            .catchError((e) {
-          if (kDebugMode) print('Error desguardar curso Supabase: $e');
-        });
-      }
-    }
   }
 
   @override

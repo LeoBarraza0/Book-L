@@ -153,6 +153,22 @@ class AppSession {
     }
   }
 
+  void setSavedLecciones(Set<int> lecciones) {
+    savedLecciones.value = lecciones;
+    if (_initialized) {
+      _prefs.setStringList(
+          _kSavedLecciones, lecciones.map((e) => e.toString()).toList());
+    }
+  }
+
+  void setSavedCursos(Set<int> cursos) {
+    savedCursos.value = cursos;
+    if (_initialized) {
+      _prefs.setStringList(
+          _kSavedCursos, cursos.map((e) => e.toString()).toList());
+    }
+  }
+
   // ── Modificadores de Favoritos ─────────────────────────────────────────────
 
   void toggleSavedCurso(int idCurso) {
@@ -166,6 +182,19 @@ class AppSession {
     savedCursos.value = current;
     _prefs.setStringList(
         _kSavedCursos, current.map((e) => e.toString()).toList());
+
+    final service = BooklService();
+    if (wasAdded) {
+      if (!service.guardadosCursos.any((g) => (g['idusuario'] ?? g['id_usuario']) == usuarioId && (g['idcurso'] ?? g['id_curso']) == idCurso)) {
+        service.guardadosCursos.add({
+          'idusuario': usuarioId,
+          'idcurso': idCurso,
+        });
+      }
+    } else {
+      service.guardadosCursos.removeWhere((g) => (g['idusuario'] ?? g['id_usuario']) == usuarioId && (g['idcurso'] ?? g['id_curso']) == idCurso);
+    }
+    service.guardarDatos();
 
     if (usuarioId != null && SupabaseClientHelper.isConfigured) {
       try {
@@ -203,6 +232,19 @@ class AppSession {
     savedLecciones.value = current;
     _prefs.setStringList(
         _kSavedLecciones, current.map((e) => e.toString()).toList());
+
+    final service = BooklService();
+    if (wasAdded) {
+      if (!service.guardados.any((g) => (g['idusuario'] ?? g['id_usuario']) == usuarioId && (g['idleccion'] ?? g['id_leccion']) == idLeccion)) {
+        service.guardados.add({
+          'idusuario': usuarioId,
+          'idleccion': idLeccion,
+        });
+      }
+    } else {
+      service.guardados.removeWhere((g) => (g['idusuario'] ?? g['id_usuario']) == usuarioId && (g['idleccion'] ?? g['id_leccion']) == idLeccion);
+    }
+    service.guardarDatos();
 
     if (usuarioId != null && SupabaseClientHelper.isConfigured) {
       try {

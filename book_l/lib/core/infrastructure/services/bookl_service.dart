@@ -368,6 +368,22 @@ class BooklService extends ChangeNotifier {
         }
       }
 
+      int toInt(dynamic value, [int defaultValue = 0]) {
+        if (value == null) return defaultValue;
+        if (value is int) return value;
+        if (value is String) return int.tryParse(value) ?? defaultValue;
+        if (value is double) return value.toInt();
+        return defaultValue;
+      }
+
+      int? toIntOrNull(dynamic value) {
+        if (value == null) return null;
+        if (value is int) return value;
+        if (value is String) return int.tryParse(value);
+        if (value is double) return value.toInt();
+        return null;
+      }
+
       // Carga en paralelo
       final results = await Future.wait([
         safeSelect('tbl_usuario'),
@@ -412,8 +428,8 @@ class BooklService extends ChangeNotifier {
 
       leccionesCursos = (results[6] as List)
           .map((e) => {
-                'id_leccion': e['id_leccion'] as int,
-                'id_curso': e['id_curso'] as int,
+                'id_leccion': toInt(e['idleccion'] ?? e['id_leccion']),
+                'id_curso': toInt(e['idcurso'] ?? e['id_curso']),
               })
           .toList();
 
@@ -435,19 +451,19 @@ class BooklService extends ChangeNotifier {
       calificaciones = [
         ...resCalL.map((e) => Calificacion(
               idCalificacion:
-                  (e['idcalificacion'] ?? e['id_calificacion']) as int,
-              idObjetoFk: (e['idleccionfk'] ?? e['id_leccion_fk']) as int,
+                  toInt(e['idcalificacion'] ?? e['id_calificacion']),
+              idObjetoFk: toInt(e['idleccionfk'] ?? e['id_leccion_fk']),
               tipoObjeto: 'leccion',
-              idUsuarioFk: (e['idusuariofk'] ?? e['id_usuario_fk']) as int,
-              valor: e['valor'] as int,
+              idUsuarioFk: toInt(e['idusuariofk'] ?? e['id_usuario_fk']),
+              valor: toInt(e['valor']),
             )),
         ...resCalC.map((e) => Calificacion(
               idCalificacion:
-                  (e['idcalificacion'] ?? e['id_calificacion']) as int,
-              idObjetoFk: (e['idcursofk'] ?? e['id_curso_fk']) as int,
+                  toInt(e['idcalificacion'] ?? e['id_calificacion']),
+              idObjetoFk: toInt(e['idcursofk'] ?? e['id_curso_fk']),
               tipoObjeto: 'curso',
-              idUsuarioFk: (e['idusuariofk'] ?? e['id_usuario_fk']) as int,
-              valor: e['valor'] as int,
+              idUsuarioFk: toInt(e['idusuariofk'] ?? e['id_usuario_fk']),
+              valor: toInt(e['valor']),
             )),
       ];
 
@@ -458,9 +474,9 @@ class BooklService extends ChangeNotifier {
 
       rachas = (results[20] as List)
           .map((e) => {
-                'id_usuario': (e['idusuario'] ?? e['id_usuario']) as int,
+                'id_usuario': toInt(e['idusuario'] ?? e['id_usuario']),
                 'racha_actual':
-                    (e['currentstreak'] ?? e['current_streak']) as int,
+                    toInt(e['currentstreak'] ?? e['current_streak']),
                 'dias_actividad': <String>[
                   if (e['lastactivitydate'] != null ||
                       e['last_activity_date'] != null)
@@ -473,19 +489,19 @@ class BooklService extends ChangeNotifier {
 
       notificaciones = (results[21] as List)
           .map((e) => {
-                'id': (e['idnotificacion'] ?? e['id_notificacion']) as int,
+                'id': toInt(e['idnotificacion'] ?? e['id_notificacion']),
                 'id_usuario_fk':
-                    (e['idusuariofk'] ?? e['id_usuario_fk']) as int,
+                    toInt(e['idusuariofk'] ?? e['id_usuario_fk']),
                 'tipo': e['tipo'] as String,
                 'id_referencia':
-                    (e['idreferencia'] ?? e['id_referencia']) as int?,
+                    toIntOrNull(e['idreferencia'] ?? e['id_referencia']),
                 'mensaje': e['mensaje'] as String,
                 'leida': e['leida'] as bool,
-                'id_curso_fk': (e['idcursofk'] ?? e['id_curso_fk']) as int?,
+                'id_curso_fk': toIntOrNull(e['idcursofk'] ?? e['id_curso_fk']),
                 'id_leccion_fk':
-                    (e['idleccionfk'] ?? e['id_leccion_fk']) as int?,
+                    toIntOrNull(e['idleccionfk'] ?? e['id_leccion_fk']),
                 'id_comentario_fk':
-                    (e['idcomentariofk'] ?? e['id_comentario_fk']) as int?,
+                    toIntOrNull(e['idcomentariofk'] ?? e['id_comentario_fk']),
                 'created_at': e['created_at'] as String?,
               })
           .toList();
@@ -518,7 +534,7 @@ class BooklService extends ChangeNotifier {
       }
 
       _nestRelations();
-      _seedAppSession();
+      seedAppSession();
 
       // Guardar a SharedPreferences local
       final prefs = await SharedPreferences.getInstance();
@@ -535,65 +551,60 @@ class BooklService extends ChangeNotifier {
 
   /// Carga la información del JSON en AppSession para que los datos
   /// de prueba iniciales sean visibles sin interacción previa del usuario.
-  void _seedAppSession() {
+  void seedAppSession() {
     final session = AppSession();
-    // Solo sembramos si AppSession ya fue inicializado y no tiene data previa
-    // (es decir, la primera vez que se carga). Si ya existe data en SharedPrefs
-    // AppSession ya la habrá cargado en su propio init().
-
     final userId = session.usuarioId;
     if (userId == null) return; // No hay sesión activa, no sembramos
 
-    if (session.completedCapitulos.value.isEmpty) {
-      final completedCaps = progresoUsuario
-          .where((p) =>
-              p['id_usuario_fk'] == userId && p['estado'] == 'completada')
-          .map<int>((p) => p['id_capitulo_fk'] as int)
-          .toSet();
-      if (completedCaps.isNotEmpty) {
-        session.completedCapitulos.value = completedCaps;
+    // Completed Capitulos
+    final completedCaps = progresoUsuario
+        .where((p) {
+          final uId = p['id_usuariofk'] ?? p['id_usuario_fk'] ?? p['idusuariofk'];
+          return uId == userId && p['estado'] == 'completada';
+        })
+        .map<int>((p) => (p['id_capitulofk'] ?? p['id_capitulo_fk'] ?? p['idcapitulofk']) as int)
+        .toSet();
+    session.completedCapitulos.value = completedCaps;
+
+    // Completed Ejercicios
+    final userAnswers = respuestasUsuario.where((r) {
+      final uId = r['idusuario'] ?? r['id_usuario'];
+      return uId == userId;
+    });
+    final answeredPreguntaIds = userAnswers
+        .map<int>((r) => (r['idpregunta'] ?? r['id_pregunta']) as int)
+        .toSet();
+
+    final completedEjs = <int>{};
+    for (final ej in ejercicios) {
+      if (ej.preguntas.isEmpty) continue;
+      final allAnswered = ej.preguntas
+          .every((p) => answeredPreguntaIds.contains(p.idPregunta));
+      if (allAnswered) {
+        completedEjs.add(ej.idEjercicio);
       }
     }
+    session.completedEjercicios.value = completedEjs;
 
-    if (session.completedEjercicios.value.isEmpty) {
-      final userAnswers =
-          respuestasUsuario.where((r) => r['id_usuario'] == userId);
-      final answeredPreguntaIds =
-          userAnswers.map<int>((r) => r['id_pregunta'] as int).toSet();
+    // Saved Lecciones
+    final savedLecs = guardados
+        .where((g) {
+          final uId = g['idusuario'] ?? g['id_usuario'];
+          return uId == userId;
+        })
+        .map<int>((g) => (g['idleccion'] ?? g['id_leccion']) as int)
+        .toSet();
+    session.setSavedLecciones(savedLecs);
 
-      final completedEjs = <int>{};
-      for (final ej in ejercicios) {
-        if (ej.preguntas.isEmpty) continue;
-        final allAnswered = ej.preguntas
-            .every((p) => answeredPreguntaIds.contains(p.idPregunta));
-        if (allAnswered) {
-          completedEjs.add(ej.idEjercicio);
-        }
-      }
-      if (completedEjs.isNotEmpty) {
-        session.completedEjercicios.value = completedEjs;
-      }
-    }
-
-    if (session.savedLecciones.value.isEmpty) {
-      final savedLecs = guardados
-          .where((g) => g['id_usuario'] == userId)
-          .map<int>((g) => g['id_leccion'] as int)
-          .toSet();
-      if (savedLecs.isNotEmpty) {
-        session.savedLecciones.value = savedLecs;
-      }
-    }
-
-    if (session.savedCursos.value.isEmpty) {
-      final savedCurs = guardadosCursos
-          .where((g) => g['id_usuario'] == userId)
-          .map<int>((g) => g['id_curso'] as int)
-          .toSet();
-      if (savedCurs.isNotEmpty) {
-        session.savedCursos.value = savedCurs;
-      }
-    }
+    // Saved Cursos
+    final savedCurs = guardadosCursos
+        .where((g) {
+          final uId = g['idusuario'] ?? g['id_usuario'];
+          return uId == userId;
+        })
+        .map<int>((g) => (g['idcurso'] ?? g['id_curso']) as int)
+        .toSet();
+    session.setSavedCursos(savedCurs);
   }
 
   Map<String, dynamic> _toMap() {
@@ -779,13 +790,13 @@ class BooklService extends ChangeNotifier {
     }
   }
 
-  void addCurso(Curso curso) {
+  void addCurso(Curso curso, {bool syncToSupabase = true}) {
     cursos.add(curso);
     registrarActividad(AppSession().usuarioId ?? 0);
     _save();
     notifyListeners();
 
-    if (SupabaseClientHelper.isConfigured) {
+    if (syncToSupabase && SupabaseClientHelper.isConfigured) {
       try {
         final cursoMap = <String, dynamic>{
           'idcurso': curso.idCurso,
@@ -811,7 +822,7 @@ class BooklService extends ChangeNotifier {
     }
   }
 
-  void addLeccion(Leccion leccion, {int? idCurso}) {
+  void addLeccion(Leccion leccion, {int? idCurso, bool syncToSupabase = true}) {
     lecciones.add(leccion);
     if (idCurso != null) {
       leccionesCursos.add({
@@ -823,7 +834,7 @@ class BooklService extends ChangeNotifier {
     _save();
     notifyListeners();
 
-    if (SupabaseClientHelper.isConfigured) {
+    if (syncToSupabase && SupabaseClientHelper.isConfigured) {
       try {
         final client = SupabaseClientHelper.client;
         final leccionMap = <String, dynamic>{
@@ -897,12 +908,12 @@ class BooklService extends ChangeNotifier {
     }
   }
 
-  void addCapitulo(Capitulo capitulo) {
+  void addCapitulo(Capitulo capitulo, {bool syncToSupabase = true}) {
     capitulos.add(capitulo);
     _save();
     notifyListeners();
 
-    if (SupabaseClientHelper.isConfigured) {
+    if (syncToSupabase && SupabaseClientHelper.isConfigured) {
       try {
         final capMap = <String, dynamic>{
           'idcapitulo': capitulo.idCapitulo,
@@ -1274,12 +1285,12 @@ class BooklService extends ChangeNotifier {
   }
 
   // ── Operaciones Discusión ─────────────────────────────────────────────────
-  void addDiscusion(Discusion d) {
+  void addDiscusion(Discusion d, {bool syncToSupabase = true}) {
     discusiones.add(d);
     _save();
     notifyListeners();
 
-    if (SupabaseClientHelper.isConfigured) {
+    if (syncToSupabase && SupabaseClientHelper.isConfigured) {
       try {
         final discMap = <String, dynamic>{
           'id_discusion': d.idDiscusion,
@@ -1297,12 +1308,16 @@ class BooklService extends ChangeNotifier {
     }
   }
 
-  void addComentario(Comentario c) {
+  void addComentario(Comentario c, {bool syncToSupabase = true}) {
+    // Deduplicar: no agregar si ya existe un comentario con el mismo ID
+    if (comentarios.any((lc) => lc.idComentario == c.idComentario)) {
+      return;
+    }
     comentarios.add(c);
     _save();
     notifyListeners();
 
-    if (SupabaseClientHelper.isConfigured) {
+    if (syncToSupabase && SupabaseClientHelper.isConfigured) {
       try {
         final comMap = <String, dynamic>{
           'id_comentario': c.idComentario,

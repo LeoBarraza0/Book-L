@@ -13,7 +13,7 @@ class GetDiscusionUseCase {
 
   Future<Discusion> call(GetDiscusionParams params) async {
     // En Book-L la obtención de discusión es inmediata vía repo
-    return repository.obtenerOCrearDiscusion(
+    return await repository.obtenerOCrearDiscusion(
       idCurso: params.idCurso,
       idLeccion: params.idLeccion,
     );

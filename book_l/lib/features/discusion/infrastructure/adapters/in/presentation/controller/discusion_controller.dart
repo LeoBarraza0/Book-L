@@ -108,7 +108,16 @@ class DiscusionController extends ChangeNotifier {
   bool _likesLoaded = false;
 
   Future<void> cargarDiscusion({int? idCurso, int? idLeccion}) async {
-    _state = _state.copyWith(isLoading: true);
+    // Si se cambia de lección/curso, limpiar estado anterior para no mostrar datos viejos
+    final currentDisc = _state.discusion;
+    final esMismDiscusion = (idCurso != null && currentDisc?.idCursoFk == idCurso) ||
+        (idLeccion != null && currentDisc?.idLeccionFk == idLeccion);
+
+    if (!esMismDiscusion) {
+      _state = const DiscusionState(isLoading: true);
+    } else {
+      _state = _state.copyWith(isLoading: true);
+    }
     notifyListeners();
 
     if (!_likesLoaded) {
@@ -120,11 +129,11 @@ class DiscusionController extends ChangeNotifier {
       GetDiscusionParams(idCurso: idCurso, idLeccion: idLeccion),
     );
 
-    final raiz = _repo.getComentariosRaiz(discusion.idDiscusion);
+    final raiz = await _repo.getComentariosRaiz(discusion.idDiscusion);
     final respuestas = <int, List<Comentario>>{};
 
     for (final c in raiz) {
-      respuestas[c.idComentario] = _repo.getRespuestas(c.idComentario);
+      respuestas[c.idComentario] = await _repo.getRespuestas(c.idComentario);
     }
 
     _state = DiscusionState(
@@ -142,7 +151,7 @@ class DiscusionController extends ChangeNotifier {
     if (idDiscusion == null || idUsuario == null || contenido.trim().isEmpty)
       return;
 
-    await _agregarComentarioUseCase(
+    final nuevoComentario = await _agregarComentarioUseCase(
       AgregarComentarioParams(
         idDiscusion: idDiscusion,
         idUsuario: idUsuario,
@@ -151,15 +160,47 @@ class DiscusionController extends ChangeNotifier {
       ),
     );
 
-    // Limpiar reply
+    // ── Actualización optimista inmediata ──────────────────────────────────
+    // Agregar el comentario al estado local SIN esperar otro roundtrip a Supabase
+    if (replyToId == null) {
+      // Es un comentario raíz
+      final nuevaLista = [nuevoComentario, ..._state.comentariosRaiz];
+      final nuevasRespuestas = Map<int, List<Comentario>>.from(_state.respuestasPorPadre);
+      nuevasRespuestas[nuevoComentario.idComentario] = [];
+      _state = _state.copyWith(
+        comentariosRaiz: nuevaLista,
+        respuestasPorPadre: nuevasRespuestas,
+      );
+    } else {
+      // Es una respuesta a un comentario existente
+      final nuevasRespuestas = Map<int, List<Comentario>>.from(_state.respuestasPorPadre);
+      final existentes = nuevasRespuestas[replyToId] ?? [];
+      nuevasRespuestas[replyToId!] = [...existentes, nuevoComentario];
+      _state = _state.copyWith(respuestasPorPadre: nuevasRespuestas);
+    }
+
+    // Limpiar reply y notificar UI de inmediato
     replyToId = null;
     replyToName = null;
+    notifyListeners();
 
-    // Recargar
-    await cargarDiscusion(
-      idCurso: _state.discusion?.idCursoFk,
-      idLeccion: _state.discusion?.idLeccionFk,
-    );
+    // ── Sincronización en background (actualiza IDs reales, timestamps, etc.) ─
+    Future.microtask(() async {
+      try {
+        final raiz = await _repo.getComentariosRaiz(idDiscusion);
+        final respuestas = <int, List<Comentario>>{};
+        for (final c in raiz) {
+          respuestas[c.idComentario] = await _repo.getRespuestas(c.idComentario);
+        }
+        _state = _state.copyWith(
+          comentariosRaiz: raiz,
+          respuestasPorPadre: respuestas,
+        );
+        notifyListeners();
+      } catch (_) {
+        // Si falla el refresh, el comentario optimista ya está visible
+      }
+    });
   }
 
   void setReplyTo(int idComentario, String nombreUsuario) {

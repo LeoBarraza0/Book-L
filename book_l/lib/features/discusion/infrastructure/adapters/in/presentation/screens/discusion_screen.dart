@@ -25,86 +25,104 @@ class DiscusionScreen extends StatefulWidget {
 }
 
 class _DiscusionScreenState extends State<DiscusionScreen> {
+  late DiscusionController _ctrl;
+  bool _initialized = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctrl = widget.controller ?? context.read<DiscusionController>();
-      ctrl.cargarDiscusion(
-        idCurso: widget.idCurso,
-        idLeccion: widget.idLeccion,
-      );
-    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _ctrl = widget.controller ?? Provider.of<DiscusionController>(context, listen: false);
+    if (!_initialized) {
+      _initialized = true;
+      // Cargar discusión la primera vez que el widget se monta
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _ctrl.cargarDiscusion(
+            idCurso: widget.idCurso,
+            idLeccion: widget.idLeccion,
+          );
+        }
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final ctrl = widget.controller ?? context.watch<DiscusionController>();
-    final state = ctrl.state;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Rating opcional
-        if (widget.showRating) ...[
-          Center(
-            child: StarsRatingWidget(
-              onRatingChanged: widget.onRatingChanged,
-            ),
-          ),
-          const SizedBox(height: 28),
-        ],
-
-        // Header con contador reactivo
-        Row(
+    // ListenableBuilder suscribe correctamente al controller sea cual sea su origen
+    return ListenableBuilder(
+      listenable: _ctrl,
+      builder: (context, _) {
+        final state = _ctrl.state;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Comentarios',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(width: 10),
-            if (!state.isLoading && state.discusion != null)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4DC130).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+            // Rating opcional
+            if (widget.showRating) ...[
+              Center(
+                child: StarsRatingWidget(
+                  onRatingChanged: widget.onRatingChanged,
                 ),
-                child: Text(
-                  '${state.comentariosRaiz.length + state.respuestasPorPadre.values.fold<int>(0, (sum, l) => sum + l.length)}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF4DC130),
+              ),
+              const SizedBox(height: 28),
+            ],
+
+            // Header con contador reactivo
+            Row(
+              children: [
+                const Text(
+                  'Comentarios',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
                   ),
                 ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 20),
-
-        // Estados de carga / vacío / contenido
-        if (state.isLoading)
-          _buildSkeleton()
-        else if (state.discusion == null || state.comentariosRaiz.isEmpty)
-          _buildEmptyState()
-        else
-          ...state.comentariosRaiz.map(
-            (c) => ComentarioTile(
-              comentario: c,
-              respuestas: state.respuestasPorPadre[c.idComentario] ?? [],
-              ctrl: ctrl,
+                const SizedBox(width: 10),
+                if (!state.isLoading && state.discusion != null)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4DC130).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${state.comentariosRaiz.length + state.respuestasPorPadre.values.fold<int>(0, (sum, l) => sum + l.length)}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF4DC130),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          ),
-        // Espacio para que el último comentario no quede tapado
-        // por el ComentarioInput flotante (~80px) + NavBar (~90px)
-        const SizedBox(height: 220),
-      ],
+            const SizedBox(height: 20),
+
+            // Estados de carga / vacío / contenido
+            if (state.isLoading)
+              _buildSkeleton()
+            else if (state.discusion == null || state.comentariosRaiz.isEmpty)
+              _buildEmptyState()
+            else
+              ...state.comentariosRaiz.map(
+                (c) => ComentarioTile(
+                  comentario: c,
+                  respuestas: state.respuestasPorPadre[c.idComentario] ?? [],
+                  ctrl: _ctrl,
+                ),
+              ),
+            // Espacio para que el último comentario no quede tapado
+            // por el ComentarioInput flotante (~80px) + NavBar (~90px)
+            const SizedBox(height: 220),
+          ],
+        );
+      },
     );
   }
 

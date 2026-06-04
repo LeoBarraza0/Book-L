@@ -3,13 +3,13 @@ import '../../../domain/models/comentario.dart';
 
 abstract class DiscusionRepository {
   /// Obtiene o crea la discusión para un curso o lección.
-  Discusion obtenerOCrearDiscusion({int? idCurso, int? idLeccion});
+  Future<Discusion> obtenerOCrearDiscusion({int? idCurso, int? idLeccion});
 
   /// Obtiene todos los comentarios raíz (sin padre) de una discusión.
-  List<Comentario> getComentariosRaiz(int idDiscusion);
+  Future<List<Comentario>> getComentariosRaiz(int idDiscusion);
 
   /// Obtiene las respuestas de un comentario padre.
-  List<Comentario> getRespuestas(int idComentarioPadre);
+  Future<List<Comentario>> getRespuestas(int idComentarioPadre);
 
   /// Agrega un comentario o respuesta.
   Future<Comentario> agregarComentario({

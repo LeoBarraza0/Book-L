@@ -10,29 +10,36 @@ class DiscusionRepositoryImpl implements DiscusionRepository {
   final BooklService _service = BooklService();
 
   @override
-  Discusion obtenerOCrearDiscusion({int? idCurso, int? idLeccion}) {
+  Future<Discusion> obtenerOCrearDiscusion({int? idCurso, int? idLeccion}) async {
     if (SupabaseClientHelper.isConfigured) {
-      final query = SupabaseClientHelper.client.from('tbl_discusion').select();
-      final q = idCurso != null ? query.eq('id_cursofk', idCurso) : query.eq('id_leccionfk', idLeccion!);
-      q.maybeSingle().then((res) {
+      try {
+        final query = SupabaseClientHelper.client.from('tbl_discusion').select();
+        final q = idCurso != null ? query.eq('id_cursofk', idCurso) : query.eq('id_leccionfk', idLeccion!);
+        final res = await q.maybeSingle();
         if (res == null) {
-          SupabaseClientHelper.client.from('tbl_discusion').insert({
+          final insRes = await SupabaseClientHelper.client.from('tbl_discusion').insert({
             'id_cursofk': idCurso,
             'id_leccionfk': idLeccion,
-          }).select().single().then((insRes) {
-            final disc = Discusion(
-              idDiscusion: insRes['id_discusion'],
-              idCursoFk: insRes['id_cursofk'],
-              idLeccionFk: insRes['id_leccionfk'],
-            );
-            _service.addDiscusion(disc);
-          }).catchError((e) {
-            if (kDebugMode) print('Error crearDiscusion Supabase: $e');
-          });
+          }).select().single();
+          final disc = Discusion(
+            idDiscusion: insRes['id_discusion'],
+            idCursoFk: insRes['id_cursofk'],
+            idLeccionFk: insRes['id_leccionfk'],
+          );
+          _service.addDiscusion(disc, syncToSupabase: false);
+        } else {
+          final disc = Discusion(
+            idDiscusion: res['id_discusion'],
+            idCursoFk: res['id_cursofk'],
+            idLeccionFk: res['id_leccionfk'],
+          );
+          if (!_service.discusiones.any((d) => d.idDiscusion == disc.idDiscusion)) {
+            _service.addDiscusion(disc, syncToSupabase: false);
+          }
         }
-      }).catchError((e) {
-        if (kDebugMode) print('Error obtenerDiscusion Supabase: $e');
-      });
+      } catch (e) {
+        if (kDebugMode) print('Error obtenerOCrearDiscusion Supabase: $e');
+      }
     }
     
     // Buscar discusión existente
@@ -61,23 +68,26 @@ class DiscusionRepositoryImpl implements DiscusionRepository {
   }
 
   @override
-  List<Comentario> getComentariosRaiz(int idDiscusion) {
+  Future<List<Comentario>> getComentariosRaiz(int idDiscusion) async {
     if (SupabaseClientHelper.isConfigured) {
-      SupabaseClientHelper.client
-          .from('tbl_comentario')
-          .select()
-          .eq('id_discusionfk', idDiscusion)
-          .isFilter('id_padre', null)
-          .then((res) {
+      try {
+        final res = await SupabaseClientHelper.client
+            .from('tbl_comentario')
+            .select()
+            .eq('id_discusionfk', idDiscusion)
+            .isFilter('id_padre', null);
         final list = res.map((e) => ComentarioDto.fromJson(e)).toList();
         for (var c in list) {
-          if (!_service.comentarios.any((lc) => lc.idComentario == c.idComentario)) {
-            _service.addComentario(c);
+          final idx = _service.comentarios.indexWhere((lc) => lc.idComentario == c.idComentario);
+          if (idx == -1) {
+            _service.addComentario(c, syncToSupabase: false);
+          } else {
+            _service.comentarios[idx] = c;
           }
         }
-      }).catchError((e) {
+      } catch (e) {
         if (kDebugMode) print('Error getComentariosRaiz Supabase: $e');
-      });
+      }
     }
 
     return _service.comentarios
@@ -87,22 +97,25 @@ class DiscusionRepositoryImpl implements DiscusionRepository {
   }
 
   @override
-  List<Comentario> getRespuestas(int idComentarioPadre) {
+  Future<List<Comentario>> getRespuestas(int idComentarioPadre) async {
     if (SupabaseClientHelper.isConfigured) {
-      SupabaseClientHelper.client
-          .from('tbl_comentario')
-          .select()
-          .eq('id_padre', idComentarioPadre)
-          .then((res) {
+      try {
+        final res = await SupabaseClientHelper.client
+            .from('tbl_comentario')
+            .select()
+            .eq('id_padre', idComentarioPadre);
         final list = res.map((e) => ComentarioDto.fromJson(e)).toList();
         for (var c in list) {
-          if (!_service.comentarios.any((lc) => lc.idComentario == c.idComentario)) {
-            _service.addComentario(c);
+          final idx = _service.comentarios.indexWhere((lc) => lc.idComentario == c.idComentario);
+          if (idx == -1) {
+            _service.addComentario(c, syncToSupabase: false);
+          } else {
+            _service.comentarios[idx] = c;
           }
         }
-      }).catchError((e) {
+      } catch (e) {
         if (kDebugMode) print('Error getRespuestas Supabase: $e');
-      });
+      }
     }
     
     return _service.comentarios
@@ -118,9 +131,30 @@ class DiscusionRepositoryImpl implements DiscusionRepository {
     required String contenido,
     int? idPadre,
   }) async {
+    int newId = 1;
+
     if (SupabaseClientHelper.isConfigured) {
       try {
+        final maxIdRes = await SupabaseClientHelper.client
+            .from('tbl_comentario')
+            .select('id_comentario')
+            .order('id_comentario', ascending: false)
+            .limit(1)
+            .maybeSingle();
+
+        if (maxIdRes != null && maxIdRes['id_comentario'] != null) {
+          newId = (maxIdRes['id_comentario'] as num).toInt() + 1;
+        } else {
+          newId = (_service.comentarios.isEmpty)
+              ? 1
+              : _service.comentarios
+                      .map((c) => c.idComentario)
+                      .reduce((a, b) => a > b ? a : b) +
+                  1;
+        }
+
         final res = await SupabaseClientHelper.client.from('tbl_comentario').insert({
+          'id_comentario': newId,
           'id_discusionfk': idDiscusion,
           'id_usuariofk': idUsuario,
           'contenido': contenido,
@@ -132,7 +166,7 @@ class DiscusionRepositoryImpl implements DiscusionRepository {
         if (idx != -1) {
           _service.comentarios[idx] = ins;
         } else {
-          _service.addComentario(ins);
+          _service.addComentario(ins, syncToSupabase: false);
         }
 
         // --- Enviar Notificación ---
@@ -178,7 +212,7 @@ class DiscusionRepositoryImpl implements DiscusionRepository {
       }
     }
 
-    final newId = (_service.comentarios.isEmpty)
+    newId = (_service.comentarios.isEmpty)
         ? 1
         : _service.comentarios
                 .map((c) => c.idComentario)
@@ -193,7 +227,8 @@ class DiscusionRepositoryImpl implements DiscusionRepository {
       idPadre: idPadre,
       createdAt: DateTime.now(),
     );
-    _service.addComentario(nuevo);
+    // Supabase no configurado: insertar localmente, sin sync adicional
+    _service.addComentario(nuevo, syncToSupabase: false);
     return nuevo;
   }
 
