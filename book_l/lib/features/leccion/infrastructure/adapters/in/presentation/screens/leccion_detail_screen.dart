@@ -463,7 +463,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text('|  ${leccion?.rating ?? 4.5}',
+                        Text('|  ${leccion != null && leccion.rating > 0 ? leccion.rating.toStringAsFixed(1) : 'Nuevo'}',
                             style: const TextStyle(
                                 fontWeight: FontWeight.w600, fontSize: 13)),
                         const SizedBox(width: 4),

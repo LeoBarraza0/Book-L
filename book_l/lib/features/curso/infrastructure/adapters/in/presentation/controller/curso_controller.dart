@@ -24,6 +24,23 @@ class CursoController extends ChangeNotifier {
     _getLecciones = GetLeccionesDeCursoUseCase(repo);
     _asociar = AsociarLeccionACursoUseCase(repo);
     _desasociar = DesasociarLeccionDeCursoUseCase(repo);
+    BooklService().addListener(_onServiceChanged);
+  }
+
+  void _onServiceChanged() {
+    if (state.selected != null) {
+      try {
+        final cursoLocal = BooklService()
+            .cursos
+            .firstWhere((c) => c.idCurso == state.selected!.idCurso);
+        // Comparamos si el rating u otros datos importantes cambiaron
+        if (state.selected!.rating != cursoLocal.rating ||
+            state.selected!.estudiantes != cursoLocal.estudiantes) {
+          state = state.copyWith(selected: cursoLocal);
+          notifyListeners();
+        }
+      } catch (_) {}
+    }
   }
 
   // ── Use cases ──────────────────────────────────────────────────────────────
@@ -77,20 +94,18 @@ class CursoController extends ChangeNotifier {
   }
 
   Future<void> seleccionarCurso(int id) async {
-    // 1. Cargar local de inmediato por si acaso no se llamó a prepararCurso previamente
+    // 1. Cargar local de inmediato
     try {
       final cursoLocal = BooklService().cursos.firstWhere((c) => c.idCurso == id);
-      if (state.selected?.idCurso != id) {
-        state = state.copyWith(selected: cursoLocal, status: DataStatus.loaded);
-        final asociadosIds = BooklService().leccionesCursos
-            .where((e) => e['id_curso'] == id)
-            .map((e) => e['id_leccion'])
-            .toList();
-        leccionesDeCurso = BooklService().lecciones
-            .where((l) => asociadosIds.contains(l.idLeccion))
-            .toList();
-        notifyListeners();
-      }
+      state = state.copyWith(selected: cursoLocal, status: DataStatus.loaded);
+      final asociadosIds = BooklService().leccionesCursos
+          .where((e) => e['id_curso'] == id)
+          .map((e) => e['id_leccion'])
+          .toList();
+      leccionesDeCurso = BooklService().lecciones
+          .where((l) => asociadosIds.contains(l.idLeccion))
+          .toList();
+      notifyListeners();
     } catch (_) {
       if (state.selected != null) {
         state = state.copyWith(selected: null, status: DataStatus.loading);
@@ -103,7 +118,13 @@ class CursoController extends ChangeNotifier {
     try {
       final curso = await _getCursoById(id);
       if (curso != null) {
-        state = state.copyWith(selected: curso, status: DataStatus.loaded);
+        final ratingReal = BooklService()
+            .cursos
+            .firstWhere((c) => c.idCurso == id, orElse: () => curso)
+            .rating;
+        state = state.copyWith(
+            selected: curso.copyWith(rating: ratingReal),
+            status: DataStatus.loaded);
         leccionesDeCurso = (await _getLecciones(id)).cast<Leccion>();
         notifyListeners();
       }

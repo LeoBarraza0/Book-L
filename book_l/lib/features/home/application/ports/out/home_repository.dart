@@ -9,6 +9,10 @@ abstract class HomeRepository {
   /// Obtiene la lista de cursos que están publicados para la pantalla de Home (FYP).
   List<Curso> getCursosPublicados();
 
+  /// Obtiene ejercicios destacados para el FYP, junto con la lección a la que pertenecen.
+  /// Retorna una lista de Maps con {'ejercicio': Ejercicio, 'leccion': Leccion}.
+  List<Map<String, dynamic>> getEjerciciosDestacados();
+
   /// Obtiene las novedades recientes (Cursos, Lecciones, Capítulos) para el panel Admin.
   Future<List<Novedad>> getNovedades();
 

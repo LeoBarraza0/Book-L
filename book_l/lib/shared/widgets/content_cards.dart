@@ -8,6 +8,8 @@ import 'package:book_l/features/curso/infrastructure/adapters/in/presentation/co
 import '../../features/leccion/domain/models/leccion.dart';
 import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/controller/leccion_controller.dart';
 import 'package:book_l/features/guardado/infrastructure/adapters/in/presentation/controller/guardado_controller.dart';
+import 'package:book_l/features/ejercicio/domain/models/ejercicio.dart';
+import 'package:book_l/features/ejercicio/infrastructure/adapters/in/presentation/screens/banco_ejercicios_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Card Base que estandariza diseño, tamaño de cajitas y estructura visual.
@@ -396,6 +398,7 @@ class _BaseFypCard extends StatelessWidget {
   final Widget favoriteButton;
   final String durationStr;
   final double rating;
+  final bool showRating;
   final String? imageUrl;
   final VoidCallback onTap;
 
@@ -409,6 +412,7 @@ class _BaseFypCard extends StatelessWidget {
     required this.favoriteButton,
     required this.durationStr,
     required this.rating,
+    this.showRating = true,
     this.imageUrl,
     required this.onTap,
   });
@@ -502,23 +506,24 @@ class _BaseFypCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.only(right: 8.0, top: 4.0),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.star_rounded,
-                          color: Color(0xFFFFB800), size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        rating.toStringAsFixed(1),
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: Colors.black),
-                      ),
-                    ],
+                if (showRating)
+                  Container(
+                    padding: const EdgeInsets.only(right: 8.0, top: 4.0),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.star_rounded,
+                            color: Color(0xFFFFB800), size: 20),
+                        const SizedBox(width: 4),
+                        Text(
+                          rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Colors.black),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ],
@@ -546,7 +551,9 @@ class FypLeccionCard extends StatelessWidget {
       rating: leccion.rating,
       onTap: () => Navigator.pushNamed(context, '/leccion_detail',
           arguments: leccion.idLeccion),
-      newBadge: _buildTag('Nuevo', const Color(0xFFF6B55C)), // Naranja
+      newBadge: _shouldShowNuevo(leccion.esNuevo, leccion.createdAt)
+          ? _buildTag('Nuevo', const Color(0xFFF6B55C))
+          : null,
       tagsArea: ListenableBuilder(
         listenable: BooklService(),
         builder: (context, _) {
@@ -573,6 +580,13 @@ class FypLeccionCard extends StatelessWidget {
       ),
       favoriteButton: _buildFavoriteButton(leccion.idLeccion, true),
     );
+  }
+
+  bool _shouldShowNuevo(bool esNuevo, DateTime? createdAt) {
+    if (esNuevo) return true;
+    if (createdAt == null) return false;
+    final diasDesdeCreacion = DateTime.now().difference(createdAt).inDays;
+    return diasDesdeCreacion <= 30;
   }
 
   Widget _buildTag(String text, Color color) {
@@ -636,8 +650,10 @@ class FypCursoCard extends StatelessWidget {
       rating: curso.rating,
       onTap: () => Navigator.pushNamed(context, '/curso_detail',
           arguments: curso.idCurso),
-      newBadge: null, // Cursos en FYP no tienen badge Nuevo por ahora
-      tagsArea: _buildTag('Curso', const Color(0xFFFF606F)), // Rojo marca
+      newBadge: _shouldShowNuevoCurso(curso.esNuevo, curso.createdAt)
+          ? _buildCursoTag('Nuevo', const Color(0xFFF6B55C))
+          : null,
+      tagsArea: _buildCursoTag('Curso', const Color(0xFFFF606F)), // Rojo marca
       favoriteButton: ListenableBuilder(
         listenable: GuardadoController(),
         builder: (context, _) {
@@ -654,6 +670,86 @@ class FypCursoCard extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  bool _shouldShowNuevoCurso(bool esNuevo, DateTime? createdAt) {
+    if (esNuevo) return true;
+    if (createdAt == null) return false;
+    final diasDesdeCreacion = DateTime.now().difference(createdAt).inDays;
+    return diasDesdeCreacion <= 30;
+  }
+
+  Widget _buildCursoTag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+            color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tarjeta de Ejercicio para el FYP
+// ─────────────────────────────────────────────────────────────────────────────
+class FypEjercicioCard extends StatelessWidget {
+  final Ejercicio ejercicio;
+  final Leccion leccion;
+
+  const FypEjercicioCard(
+      {super.key, required this.ejercicio, required this.leccion});
+
+  static const _tipoColors = <TipoEjercicio, Color>{
+    TipoEjercicio.multipleChoice: Color(0xFF4DC130),
+    TipoEjercicio.trueFalse: Color(0xFFF6B55C),
+    TipoEjercicio.ordenar: Color(0xFF4DB0FF),
+    TipoEjercicio.rellenar: Color(0xFFFF606F),
+    TipoEjercicio.respuestaCorta: Color(0xFF9B51E0),
+  };
+
+  static const _tipoIcons = <TipoEjercicio, IconData>{
+    TipoEjercicio.multipleChoice: Icons.quiz_outlined,
+    TipoEjercicio.trueFalse: Icons.check_circle_outline,
+    TipoEjercicio.ordenar: Icons.swap_vert_rounded,
+    TipoEjercicio.rellenar: Icons.text_fields_rounded,
+    TipoEjercicio.respuestaCorta: Icons.short_text_rounded,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _tipoColors[ejercicio.tipo] ?? const Color(0xFF4DC130);
+    final icon = _tipoIcons[ejercicio.tipo] ?? Icons.quiz_outlined;
+
+    return _BaseFypCard(
+      title: ejercicio.titulo,
+      imageBoxColor: color.withValues(alpha: 0.18),
+      iconColor: color.withValues(alpha: 0.7),
+      iconData: icon,
+      imageUrl: null,
+      durationStr: '${ejercicio.preguntas.length} preguntas',
+      rating: 0.0, // Los ejercicios no tienen rating
+      showRating: false,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => BancoEjerciciosScreen(
+              idLeccion: leccion.idLeccion,
+              title: ejercicio.titulo,
+            ),
+          ),
+        );
+      },
+      newBadge: _buildTag('Ejercicio', color),
+      tagsArea: _buildTag(ejercicio.tipo.displayName, color.withValues(alpha: 0.8)),
+      favoriteButton: const SizedBox.shrink(),
     );
   }
 

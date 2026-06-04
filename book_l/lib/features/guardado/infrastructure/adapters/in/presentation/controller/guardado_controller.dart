@@ -5,6 +5,7 @@ import 'package:book_l/features/curso/domain/models/curso.dart';
 import 'package:book_l/features/guardado/application/usecases/get_guardados_usecase.dart';
 import 'package:book_l/features/guardado/application/usecases/toggle_guardado_usecase.dart';
 import 'package:book_l/core/infrastructure/storage/local_storage.dart';
+import 'package:book_l/core/infrastructure/services/bookl_service.dart';
 
 /// Controlador singleton para la gestión de elementos guardados (favoritos).
 class GuardadoController extends ChangeNotifier {
@@ -24,6 +25,7 @@ class GuardadoController extends ChangeNotifier {
         ) {
     AppSession().savedLecciones.addListener(notifyListeners);
     AppSession().savedCursos.addListener(notifyListeners);
+    BooklService().addListener(notifyListeners);
   }
 
   /// Retorna las lecciones guardadas del usuario

@@ -15,7 +15,43 @@ class HomeRepositoryImpl implements HomeRepository {
 
   @override
   List<Curso> getCursosPublicados() {
-    return _service.cursos.where((c) => c.estado == 'Publicado').toList();
+    // Aceptamos tanto 'activo' como 'Publicado' (variaciones del campo en BD)
+    return _service.cursos
+        .where((c) =>
+            c.estado == 'activo' ||
+            c.estado == 'Publicado' ||
+            c.estado == 'publicado')
+        .toList();
+  }
+
+  @override
+  List<Map<String, dynamic>> getEjerciciosDestacados() {
+    final result = <Map<String, dynamic>>[];
+    final lecciones = _service.lecciones;
+    final capitulos = _service.capitulos;
+    final ejercicios = _service.ejercicios;
+
+    // Tomamos solo ejercicios que tengan preguntas configuradas
+    final ejerciciosConPreguntas =
+        ejercicios.where((e) => e.preguntas.isNotEmpty).toList();
+
+    for (final ejercicio in ejerciciosConPreguntas) {
+      // Encontrar el capítulo al que pertenece
+      final capitulo = capitulos
+          .where((c) => c.idCapitulo == ejercicio.idCapitulo)
+          .firstOrNull;
+      if (capitulo == null) continue;
+
+      // Encontrar la lección a la que pertenece el capítulo
+      final leccion = lecciones
+          .where((l) => l.idLeccion == capitulo.idLeccion)
+          .firstOrNull;
+      if (leccion == null) continue;
+
+      result.add({'ejercicio': ejercicio, 'leccion': leccion});
+    }
+
+    return result;
   }
 
   @override

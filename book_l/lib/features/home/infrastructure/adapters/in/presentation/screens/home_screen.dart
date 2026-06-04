@@ -7,6 +7,9 @@ import '../controller/home_controller.dart';
 import 'package:book_l/core/infrastructure/storage/local_storage.dart';
 import 'package:book_l/features/notificacion/infrastructure/adapters/in/presentation/widgets/notification_icon_button.dart';
 import 'widgets/racha_buky_widget.dart';
+import 'package:book_l/features/curso/domain/models/curso.dart';
+import 'package:book_l/features/leccion/domain/models/leccion.dart';
+import 'package:book_l/features/ejercicio/domain/models/ejercicio.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -83,11 +86,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           }
 
                           final widgets = mixedList.map<Widget>((item) {
-                            if (item.runtimeType.toString() == 'Curso') {
+                            if (item is Curso) {
                               return FypCursoCard(curso: item);
-                            } else {
+                            } else if (item is Leccion) {
                               return FypLeccionCard(leccion: item);
+                            } else if (item is Map<String, dynamic>) {
+                              return FypEjercicioCard(
+                                ejercicio: item['ejercicio'] as Ejercicio,
+                                leccion: item['leccion'] as Leccion,
+                              );
                             }
+                            return const SizedBox.shrink();
                           }).toList();
 
                           return Column(children: widgets);

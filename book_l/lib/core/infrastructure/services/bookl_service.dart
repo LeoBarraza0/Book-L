@@ -319,6 +319,37 @@ class BooklService extends ChangeNotifier {
     }
 
     _nestRelations();
+    _calculateRatings();
+  }
+
+  void _calculateRatings() {
+    for (int i = 0; i < lecciones.length; i++) {
+      final cals = calificaciones
+          .where((c) =>
+              c.tipoObjeto == 'leccion' && c.idObjetoFk == lecciones[i].idLeccion)
+          .toList();
+      double promedio = 0.0;
+      if (cals.isNotEmpty) {
+        final suma = cals.fold<int>(0, (sum, c) => sum + c.valor);
+        promedio = suma / cals.length;
+      }
+      lecciones[i] =
+          lecciones[i].copyWith(rating: double.parse(promedio.toStringAsFixed(1)));
+    }
+
+    for (int i = 0; i < cursos.length; i++) {
+      final cals = calificaciones
+          .where((c) =>
+              c.tipoObjeto == 'curso' && c.idObjetoFk == cursos[i].idCurso)
+          .toList();
+      double promedio = 0.0;
+      if (cals.isNotEmpty) {
+        final suma = cals.fold<int>(0, (sum, c) => sum + c.valor);
+        promedio = suma / cals.length;
+      }
+      cursos[i] =
+          cursos[i].copyWith(rating: double.parse(promedio.toStringAsFixed(1)));
+    }
   }
 
   void _nestRelations() {
@@ -533,6 +564,7 @@ class BooklService extends ChangeNotifier {
       }
 
       _nestRelations();
+      _calculateRatings();
       seedAppSession();
 
       // Guardar a SharedPreferences local

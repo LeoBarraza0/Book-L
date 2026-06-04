@@ -42,6 +42,23 @@ class LeccionController extends ChangeNotifier {
     _createMaterial = CreateMaterialEducativoUseCase(_leccionRepo);
     _deleteMaterial = DeleteMaterialEducativoUseCase(_leccionRepo);
     _updateMaterial = UpdateMaterialEducativoUseCase(_leccionRepo);
+
+    BooklService().addListener(_onServiceChanged);
+  }
+
+  void _onServiceChanged() {
+    if (state.selected != null) {
+      try {
+        final leccionLocal = BooklService()
+            .lecciones
+            .firstWhere((l) => l.idLeccion == state.selected!.idLeccion);
+        if (state.selected!.rating != leccionLocal.rating ||
+            state.selected!.estudiantes != leccionLocal.estudiantes) {
+          state = state.copyWith(selected: leccionLocal);
+          notifyListeners();
+        }
+      } catch (_) {}
+    }
   }
 
   // ── Repositorio (acceso directo para operaciones síncronas) ────────────────
@@ -107,15 +124,13 @@ class LeccionController extends ChangeNotifier {
 
   /// Selecciona una lección por ID y carga sus capítulos asociados
   Future<void> seleccionarLeccion(int id) async {
-    // 1. Cargar local de inmediato por si acaso no se llamó a prepararLeccion previamente
+    // 1. Cargar local de inmediato
     try {
       final leccionLocal = BooklService().lecciones.firstWhere((l) => l.idLeccion == id);
-      if (state.selected?.idLeccion != id) {
-        state = state.copyWith(selected: leccionLocal, status: DataStatus.loaded);
-        capitulosDeLeccion = _leccionRepo.capitulosDe(id);
-        capituloSeleccionado = null;
-        notifyListeners();
-      }
+      state = state.copyWith(selected: leccionLocal, status: DataStatus.loaded);
+      capitulosDeLeccion = _leccionRepo.capitulosDe(id);
+      capituloSeleccionado = null;
+      notifyListeners();
     } catch (_) {
       if (state.selected != null) {
         state = state.copyWith(selected: null, status: DataStatus.loading);
@@ -129,7 +144,13 @@ class LeccionController extends ChangeNotifier {
     try {
       final leccion = await _getLeccionById(id);
       if (leccion != null) {
-        state = state.copyWith(selected: leccion, status: DataStatus.loaded);
+        final ratingReal = BooklService()
+            .lecciones
+            .firstWhere((l) => l.idLeccion == id, orElse: () => leccion)
+            .rating;
+        state = state.copyWith(
+            selected: leccion.copyWith(rating: ratingReal),
+            status: DataStatus.loaded);
         capitulosDeLeccion = await _getCapitulos(id);
         notifyListeners();
       }

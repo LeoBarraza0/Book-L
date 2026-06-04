@@ -11,23 +11,21 @@ class HomeController extends ChangeNotifier {
 
   final _repo = HomeRepositoryImpl();
 
-  /// Obtiene los elementos mezclados (Cursos y Lecciones) para la vista principal
+  /// Obtiene los elementos mezclados (Cursos, Lecciones y Ejercicios) para la vista principal
   List<dynamic> getForYouPageItems() {
     final lecciones = _repo.getLeccionesActivas();
     final cursos = _repo.getCursosPublicados();
+    final ejerciciosInfo = _repo.getEjerciciosDestacados();
 
+    // Mezclamos: Curso → Lección → Ejercicio (intercalados) para variedad
     final mixedList = <dynamic>[];
-    final maxLen =
-        lecciones.length > cursos.length ? lecciones.length : cursos.length;
+    final maxLen = [lecciones.length, cursos.length, ejerciciosInfo.length]
+        .reduce((a, b) => a > b ? a : b);
 
-    // Mezclamos en una sola lista (intercalados para FYP)
     for (int i = 0; i < maxLen; i++) {
-      if (i < cursos.length) {
-        mixedList.add(cursos[i]);
-      }
-      if (i < lecciones.length) {
-        mixedList.add(lecciones[i]);
-      }
+      if (i < cursos.length) mixedList.add(cursos[i]);
+      if (i < lecciones.length) mixedList.add(lecciones[i]);
+      if (i < ejerciciosInfo.length) mixedList.add(ejerciciosInfo[i]);
     }
 
     return mixedList;
