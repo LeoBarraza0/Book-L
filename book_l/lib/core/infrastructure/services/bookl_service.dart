@@ -281,25 +281,30 @@ class BooklService extends ChangeNotifier {
     }
 
     if (data.containsKey('progreso_usuario')) {
-      progresoUsuario =
-          List<Map<String, dynamic>>.from(data['progreso_usuario']);
+      progresoUsuario = (data['progreso_usuario'] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } else {
       progresoUsuario = [];
     }
     if (data.containsKey('respuestas_usuario')) {
-      respuestasUsuario =
-          List<Map<String, dynamic>>.from(data['respuestas_usuario']);
+      respuestasUsuario = (data['respuestas_usuario'] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } else {
       respuestasUsuario = [];
     }
     if (data.containsKey('guardados')) {
-      guardados = List<Map<String, dynamic>>.from(data['guardados']);
+      guardados = (data['guardados'] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } else {
       guardados = [];
     }
     if (data.containsKey('guardados_cursos')) {
-      guardadosCursos =
-          List<Map<String, dynamic>>.from(data['guardados_cursos']);
+      guardadosCursos = (data['guardados_cursos'] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } else {
       guardadosCursos = [];
     }
@@ -463,7 +468,9 @@ class BooklService extends ChangeNotifier {
               })
           .toList();
 
-      seguidores = List<Map<String, dynamic>>.from(results[7] as List);
+      seguidores = (results[7] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
       discusiones =
           (results[8] as List).map((e) => DiscusionDto.fromJson(e)).toList();
       comentarios =
@@ -497,13 +504,21 @@ class BooklService extends ChangeNotifier {
             )),
       ];
 
-      progresoUsuario = List<Map<String, dynamic>>.from(results[16] as List);
-      respuestasUsuario = List<Map<String, dynamic>>.from(results[17] as List);
-      guardados = List<Map<String, dynamic>>.from(results[18] as List);
-      guardadosCursos = List<Map<String, dynamic>>.from(results[19] as List);
+      progresoUsuario = (results[16] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      respuestasUsuario = (results[17] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      guardados = (results[18] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      guardadosCursos = (results[19] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
 
       rachas = (results[20] as List)
-          .map((e) => {
+          .map<Map<String, dynamic>>((e) => <String, dynamic>{
                 'id_usuario': toInt(e['idusuario'] ?? e['id_usuario']),
                 'racha_actual':
                     toInt(e['currentstreak'] ?? e['current_streak']),
@@ -518,7 +533,7 @@ class BooklService extends ChangeNotifier {
           .toList();
 
       notificaciones = (results[21] as List)
-          .map((e) => {
+          .map<Map<String, dynamic>>((e) => <String, dynamic>{
                 'id': toInt(e['idnotificacion'] ?? e['id_notificacion']),
                 'id_usuario_fk':
                     toInt(e['idusuariofk'] ?? e['id_usuario_fk']),

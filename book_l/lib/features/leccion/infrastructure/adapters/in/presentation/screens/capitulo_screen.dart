@@ -12,6 +12,10 @@ import '../controller/leccion_controller.dart';
 import 'package:book_l/features/ejercicio/infrastructure/adapters/in/presentation/controller/ejercicios_controller.dart';
 import 'package:book_l/features/ejercicio/domain/models/ejercicio.dart';
 import 'package:book_l/features/ejercicio/infrastructure/adapters/in/presentation/screens/teorico_screen.dart';
+import 'package:book_l/features/ejercicio/infrastructure/adapters/in/presentation/screens/verdadero_falso_screen.dart';
+import 'package:book_l/features/ejercicio/infrastructure/adapters/in/presentation/screens/ordenar_screen.dart';
+import 'package:book_l/features/ejercicio/infrastructure/adapters/in/presentation/screens/rellenar_screen.dart';
+import 'package:book_l/features/ejercicio/infrastructure/adapters/in/presentation/screens/respuesta_corta_screen.dart';
 
 class CapituloScreen extends StatefulWidget {
   final int? idCapitulo;
@@ -428,10 +432,28 @@ class _CapituloScreenState extends State<CapituloScreen> {
 
     return GestureDetector(
       onTap: () {
+        Widget screen;
+        switch (ex.tipo) {
+          case TipoEjercicio.multipleChoice:
+            screen = TeoricoScreen(ejercicio: ex);
+            break;
+          case TipoEjercicio.trueFalse:
+            screen = VerdaderoFalsoScreen(ejercicio: ex);
+            break;
+          case TipoEjercicio.ordenar:
+            screen = OrdenarScreen(ejercicio: ex);
+            break;
+          case TipoEjercicio.rellenar:
+            screen = RellenarScreen(ejercicio: ex);
+            break;
+          case TipoEjercicio.respuestaCorta:
+            screen = RespuestaCortaScreen(ejercicio: ex);
+            break;
+        }
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => TeoricoScreen(ejercicio: ex),
+            builder: (context) => screen,
           ),
         );
       },

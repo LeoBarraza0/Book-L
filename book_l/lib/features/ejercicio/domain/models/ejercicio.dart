@@ -11,9 +11,15 @@ enum TipoEjercicio {
   const TipoEjercicio(this.name);
 
   static TipoEjercicio fromString(String value) {
+    // Match by custom 'name' field first (e.g. 'true_false'),
+    // then fall back to matching the Dart enum member identifier (e.g. 'trueFalse').
+    final normalized = value.trim().toLowerCase();
     return TipoEjercicio.values.firstWhere(
-      (e) => e.name == value,
-      orElse: () => TipoEjercicio.multipleChoice,
+      (e) => e.name == value || e.name.toLowerCase() == normalized,
+      orElse: () => TipoEjercicio.values.firstWhere(
+        (e) => e.toString().split('.').last.toLowerCase() == normalized,
+        orElse: () => TipoEjercicio.multipleChoice,
+      ),
     );
   }
 
