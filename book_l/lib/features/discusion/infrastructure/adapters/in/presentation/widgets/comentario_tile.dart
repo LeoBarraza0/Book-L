@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:book_l/features/discusion/domain/models/comentario.dart';
 import '../controller/discusion_controller.dart';
+import 'package:book_l/shared/widgets/custom_avatar.dart';
 
 class ComentarioTile extends StatefulWidget {
   final Comentario comentario;
@@ -34,8 +35,7 @@ class _ComentarioTileState extends State<ComentarioTile> {
   Widget build(BuildContext context) {
     final usuario = widget.ctrl.getUserSync(widget.comentario.idUsuarioFk);
     final nombre = usuario?.nombreCompleto ?? 'Usuario';
-    final avatar = usuario?.avatarUrl as String? ??
-        'https://ui-avatars.com/api/?name=${nombre.replaceAll(" ", "+")}&background=4DC130&color=fff';
+    final avatar = usuario?.avatarUrl as String?;
     final tiempo = _tiempoRelativo(widget.comentario.createdAt);
     final tieneRespuestas = widget.respuestas.isNotEmpty;
 
@@ -55,11 +55,11 @@ class _ComentarioTileState extends State<ComentarioTile> {
                   color: Color(0xFF4DC130),
                   shape: BoxShape.circle,
                 ),
-                child: CircleAvatar(
+                child: CustomAvatar(
                   radius: 18,
+                  url: avatar,
+                  nombre: nombre ?? 'Usuario',
                   backgroundColor: Colors.white,
-                  backgroundImage: NetworkImage(avatar),
-                  onBackgroundImageError: (_, __) {},
                 ),
               ),
               const SizedBox(width: 10),
