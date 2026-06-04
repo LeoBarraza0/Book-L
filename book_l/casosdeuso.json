@@ -1,0 +1,285 @@
+{
+  "diagram_type": "UML_UseCaseDiagram",
+  "system_name": "Book-L — Plataforma E-learning Colaborativa",
+  "description": "Diagrama de casos de uso del sistema Book-L. Representa los actores del sistema, los casos de uso agrupados por paquete funcional, y las relaciones entre ellos (include, extend, generalization, association).",
+
+  "actors": [
+    {
+      "id": "User",
+      "name": "Usuario",
+      "type": "human_primary",
+      "description": "Persona registrada en la plataforma. Puede consumir y publicar contenido educativo."
+    },
+    {
+      "id": "Admin",
+      "name": "Administrador",
+      "type": "human_specialized",
+      "description": "Gestiona usuarios, reportes y contenido a nivel global. Hereda todos los casos de uso de Usuario.",
+      "generalizes": "User"
+    },
+    {
+      "id": "Bot",
+      "name": "Chatbot",
+      "type": "system_secondary",
+      "description": "Actor de sistema automatizado. Genera respuestas a las consultas del usuario."
+    }
+  ],
+
+  "packages": [
+    {
+      "id": "PKG_AUTH",
+      "name": "Acceso y Cuenta",
+      "use_cases": [
+        { "id": "UC_Reg",  "code": "UC_AUTH_REG", "name": "Registrarse" },
+        { "id": "UC_Log",  "code": "UC_AUTH_LOG", "name": "Iniciar Sesión" },
+        { "id": "UC_Out",  "code": "UC_AUTH_OUT", "name": "Cerrar Sesión" },
+        { "id": "UC_Conf", "code": "UC_CONF_UPD", "name": "Actualizar Configuración" },
+        { "id": "UC_Sug",  "code": "UC_CONF_SUG", "name": "Enviar Sugerencias" }
+      ]
+    },
+    {
+      "id": "PKG_COMMUNITY",
+      "name": "Comunidad e Interacción",
+      "use_cases": [
+        { "id": "UC_ProfView", "code": "UC_PROF_VIEW",  "name": "Visualizar Perfil" },
+        { "id": "UC_ProfUpd",  "code": "UC_PROF_UPD",   "name": "Actualizar Perfil" },
+        { "id": "UC_ProfFol",  "code": "UC_PROF_FOL",   "name": "Seguir Usuario" },
+        { "id": "UC_Notif",    "code": "UC_NOTIF_VIEW", "name": "Visualizar Notificaciones" },
+        { "id": "UC_RepAdd",   "code": "UC_REP_ADD",    "name": "Reportar Contenido" },
+        { "id": "UC_DiscView", "code": "UC_DISC_VIEW",  "name": "Visualizar Discusión" },
+        { "id": "UC_DiscAdd",  "code": "UC_DISC_ADD",   "name": "Comentar Contenido" },
+        { "id": "UC_DiscLike", "code": "UC_DISC_LIKE",  "name": "Dar Like a Comentario" }
+      ]
+    },
+    {
+      "id": "PKG_CONTENT",
+      "name": "Contenido Educativo",
+      "use_cases": [
+        { "id": "UC_Search",   "code": "UC_SRCH_ALL",  "name": "Buscar Contenido" },
+        { "id": "UC_CursList", "code": "UC_CURS_LIST", "name": "Buscar y Listar Cursos" },
+        { "id": "UC_CursDet",  "code": "UC_CURS_DET",  "name": "Visualizar Detalles del Curso" },
+        { "id": "UC_CursPub",  "code": "UC_CURS_PUB",  "name": "Publicar Curso" },
+        { "id": "UC_CursEdit", "code": "UC_CURS_EDIT", "name": "Editar Curso" },
+        { "id": "UC_CursDel",  "code": "UC_CURS_DEL",  "name": "Eliminar Curso" },
+        { "id": "UC_LeccPub",  "code": "UC_LECC_PUB",  "name": "Publicar Lección" },
+        { "id": "UC_LeccEdit", "code": "UC_LECC_EDIT", "name": "Editar Lección" },
+        { "id": "UC_LeccDel",  "code": "UC_LECC_DEL",  "name": "Eliminar Lección" },
+        { "id": "UC_LeccView", "code": "UC_LECC_VIEW", "name": "Visualizar Lección" },
+        { "id": "UC_CapView",  "code": "UC_CAP_VIEW",  "name": "Visualizar Capítulo" },
+        { "id": "UC_CapCre",   "code": "UC_CAP_CRE",   "name": "Crear Capítulo" },
+        { "id": "UC_CapEdit",  "code": "UC_CAP_EDIT",  "name": "Editar Capítulo" },
+        { "id": "UC_CapDel",   "code": "UC_CAP_DEL",   "name": "Eliminar Capítulo" },
+        { "id": "UC_CapCal",   "code": "UC_CAP_CAL",   "name": "Calificar Capítulo" },
+        { "id": "UC_SaveTogg", "code": "UC_SAVE_TOGG", "name": "Guardar Contenido" },
+        { "id": "UC_SaveList", "code": "UC_SAVE_LIST", "name": "Visualizar Guardados" }
+      ]
+    },
+    {
+      "id": "PKG_EVALUATION",
+      "name": "Evaluación y Progreso",
+      "use_cases": [
+        { "id": "UC_ExerView", "code": "UC_EXER_VIEW", "name": "Visualizar Ejercicio" },
+        { "id": "UC_ExerSolv", "code": "UC_EXER_SOLV", "name": "Resolver Ejercicio" },
+        { "id": "UC_ExerCre",  "code": "UC_EXER_CRE",  "name": "Crear Ejercicio" },
+        { "id": "UC_ProgView", "code": "UC_PROG_VIEW", "name": "Visualizar Progreso Académico" }
+      ]
+    },
+    {
+      "id": "PKG_CHATBOT",
+      "name": "Asistente Inteligente",
+      "use_cases": [
+        { "id": "UC_BotAsk", "code": "UC_BOT_ASK", "name": "Consultar Chatbot" },
+        { "id": "UC_BotGen", "code": "UC_BOT_GEN", "name": "Generar Respuesta" }
+      ]
+    },
+    {
+      "id": "PKG_ADMIN",
+      "name": "Panel Administrativo",
+      "use_cases": [
+        { "id": "UC_AdmUsers", "code": "UC_ADM_USERS", "name": "Gestionar Usuarios" },
+        { "id": "UC_AdmReps",  "code": "UC_ADM_REPS",  "name": "Gestionar Reportes" },
+        { "id": "UC_AdmCont",  "code": "UC_ADM_CONT",  "name": "Gestionar Contenido" },
+        { "id": "UC_AdmStat",  "code": "UC_ADM_STAT",  "name": "Visualizar Estadísticas" }
+      ]
+    }
+  ],
+
+  "actor_associations": [
+    { "actor": "User", "use_cases": [
+      "UC_Reg", "UC_Log", "UC_Out", "UC_Conf", "UC_Sug",
+      "UC_ProfView", "UC_Notif", "UC_RepAdd", "UC_DiscView", "UC_DiscLike",
+      "UC_Search", "UC_CursList", "UC_CursDet",
+      "UC_CursPub", "UC_CursEdit", "UC_CursDel",
+      "UC_LeccPub", "UC_LeccEdit", "UC_LeccDel", "UC_LeccView",
+      "UC_CapView", "UC_CapDel", "UC_CapCal",
+      "UC_SaveList", "UC_SaveTogg",
+      "UC_ExerView", "UC_ExerCre", "UC_ProgView",
+      "UC_BotAsk"
+    ]},
+    { "actor": "Admin", "use_cases": [
+      "UC_AdmUsers", "UC_AdmReps", "UC_AdmCont", "UC_AdmStat"
+    ]},
+    { "actor": "Bot", "use_cases": [
+      "UC_BotGen"
+    ]}
+  ],
+
+  "relationships": [
+    {
+      "type": "generalization",
+      "from": "Admin",
+      "to": "User",
+      "note": "El Administrador hereda todos los casos de uso del Usuario base."
+    },
+    {
+      "type": "extend",
+      "from": "UC_ProfUpd",
+      "to": "UC_ProfView",
+      "note": "El usuario puede opcionalmente editar su perfil tras visualizarlo."
+    },
+    {
+      "type": "extend",
+      "from": "UC_ProfFol",
+      "to": "UC_ProfView",
+      "note": "El usuario puede opcionalmente seguir a otro usuario tras ver su perfil."
+    },
+    {
+      "type": "extend",
+      "from": "UC_Sug",
+      "to": "UC_Conf",
+      "note": "Desde la pantalla de configuración, el usuario puede opcionalmente enviar sugerencias."
+    },
+    {
+      "type": "extend",
+      "from": "UC_CursEdit",
+      "to": "UC_CursDet",
+      "note": "El creador puede opcionalmente editar el curso al visualizar su detalle."
+    },
+    {
+      "type": "extend",
+      "from": "UC_CursDel",
+      "to": "UC_CursDet",
+      "note": "El creador puede opcionalmente eliminar el curso al visualizar su detalle."
+    },
+    {
+      "type": "extend",
+      "from": "UC_SaveTogg",
+      "to": "UC_CursDet",
+      "note": "El usuario puede opcionalmente guardar el curso al visualizar su detalle."
+    },
+    {
+      "type": "extend",
+      "from": "UC_RepAdd",
+      "to": "UC_CursDet",
+      "note": "El usuario puede opcionalmente reportar el curso al visualizar su detalle."
+    },
+    {
+      "type": "extend",
+      "from": "UC_LeccEdit",
+      "to": "UC_LeccView",
+      "note": "El creador puede opcionalmente editar la lección al visualizarla."
+    },
+    {
+      "type": "extend",
+      "from": "UC_LeccDel",
+      "to": "UC_LeccView",
+      "note": "El creador puede opcionalmente eliminar la lección al visualizarla."
+    },
+    {
+      "type": "extend",
+      "from": "UC_SaveTogg",
+      "to": "UC_LeccView",
+      "note": "El usuario puede opcionalmente guardar la lección al visualizarla."
+    },
+    {
+      "type": "extend",
+      "from": "UC_RepAdd",
+      "to": "UC_LeccView",
+      "note": "El usuario puede opcionalmente reportar la lección al visualizarla."
+    },
+    {
+      "type": "include",
+      "from": "UC_LeccPub",
+      "to": "UC_CapCre",
+      "note": "Publicar una lección siempre incluye la creación de al menos un capítulo."
+    },
+    {
+      "type": "include",
+      "from": "UC_LeccEdit",
+      "to": "UC_CapEdit",
+      "note": "Editar una lección siempre incluye la gestión de sus capítulos."
+    },
+    {
+      "type": "extend",
+      "from": "UC_CapCal",
+      "to": "UC_CapView",
+      "note": "El usuario puede opcionalmente calificar el capítulo al visualizarlo."
+    },
+    {
+      "type": "extend",
+      "from": "UC_CapDel",
+      "to": "UC_CapView",
+      "note": "El creador puede opcionalmente eliminar el capítulo al visualizarlo."
+    },
+    {
+      "type": "include",
+      "from": "UC_LeccView",
+      "to": "UC_CapView",
+      "note": "Visualizar una lección siempre incluye navegar por sus capítulos."
+    },
+    {
+      "type": "include",
+      "from": "UC_ExerSolv",
+      "to": "UC_ExerView",
+      "note": "Resolver un ejercicio siempre incluye cargarlo y visualizarlo primero."
+    },
+    {
+      "type": "extend",
+      "from": "UC_ExerCre",
+      "to": "UC_CapView",
+      "note": "El creador puede opcionalmente añadir un ejercicio al visualizar el capítulo."
+    },
+    {
+      "type": "extend",
+      "from": "UC_DiscAdd",
+      "to": "UC_DiscView",
+      "note": "El usuario puede opcionalmente comentar tras visualizar la discusión."
+    },
+    {
+      "type": "extend",
+      "from": "UC_DiscLike",
+      "to": "UC_DiscView",
+      "note": "El usuario puede opcionalmente dar like a un comentario al visualizar la discusión."
+    },
+    {
+      "type": "extend",
+      "from": "UC_DiscView",
+      "to": "UC_LeccView",
+      "note": "La discusión es accesible opcionalmente desde la vista de la lección."
+    },
+    {
+      "type": "extend",
+      "from": "UC_DiscView",
+      "to": "UC_CursDet",
+      "note": "La discusión es accesible opcionalmente desde el detalle del curso."
+    },
+    {
+      "type": "include",
+      "from": "UC_SaveList",
+      "to": "UC_SaveTogg",
+      "note": "Visualizar guardados implica necesariamente la existencia del mecanismo de guardado."
+    },
+    {
+      "type": "include",
+      "from": "UC_CursList",
+      "to": "UC_Search",
+      "note": "Buscar y listar cursos siempre incluye el mecanismo general de búsqueda de contenido."
+    },
+    {
+      "type": "include",
+      "from": "UC_BotAsk",
+      "to": "UC_BotGen",
+      "note": "Consultar el chatbot siempre dispara la generación automática de una respuesta por el sistema."
+    }
+  ]
+}

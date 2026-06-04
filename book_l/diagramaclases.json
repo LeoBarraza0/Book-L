@@ -1,0 +1,1232 @@
+{
+    "diagram_type": "UML_ClassDiagram",
+    "system_name": "Book-L — Plataforma E-learning Colaborativa",
+    "description": "Diagrama de clases del dominio lógico de Book-L. Representa las 14 entidades principales del sistema con sus atributos, métodos de comportamiento y relaciones. La visibilidad de los atributos es pública (+) por convención idiomática de Dart (campos final públicos + patrón copyWith). Los métodos representan responsabilidades semánticas del dominio, no siempre implementadas directamente en la entidad sino distribuidas en repositorios y casos de uso.",
+    "visibility_note": "All attributes use public visibility (+) because the project is built in Dart/Flutter, where encapsulation is achieved through immutability (final fields) and the copyWith pattern, not through private fields with getters/setters.",
+    "classes": [
+        {
+            "id": "Usuario",
+            "name": "Usuario",
+            "description": "Representa a cualquier persona registrada en la plataforma. Puede ser estudiante, profesor o administrador según su rol.",
+            "attributes": [
+                {
+                    "name": "idUsuario",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "nombreCompleto",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "correo",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "rol",
+                    "type": "String",
+                    "visibility": "public",
+                    "values": [
+                        "Estudiante",
+                        "Profesor",
+                        "Administrador"
+                    ]
+                },
+                {
+                    "name": "programa",
+                    "type": "String",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "activo",
+                    "type": "bool",
+                    "visibility": "public"
+                },
+                {
+                    "name": "avatarUrl",
+                    "type": "String",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "username",
+                    "type": "String",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "descripcion",
+                    "type": "String",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "celular",
+                    "type": "int",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "semestre",
+                    "type": "int",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "nacimiento",
+                    "type": "DateTime",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "preferencias",
+                    "type": "String",
+                    "visibility": "public",
+                    "nullable": true
+                }
+            ],
+            "methods": [
+                {
+                    "name": "actualizarPerfil",
+                    "params": [
+                        "String nombre",
+                        "String desc",
+                        "int cel",
+                        "int sem",
+                        "DateTime nac"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "seguir",
+                    "params": [
+                        "Usuario otro"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "dejarDeSeguir",
+                    "params": [
+                        "Usuario otro"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "verificarSeguimiento",
+                    "params": [
+                        "Usuario otro"
+                    ],
+                    "returns": "bool"
+                },
+                {
+                    "name": "obtenerProgreso",
+                    "params": [],
+                    "returns": "Map"
+                },
+                {
+                    "name": "cargarHistorialBusqueda",
+                    "params": [],
+                    "returns": "List<String>"
+                }
+            ]
+        },
+        {
+            "id": "Configuracion",
+            "name": "Configuracion",
+            "description": "Preferencias personales de un usuario para la aplicación (tema, notificaciones, accesibilidad).",
+            "attributes": [
+                {
+                    "name": "idConfig",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idUsuario",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "temaOscuro",
+                    "type": "bool",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idioma",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "notificacionesPush",
+                    "type": "bool",
+                    "visibility": "public"
+                },
+                {
+                    "name": "notificacionesEmail",
+                    "type": "bool",
+                    "visibility": "public"
+                },
+                {
+                    "name": "notificacionesRacha",
+                    "type": "bool",
+                    "visibility": "public"
+                },
+                {
+                    "name": "tamanoFuente",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "reproduccionAuto",
+                    "type": "bool",
+                    "visibility": "public"
+                },
+                {
+                    "name": "perfilPublico",
+                    "type": "bool",
+                    "visibility": "public"
+                }
+            ],
+            "methods": [
+                {
+                    "name": "actualizarTema",
+                    "params": [
+                        "bool value"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "actualizarIdioma",
+                    "params": [
+                        "String value"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "actualizarNotificaciones",
+                    "params": [
+                        "bool push",
+                        "bool email",
+                        "bool racha"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "actualizarPreferenciaVisual",
+                    "params": [
+                        "String tamano",
+                        "bool autoPlay"
+                    ],
+                    "returns": "void"
+                }
+            ]
+        },
+        {
+            "id": "Curso",
+            "name": "Curso",
+            "description": "Contenido educativo de alto nivel creado por un usuario. Agrupa lecciones y tiene su propia discusión.",
+            "attributes": [
+                {
+                    "name": "idCurso",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idUsuarioFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "FK al usuario creador"
+                },
+                {
+                    "name": "nombre",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "imagenUrl",
+                    "type": "String",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "rating",
+                    "type": "double",
+                    "visibility": "public"
+                },
+                {
+                    "name": "duracion",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "estudiantes",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "progreso",
+                    "type": "double",
+                    "visibility": "public"
+                },
+                {
+                    "name": "estado",
+                    "type": "String",
+                    "visibility": "public",
+                    "values": [
+                        "activo",
+                        "inactivo",
+                        "en_revision",
+                        "suspendido"
+                    ]
+                },
+                {
+                    "name": "createdAt",
+                    "type": "DateTime",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "updatedAt",
+                    "type": "DateTime",
+                    "visibility": "public",
+                    "nullable": true
+                }
+            ],
+            "methods": [
+                {
+                    "name": "publicar",
+                    "params": [],
+                    "returns": "void"
+                },
+                {
+                    "name": "editarDetalles",
+                    "params": [
+                        "String nombre",
+                        "String imgUrl",
+                        "String estado"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "eliminar",
+                    "params": [],
+                    "returns": "void"
+                },
+                {
+                    "name": "asociarLeccion",
+                    "params": [
+                        "Leccion leccion"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "desasociarLeccion",
+                    "params": [
+                        "Leccion leccion"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "calcularProgreso",
+                    "params": [],
+                    "returns": "double"
+                },
+                {
+                    "name": "actualizarRating",
+                    "params": [
+                        "double nuevoValor"
+                    ],
+                    "returns": "void"
+                }
+            ]
+        },
+        {
+            "id": "Leccion",
+            "name": "Leccion",
+            "description": "Unidad de aprendizaje independiente. Se compone de capítulos y puede asociarse a uno o más cursos.",
+            "attributes": [
+                {
+                    "name": "idLeccion",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idUsuarioFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "FK al usuario creador"
+                },
+                {
+                    "name": "nombre",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "imagenUrl",
+                    "type": "String",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "rating",
+                    "type": "double",
+                    "visibility": "public"
+                },
+                {
+                    "name": "duracion",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "estudiantes",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "progreso",
+                    "type": "double",
+                    "visibility": "public"
+                },
+                {
+                    "name": "estado",
+                    "type": "String",
+                    "visibility": "public",
+                    "values": [
+                        "activa",
+                        "inactiva",
+                        "en_revision",
+                        "suspendida"
+                    ]
+                },
+                {
+                    "name": "createdAt",
+                    "type": "DateTime",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "updatedAt",
+                    "type": "DateTime",
+                    "visibility": "public",
+                    "nullable": true
+                }
+            ],
+            "methods": [
+                {
+                    "name": "publicar",
+                    "params": [],
+                    "returns": "void"
+                },
+                {
+                    "name": "editarDetalles",
+                    "params": [
+                        "String nombre",
+                        "String imgUrl",
+                        "String estado"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "eliminar",
+                    "params": [],
+                    "returns": "void"
+                },
+                {
+                    "name": "agregarCapitulo",
+                    "params": [
+                        "Capitulo capitulo"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "eliminarCapitulo",
+                    "params": [
+                        "int idCapitulo"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "calcularProgreso",
+                    "params": [],
+                    "returns": "double"
+                },
+                {
+                    "name": "adjuntarMaterial",
+                    "params": [
+                        "MaterialEducativo material"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "eliminarMaterial",
+                    "params": [
+                        "int idMaterial"
+                    ],
+                    "returns": "void"
+                }
+            ]
+        },
+        {
+            "id": "Capitulo",
+            "name": "Capitulo",
+            "description": "Unidad básica de contenido dentro de una lección. Contiene el material de estudio y los ejercicios.",
+            "attributes": [
+                {
+                    "name": "idCapitulo",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idLeccion",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "FK a la lección padre (required, no nullable)"
+                },
+                {
+                    "name": "nombre",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "tiempoTotal",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "Duración en segundos"
+                }
+            ],
+            "methods": [
+                {
+                    "name": "editarNombre",
+                    "params": [
+                        "String nuevoNombre"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "actualizarTiempo",
+                    "params": [
+                        "int tiempo"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "agregarEjercicio",
+                    "params": [
+                        "Ejercicio ejercicio"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "eliminarEjercicio",
+                    "params": [
+                        "int idEjercicio"
+                    ],
+                    "returns": "void"
+                }
+            ]
+        },
+        {
+            "id": "MaterialEducativo",
+            "name": "MaterialEducativo",
+            "description": "Recurso digital (PDF, video, enlace, SCORM) adjunto a una lección como material de apoyo.",
+            "attributes": [
+                {
+                    "name": "idMaterial",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idLeccionFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "FK a la lección (required, no nullable)"
+                },
+                {
+                    "name": "nombre",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "url",
+                    "type": "String",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "descripcion",
+                    "type": "String",
+                    "visibility": "public",
+                    "nullable": true
+                },
+                {
+                    "name": "tipo",
+                    "type": "String",
+                    "visibility": "public",
+                    "values": [
+                        "video",
+                        "pdf",
+                        "enlace",
+                        "SCORM"
+                    ]
+                },
+                {
+                    "name": "tamanoBytes",
+                    "type": "int",
+                    "visibility": "public"
+                }
+            ],
+            "methods": [
+                {
+                    "name": "visualizar",
+                    "params": [],
+                    "returns": "void"
+                },
+                {
+                    "name": "descargar",
+                    "params": [],
+                    "returns": "void"
+                }
+            ]
+        },
+        {
+            "id": "Ejercicio",
+            "name": "Ejercicio",
+            "description": "Actividad evaluativa dentro de un capítulo. Contiene preguntas de diferentes tipos.",
+            "attributes": [
+                {
+                    "name": "idEjercicio",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idCapitulo",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "FK al capítulo (required, no nullable)"
+                },
+                {
+                    "name": "tipo",
+                    "type": "TipoEjercicio",
+                    "visibility": "public",
+                    "values": [
+                        "multipleChoice",
+                        "trueFalse",
+                        "ordenar",
+                        "rellenar",
+                        "respuestaCorta"
+                    ]
+                },
+                {
+                    "name": "titulo",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "descripcion",
+                    "type": "String",
+                    "visibility": "public"
+                }
+            ],
+            "methods": [
+                {
+                    "name": "validarRespuestas",
+                    "params": [
+                        "Map respuestas"
+                    ],
+                    "returns": "Map"
+                },
+                {
+                    "name": "obtenerPreguntas",
+                    "params": [],
+                    "returns": "List<Pregunta>"
+                }
+            ]
+        },
+        {
+            "id": "Pregunta",
+            "name": "Pregunta",
+            "description": "Ítem individual dentro de un ejercicio. Tiene un enunciado y múltiples opciones de respuesta.",
+            "attributes": [
+                {
+                    "name": "idPregunta",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idEjercicioFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "FK al ejercicio (required, no nullable)"
+                },
+                {
+                    "name": "contenido",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "explicacion",
+                    "type": "String",
+                    "visibility": "public",
+                    "nullable": true
+                }
+            ],
+            "methods": [
+                {
+                    "name": "agregarOpcion",
+                    "params": [
+                        "Opcion opcion"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "obtenerOpcionCorrecta",
+                    "params": [],
+                    "returns": "Opcion"
+                }
+            ]
+        },
+        {
+            "id": "Opcion",
+            "name": "Opcion",
+            "description": "Alternativa de respuesta para una pregunta de ejercicio. Indica si es la respuesta correcta.",
+            "attributes": [
+                {
+                    "name": "idOpcion",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idPreguntaFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "FK a la pregunta (required, no nullable)"
+                },
+                {
+                    "name": "contenido",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "correcta",
+                    "type": "bool",
+                    "visibility": "public"
+                }
+            ],
+            "methods": []
+        },
+        {
+            "id": "Discusion",
+            "name": "Discusion",
+            "description": "Hilo de debate asociado a un curso o lección. Agrupa todos los comentarios de esa unidad de contenido.",
+            "attributes": [
+                {
+                    "name": "idDiscusion",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idCursoFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "nullable": true,
+                    "note": "FK al curso (mutuamente excluyente con idLeccionFk)"
+                },
+                {
+                    "name": "idLeccionFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "nullable": true,
+                    "note": "FK a la lección (mutuamente excluyente con idCursoFk)"
+                }
+            ],
+            "methods": [
+                {
+                    "name": "agregarComentario",
+                    "params": [
+                        "Comentario comentario"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "obtenerComentariosRaiz",
+                    "params": [],
+                    "returns": "List<Comentario>"
+                }
+            ]
+        },
+        {
+            "id": "Comentario",
+            "name": "Comentario",
+            "description": "Aportación textual de un usuario en un hilo de discusión. Soporta estructura de hilos mediante auto-referencia.",
+            "attributes": [
+                {
+                    "name": "idComentario",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idDiscusionFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "FK a la discusión (required, no nullable)"
+                },
+                {
+                    "name": "idUsuarioFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "FK al autor"
+                },
+                {
+                    "name": "contenido",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idPadre",
+                    "type": "int",
+                    "visibility": "public",
+                    "nullable": true,
+                    "note": "Auto-referencia: FK al comentario padre en el hilo"
+                },
+                {
+                    "name": "createdAt",
+                    "type": "DateTime",
+                    "visibility": "public"
+                }
+            ],
+            "methods": [
+                {
+                    "name": "editarContenido",
+                    "params": [
+                        "String nuevoContenido"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "responder",
+                    "params": [
+                        "Comentario respuesta"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "darLike",
+                    "params": [
+                        "Usuario usuario"
+                    ],
+                    "returns": "void"
+                },
+                {
+                    "name": "quitarLike",
+                    "params": [
+                        "Usuario usuario"
+                    ],
+                    "returns": "void"
+                }
+            ]
+        },
+        {
+            "id": "Calificacion",
+            "name": "Calificacion",
+            "description": "Puntuación asignada por un usuario a un curso o lección. Usa referencia polimórfica con tipoObjeto.",
+            "attributes": [
+                {
+                    "name": "idCalificacion",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idObjetoFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "ID del curso o lección calificado"
+                },
+                {
+                    "name": "tipoObjeto",
+                    "type": "String",
+                    "visibility": "public",
+                    "values": [
+                        "curso",
+                        "leccion"
+                    ]
+                },
+                {
+                    "name": "idUsuarioFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "FK al usuario que califica"
+                },
+                {
+                    "name": "valor",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "Rango: 1 a 5"
+                }
+            ],
+            "methods": [
+                {
+                    "name": "asignarPuntuacion",
+                    "params": [
+                        "int valor"
+                    ],
+                    "returns": "void"
+                }
+            ]
+        },
+        {
+            "id": "Reporte",
+            "name": "Reporte",
+            "description": "Denuncia emitida por un usuario sobre contenido inapropiado. Usa referencia polimórfica con entidadTipo.",
+            "attributes": [
+                {
+                    "name": "idReporte",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idUsuarioFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "FK al usuario que reporta"
+                },
+                {
+                    "name": "entidadTipo",
+                    "type": "String",
+                    "visibility": "public",
+                    "values": [
+                        "curso",
+                        "leccion",
+                        "comentario"
+                    ]
+                },
+                {
+                    "name": "entidadId",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "ID de la entidad denunciada"
+                },
+                {
+                    "name": "motivo",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "createdAt",
+                    "type": "DateTime",
+                    "visibility": "public"
+                }
+            ],
+            "methods": [
+                {
+                    "name": "crearReporte",
+                    "params": [],
+                    "returns": "void"
+                },
+                {
+                    "name": "resolverReporte",
+                    "params": [],
+                    "returns": "void"
+                }
+            ]
+        },
+        {
+            "id": "Notificacion",
+            "name": "Notificacion",
+            "description": "Alerta generada por el sistema para un usuario (nuevo seguidor, respuesta a comentario, etc.).",
+            "attributes": [
+                {
+                    "name": "id",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "idUsuarioFk",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "FK al usuario destinatario"
+                },
+                {
+                    "name": "tipo",
+                    "type": "String",
+                    "visibility": "public",
+                    "example": "follow, reply, calificacion"
+                },
+                {
+                    "name": "idReferencia",
+                    "type": "int",
+                    "visibility": "public",
+                    "note": "ID del elemento que originó la notificación"
+                },
+                {
+                    "name": "mensaje",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "leida",
+                    "type": "bool",
+                    "visibility": "public"
+                },
+                {
+                    "name": "createdAt",
+                    "type": "DateTime",
+                    "visibility": "public"
+                }
+            ],
+            "methods": [
+                {
+                    "name": "marcarComoLeida",
+                    "params": [],
+                    "returns": "void"
+                }
+            ]
+        },
+        {
+            "id": "ChatbotRespuesta",
+            "name": "ChatbotRespuesta",
+            "description": "Intención del chatbot con sus palabras clave y posibles respuestas pregeneradas. Base de conocimiento del asistente inteligente.",
+            "attributes": [
+                {
+                    "name": "idIntencion",
+                    "type": "int",
+                    "visibility": "public"
+                },
+                {
+                    "name": "nombreIntencion",
+                    "type": "String",
+                    "visibility": "public"
+                },
+                {
+                    "name": "palabrasClave",
+                    "type": "List<String>",
+                    "visibility": "public"
+                },
+                {
+                    "name": "respuestas",
+                    "type": "List<String>",
+                    "visibility": "public"
+                }
+            ],
+            "methods": [
+                {
+                    "name": "buscarPorPalabraClave",
+                    "params": [
+                        "String palabra"
+                    ],
+                    "returns": "bool"
+                }
+            ]
+        }
+    ],
+    "relationships": [
+        {
+            "type": "bidirectional_association",
+            "from": "Usuario",
+            "from_multiplicity": "1",
+            "to": "Configuracion",
+            "to_multiplicity": "1",
+            "label": "posee",
+            "note": "Cada usuario tiene exactamente una configuración. No es composición porque Configuracion puede existir de forma independiente en base de datos."
+        },
+        {
+            "type": "directed_association",
+            "from": "Usuario",
+            "from_multiplicity": "1",
+            "to": "Curso",
+            "to_multiplicity": "*",
+            "label": "crea",
+            "note": "idUsuarioFk en Curso referencia al creador. El curso puede sobrevivir aunque el usuario sea desactivado."
+        },
+        {
+            "type": "directed_association",
+            "from": "Usuario",
+            "from_multiplicity": "1",
+            "to": "Leccion",
+            "to_multiplicity": "*",
+            "label": "crea",
+            "note": "idUsuarioFk en Leccion referencia al autor. Misma lógica que Curso."
+        },
+        {
+            "type": "directed_association",
+            "from": "Usuario",
+            "from_multiplicity": "1",
+            "to": "Comentario",
+            "to_multiplicity": "*",
+            "label": "escribe",
+            "note": "idUsuarioFk en Comentario. El comentario pertenece a la discusión, no al usuario."
+        },
+        {
+            "type": "directed_association",
+            "from": "Usuario",
+            "from_multiplicity": "1",
+            "to": "Calificacion",
+            "to_multiplicity": "*",
+            "label": "otorga",
+            "note": "idUsuarioFk en Calificacion registra quién calificó."
+        },
+        {
+            "type": "directed_association",
+            "from": "Usuario",
+            "from_multiplicity": "1",
+            "to": "Reporte",
+            "to_multiplicity": "*",
+            "label": "radica",
+            "note": "idUsuarioFk en Reporte guarda quién radicó la denuncia."
+        },
+        {
+            "type": "bidirectional_association",
+            "from": "Usuario",
+            "from_multiplicity": "1",
+            "to": "Notificacion",
+            "to_multiplicity": "*",
+            "label": "recibe / involucra_a",
+            "note": "Consolidada: el usuario recibe notificaciones (idUsuarioFk) y la notificación involucra a otro usuario a través de idReferencia."
+        },
+        {
+            "type": "self_association",
+            "from": "Usuario",
+            "from_multiplicity": "*",
+            "to": "Usuario",
+            "to_multiplicity": "*",
+            "label": "sigue_a",
+            "note": "Seguimiento social. toggleSeguir(idSeguidor, idSeguido) toma dos IDs del mismo tipo. Se resuelve como tabla relacional intermedia."
+        },
+        {
+            "type": "dependency",
+            "from": "Usuario",
+            "from_multiplicity": "*",
+            "to": "ChatbotRespuesta",
+            "to_multiplicity": "*",
+            "label": "consulta",
+            "note": "No hay FK directa. La relación existe solo en tiempo de ejecución vía búsqueda por palabras clave."
+        },
+        {
+            "type": "aggregation",
+            "from": "Curso",
+            "from_multiplicity": "1",
+            "to": "Leccion",
+            "to_multiplicity": "*",
+            "label": "asocia",
+            "note": "Una Leccion puede existir sola sin pertenecer a un Curso. AsociarLeccionACursoUseCase confirma que es una asociación opcional y reversible."
+        },
+        {
+            "type": "composition",
+            "from": "Curso",
+            "from_multiplicity": "1",
+            "to": "Discusion",
+            "to_multiplicity": "*",
+            "label": "contiene",
+            "note": "La discusión se crea automáticamente al acceder al curso (obtenerOCrearDiscusion). Una Discusion sin su Curso carece de sentido."
+        },
+        {
+            "type": "bidirectional_association",
+            "from": "Curso",
+            "from_multiplicity": "1",
+            "to": "Calificacion",
+            "to_multiplicity": "*",
+            "label": "recibe / califica",
+            "note": "Consolidada. Calificacion usa tipoObjeto='curso' + idObjetoFk para referenciar al curso de forma polimórfica."
+        },
+        {
+            "type": "bidirectional_association",
+            "from": "Curso",
+            "from_multiplicity": "1",
+            "to": "Reporte",
+            "to_multiplicity": "*",
+            "label": "es_denunciado / denuncia",
+            "note": "Consolidada. Reporte usa entidadTipo='curso' + entidadId para referenciar al curso de forma polimórfica."
+        },
+        {
+            "type": "composition",
+            "from": "Leccion",
+            "from_multiplicity": "1",
+            "to": "Capitulo",
+            "to_multiplicity": "*",
+            "label": "se_compone_de",
+            "note": "idLeccion en Capitulo es required y no nullable. Un capítulo no puede existir sin su lección."
+        },
+        {
+            "type": "composition",
+            "from": "Leccion",
+            "from_multiplicity": "1",
+            "to": "MaterialEducativo",
+            "to_multiplicity": "*",
+            "label": "adjunta",
+            "note": "idLeccionFk en MaterialEducativo es required. El material es contenido inseparable de la lección."
+        },
+        {
+            "type": "composition",
+            "from": "Leccion",
+            "from_multiplicity": "1",
+            "to": "Discusion",
+            "to_multiplicity": "*",
+            "label": "contiene",
+            "note": "Misma lógica que Curso→Discusion. La discusión se crea automáticamente al acceder a la lección."
+        },
+        {
+            "type": "bidirectional_association",
+            "from": "Leccion",
+            "from_multiplicity": "1",
+            "to": "Calificacion",
+            "to_multiplicity": "*",
+            "label": "recibe / califica",
+            "note": "Consolidada. Calificacion usa tipoObjeto='leccion' + idObjetoFk."
+        },
+        {
+            "type": "bidirectional_association",
+            "from": "Leccion",
+            "from_multiplicity": "1",
+            "to": "Reporte",
+            "to_multiplicity": "*",
+            "label": "es_denunciada / denuncia",
+            "note": "Consolidada. Reporte usa entidadTipo='leccion' + entidadId."
+        },
+        {
+            "type": "composition",
+            "from": "Capitulo",
+            "from_multiplicity": "1",
+            "to": "Ejercicio",
+            "to_multiplicity": "*",
+            "label": "incluye",
+            "note": "idCapitulo en Ejercicio es required y no nullable. Un ejercicio pertenece irreversiblemente a un capítulo."
+        },
+        {
+            "type": "composition",
+            "from": "Ejercicio",
+            "from_multiplicity": "1",
+            "to": "Pregunta",
+            "to_multiplicity": "*",
+            "label": "se_compone_de",
+            "note": "idEjercicioFk en Pregunta es required. La pregunta no tiene sentido fuera de su ejercicio."
+        },
+        {
+            "type": "composition",
+            "from": "Pregunta",
+            "from_multiplicity": "1",
+            "to": "Opcion",
+            "to_multiplicity": "*",
+            "label": "ofrece",
+            "note": "idPreguntaFk en Opcion es required. Una opción de respuesta es parte constitutiva de la pregunta."
+        },
+        {
+            "type": "composition",
+            "from": "Discusion",
+            "from_multiplicity": "1",
+            "to": "Comentario",
+            "to_multiplicity": "*",
+            "label": "agrupa",
+            "note": "idDiscusionFk en Comentario es required. Un comentario no existe sin su hilo de discusión."
+        },
+        {
+            "type": "self_association",
+            "from": "Comentario",
+            "from_multiplicity": "1",
+            "to": "Comentario",
+            "to_multiplicity": "*",
+            "label": "responde_a",
+            "note": "idPadre en Comentario es nullable (int?). Un comentario puede o no tener padre, modelando hilos de respuesta. Es asociación (no composición) porque un comentario raíz existe sin padre."
+        }
+    ]
+}
