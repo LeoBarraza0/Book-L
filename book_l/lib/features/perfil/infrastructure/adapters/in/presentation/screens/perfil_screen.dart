@@ -130,7 +130,7 @@ class _PerfilScreenState extends State<PerfilScreen>
                                 ),
                               ),
                               Text(
-                                '@${(_user?.nombreCompleto ?? 'usuario').replaceAll(" ", "").toLowerCase()}',
+                                '@${(_user?.username ?? 'usuario').replaceAll(" ", "").toLowerCase()}',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,

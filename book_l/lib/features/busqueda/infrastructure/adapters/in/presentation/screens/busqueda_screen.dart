@@ -365,19 +365,68 @@ class _BusquedaScreenState extends State<BusquedaScreen> {
   }
 
   Widget _buildHistorialVacio() {
-    return const Center(
+    final svc = BooklService();
+    final items = <String>{};
+    
+    for (var c in svc.cursos) {
+      if (c.nombre.isNotEmpty) items.add(c.nombre);
+    }
+    for (var l in svc.lecciones) {
+      if (l.nombre.isNotEmpty) items.add(l.nombre);
+    }
+    
+    if (items.isEmpty) {
+      items.addAll([
+        'Matemáticas', 'Física', 'Programación', 'Historia', 
+        'Arte', 'Biología', 'Química', 'Inglés', 'Diseño', 
+        'Marketing', 'Filosofía', 'Música', 'Finanzas', 'Literatura'
+      ]);
+    }
+    
+    final temas = items.toList()..shuffle();
+    final temasRecomendados = temas.take(8).toList();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.search_off, size: 48, color: Color(0xFFDDDDDD)),
-          SizedBox(height: 12),
-          Text(
-            'No tienes búsquedas recientes',
+          const Text(
+            'Temas recomendados',
             style: TextStyle(
               fontSize: 15,
-              color: Color(0xFFBBBBBB),
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF888888),
             ),
+          ),
+          const SizedBox(height: 15),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: temasRecomendados.map((tema) {
+              return GestureDetector(
+                onTap: () {
+                  _searchController.text = tema;
+                  _ejecutarBusqueda(tema);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5AB639).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF5AB639).withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    tema,
+                    style: const TextStyle(
+                      color: Color(0xFF5AB639),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
