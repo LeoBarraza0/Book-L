@@ -429,7 +429,7 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              '|  ${curso?.rating ?? 4.5}',
+                              '|  ${curso != null && curso.rating > 0 ? curso.rating.toStringAsFixed(1) : 'Nuevo'}',
                               style: const TextStyle(
                                   fontWeight: FontWeight.w600, fontSize: 13),
                             ),
@@ -548,20 +548,27 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                   children: [
                     ListenableBuilder(
                       listenable: _ctrl,
-                      builder: (context, _) => Text(
-                        'Rate: ${_ctrl.state.selected?.rating ?? 4.5}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
+                      builder: (context, _) {
+                        final rating = _ctrl.state.selected?.rating ?? 0.0;
+                        return Text(
+                          'Rate: ${rating > 0 ? rating.toStringAsFixed(1) : 'Nuevo'}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        );
+                      },
                     ),
                     ListenableBuilder(
                       listenable: _discCtrl,
-                      builder: (context, _) => const Text(
-                        '0 comentarios',
-                        style: TextStyle(fontSize: 11, color: Colors.black54),
-                      ),
+                      builder: (context, _) {
+                        final count = _discCtrl.state.comentariosRaiz.length + 
+                                      _discCtrl.state.respuestasPorPadre.values.fold<int>(0, (sum, l) => sum + l.length);
+                        return Text(
+                          '$count comentarios',
+                          style: const TextStyle(fontSize: 11, color: Colors.black54),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -664,6 +671,10 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
               children: contenido.map((s) {
                 final titulo = s['titulo'] as String? ?? '';
                 final deltaData = s['cuerpo_delta'] as List<dynamic>?;
+                final tieneImagen = s['tiene_imagen'] as bool? ?? false;
+                final imagenPath = s['imagen_path'] as String?;
+                final tieneVideo = s['tiene_video'] as bool? ?? false;
+                final videoPath = s['video_path'] as String?;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 24),
@@ -683,6 +694,87 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
                         fontSize: 16,
                         color: const Color(0xFF787878),
                       ),
+                      // Imagen de la sección
+                      if (tieneImagen && imagenPath != null && imagenPath.startsWith('http')) ...[
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            imagenPath,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              height: 160,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEEEEEE),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Center(
+                                child: Icon(Icons.broken_image_outlined,
+                                    color: Colors.grey, size: 40),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                      // Video de la sección (enlace externo)
+                      if (tieneVideo && videoPath != null && videoPath.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        GestureDetector(
+                          onTap: () async {
+                            // Abrir en el navegador
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E1E2E),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFFF606F),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.play_arrow_rounded,
+                                      color: Colors.white, size: 28),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Video adjunto',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      Text(
+                                        videoPath,
+                                        style: const TextStyle(
+                                          color: Color(0xFFAAAAAA),
+                                          fontSize: 11,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 );

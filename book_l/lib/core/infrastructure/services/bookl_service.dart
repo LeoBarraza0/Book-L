@@ -1719,6 +1719,17 @@ class BooklService extends ChangeNotifier {
         lecciones[iLeccion] = lecciones[iLeccion]
             .copyWith(rating: double.parse(nuevoPromedio.toStringAsFixed(1)));
         nuevoPromedio = lecciones[iLeccion].rating;
+        if (SupabaseClientHelper.isConfigured) {
+          try {
+            SupabaseClientHelper.client
+                .from('tbl_leccion')
+                .update({'rating': nuevoPromedio})
+                .eq('idleccion', idObjeto)
+                .then((_) => null, onError: (e) => debugPrint("Supabase error rating leccion: $e"));
+          } catch (e) {
+            debugPrint("Error sync leccion rating: $e");
+          }
+        }
       }
     } else if (tipoObjeto == 'curso') {
       final iCurso = cursos.indexWhere((c) => c.idCurso == idObjeto);
@@ -1726,6 +1737,17 @@ class BooklService extends ChangeNotifier {
         cursos[iCurso] = cursos[iCurso]
             .copyWith(rating: double.parse(nuevoPromedio.toStringAsFixed(1)));
         nuevoPromedio = cursos[iCurso].rating;
+        if (SupabaseClientHelper.isConfigured) {
+          try {
+            SupabaseClientHelper.client
+                .from('tbl_curso')
+                .update({'rating': nuevoPromedio})
+                .eq('idcurso', idObjeto)
+                .then((_) => null, onError: (e) => debugPrint("Supabase error rating curso: $e"));
+          } catch (e) {
+            debugPrint("Error sync curso rating: $e");
+          }
+        }
       }
     }
 
