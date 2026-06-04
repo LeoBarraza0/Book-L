@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../controller/discusion_controller.dart';
 import 'package:book_l/core/infrastructure/storage/local_storage.dart';
+import 'package:book_l/shared/widgets/custom_avatar.dart';
 
 class ComentarioInput extends StatefulWidget {
   final DiscusionController ctrl;
@@ -49,8 +50,7 @@ class _ComentarioInputState extends State<ComentarioInput> {
   Widget build(BuildContext context) {
     final myId = AppSession().usuarioId;
     final myUser = myId != null ? widget.ctrl.getUserSync(myId) : null;
-    final myAvatar = myUser?.avatarUrl as String? ??
-        'https://ui-avatars.com/api/?name=User&background=4DC130&color=fff';
+    final myAvatar = myUser?.avatarUrl as String?;
     final isReplying = widget.ctrl.replyToId != null;
 
     return Container(
@@ -106,11 +106,11 @@ class _ComentarioInputState extends State<ComentarioInput> {
           Row(
             children: [
               // Mi avatar
-              CircleAvatar(
+              CustomAvatar(
                 radius: 18,
-                backgroundColor: const Color(0xFF4DC130),
-                backgroundImage: NetworkImage(myAvatar),
-                onBackgroundImageError: (_, __) {},
+                url: myAvatar,
+                nombre: myUser?.nombreCompleto ?? 'Usuario',
+                backgroundColor: Colors.white,
               ),
               const SizedBox(width: 10),
               // Campo de texto
