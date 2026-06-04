@@ -277,6 +277,7 @@ class BooklService extends ChangeNotifier {
       calificaciones = (data['calificaciones'] as List)
           .map((e) => CalificacionDto.fromJson(e as Map<String, dynamic>))
           .toList();
+      _limpiarCalificacionesDuplicadas();
     } else {
       calificaciones = [];
     }
@@ -477,6 +478,8 @@ class BooklService extends ChangeNotifier {
               valor: toInt(e['valor']),
             )),
       ];
+
+      _limpiarCalificacionesDuplicadas();
 
       for (var i = 0; i < lecciones.length; i++) {
         final califs = calificaciones.where((c) => c.tipoObjeto == 'leccion' && c.idObjetoFk == lecciones[i].idLeccion).toList();
@@ -1339,8 +1342,30 @@ class BooklService extends ChangeNotifier {
         .where((c) => c.tipoObjeto == 'leccion' && c.idObjetoFk == idLeccion)
         .toList();
     if (cals.isEmpty) return 0.0;
-    final suma = cals.fold<int>(0, (sum, c) => sum + c.valor);
-    return double.parse((suma / cals.length).toStringAsFixed(1));
+
+    // Deduplicar para asegurar un único voto por usuario
+    final uniqueCals = <int, Calificacion>{};
+    for (var c in cals) {
+      final existing = uniqueCals[c.idUsuarioFk];
+      if (existing == null) {
+        uniqueCals[c.idUsuarioFk] = c;
+      } else {
+        final bool cEsTemporal = c.idCalificacion > 1000000000;
+        final bool existingEsTemporal = existing.idCalificacion > 1000000000;
+        if (existingEsTemporal && !cEsTemporal) {
+          uniqueCals[c.idUsuarioFk] = c;
+        } else if (existingEsTemporal == cEsTemporal) {
+          if (c.idCalificacion > existing.idCalificacion) {
+            uniqueCals[c.idUsuarioFk] = c;
+          }
+        }
+      }
+    }
+
+    final uniqueList = uniqueCals.values;
+    if (uniqueList.isEmpty) return 0.0;
+    final suma = uniqueList.fold<int>(0, (sum, c) => sum + c.valor);
+    return double.parse((suma / uniqueList.length).toStringAsFixed(1));
   }
 
   double obtenerRatingCurso(int idCurso) {
@@ -1348,8 +1373,53 @@ class BooklService extends ChangeNotifier {
         .where((c) => c.tipoObjeto == 'curso' && c.idObjetoFk == idCurso)
         .toList();
     if (cals.isEmpty) return 0.0;
-    final suma = cals.fold<int>(0, (sum, c) => sum + c.valor);
-    return double.parse((suma / cals.length).toStringAsFixed(1));
+
+    // Deduplicar para asegurar un único voto por usuario
+    final uniqueCals = <int, Calificacion>{};
+    for (var c in cals) {
+      final existing = uniqueCals[c.idUsuarioFk];
+      if (existing == null) {
+        uniqueCals[c.idUsuarioFk] = c;
+      } else {
+        final bool cEsTemporal = c.idCalificacion > 1000000000;
+        final bool existingEsTemporal = existing.idCalificacion > 1000000000;
+        if (existingEsTemporal && !cEsTemporal) {
+          uniqueCals[c.idUsuarioFk] = c;
+        } else if (existingEsTemporal == cEsTemporal) {
+          if (c.idCalificacion > existing.idCalificacion) {
+            uniqueCals[c.idUsuarioFk] = c;
+          }
+        }
+      }
+    }
+
+    final uniqueList = uniqueCals.values;
+    if (uniqueList.isEmpty) return 0.0;
+    final suma = uniqueList.fold<int>(0, (sum, c) => sum + c.valor);
+    return double.parse((suma / uniqueList.length).toStringAsFixed(1));
+  }
+
+  void _limpiarCalificacionesDuplicadas() {
+    final uniqueMap = <String, Calificacion>{};
+    for (var c in calificaciones) {
+      final key = '${c.tipoObjeto}_${c.idObjetoFk}_${c.idUsuarioFk}';
+      final existing = uniqueMap[key];
+      if (existing == null) {
+        uniqueMap[key] = c;
+      } else {
+        final bool cEsTemporal = c.idCalificacion > 1000000000;
+        final bool existingEsTemporal = existing.idCalificacion > 1000000000;
+
+        if (existingEsTemporal && !cEsTemporal) {
+          uniqueMap[key] = c;
+        } else if (existingEsTemporal == cEsTemporal) {
+          if (c.idCalificacion > existing.idCalificacion) {
+            uniqueMap[key] = c;
+          }
+        }
+      }
+    }
+    calificaciones = uniqueMap.values.toList();
   }
 
   /// Agrega o actualiza la calificación de un usuario para una lección o curso.
@@ -1385,6 +1455,8 @@ class BooklService extends ChangeNotifier {
         ),
       );
     }
+
+    _limpiarCalificacionesDuplicadas();
 
     // 2. Recalcular promedio para el objeto afectado
     final promedio = tipoObjeto == 'curso'
@@ -1494,6 +1566,8 @@ class BooklService extends ChangeNotifier {
         ),
       );
     }
+
+    _limpiarCalificacionesDuplicadas();
 
     // Recalcular promedio del objeto
     final promedio = tipoObjeto == 'curso'
