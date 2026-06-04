@@ -438,7 +438,11 @@ class BooklService extends ChangeNotifier {
           .toList();
 
       seguidores = (results[7] as List)
-          .map((e) => Map<String, dynamic>.from(e as Map))
+          .map((e) => <String, dynamic>{
+                'id_seguidor': e['idseguidor'] ?? e['id_seguidor'],
+                'id_seguido': e['idseguido'] ?? e['id_seguido'],
+                'estado': e['estado'],
+              })
           .toList();
       discusiones =
           (results[8] as List).map((e) => DiscusionDto.fromJson(e)).toList();
@@ -473,6 +477,22 @@ class BooklService extends ChangeNotifier {
             )),
       ];
 
+      for (var i = 0; i < lecciones.length; i++) {
+        final califs = calificaciones.where((c) => c.tipoObjeto == 'leccion' && c.idObjetoFk == lecciones[i].idLeccion).toList();
+        if (califs.isNotEmpty) {
+          final avg = califs.map((c) => c.valor).reduce((a, b) => a + b) / califs.length;
+          lecciones[i] = lecciones[i].copyWith(rating: avg);
+        }
+      }
+
+      for (var i = 0; i < cursos.length; i++) {
+        final califs = calificaciones.where((c) => c.tipoObjeto == 'curso' && c.idObjetoFk == cursos[i].idCurso).toList();
+        if (califs.isNotEmpty) {
+          final avg = califs.map((c) => c.valor).reduce((a, b) => a + b) / califs.length;
+          cursos[i] = cursos[i].copyWith(rating: avg);
+        }
+      }
+
       progresoUsuario = (results[16] as List)
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
@@ -486,20 +506,24 @@ class BooklService extends ChangeNotifier {
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
 
-      rachas = (results[20] as List)
-          .map<Map<String, dynamic>>((e) => <String, dynamic>{
-                'id_usuario': toInt(e['idusuario'] ?? e['id_usuario']),
-                'racha_actual':
-                    toInt(e['currentstreak'] ?? e['current_streak']),
-                'dias_actividad': <String>[
-                  if (e['lastactivitydate'] != null ||
-                      e['last_activity_date'] != null)
-                    (e['lastactivitydate'] ?? e['last_activity_date'])
-                        .toString()
-                        .split('T')[0]
-                ],
-              })
-          .toList();
+      final currentRachas = rachas;
+      rachas = (results[20] as List).map<Map<String, dynamic>>((e) {
+        final idU = toInt(e['idusuario'] ?? e['id_usuario']);
+        final lastDate = (e['lastactivitydate'] ?? e['last_activity_date'])?.toString().split('T')[0];
+        
+        final rachaExistente = currentRachas.firstWhere((r) => r['id_usuario'] == idU, orElse: () => <String, dynamic>{'dias_actividad': <String>[]});
+        final dias = List<String>.from(rachaExistente['dias_actividad'] ?? <String>[]);
+        if (lastDate != null && !dias.contains(lastDate)) {
+          dias.add(lastDate);
+          dias.sort();
+        }
+
+        return <String, dynamic>{
+          'id_usuario': idU,
+          'racha_actual': toInt(e['currentstreak'] ?? e['current_streak']),
+          'dias_actividad': dias,
+        };
+      }).toList();
 
       notificaciones = (results[21] as List)
           .map<Map<String, dynamic>>((e) => <String, dynamic>{

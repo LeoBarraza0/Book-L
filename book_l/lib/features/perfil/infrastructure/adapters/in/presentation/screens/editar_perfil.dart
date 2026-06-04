@@ -6,6 +6,7 @@ import '../controller/perfil_controller.dart';
 import 'package:book_l/core/infrastructure/storage/local_storage.dart';
 import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/controller/auth_controller.dart';
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditarPerfil extends StatefulWidget {
   const EditarPerfil({super.key});
@@ -90,8 +91,26 @@ class _EditarPerfilState extends State<EditarPerfil> {
           if (!kIsWeb) {
             _selectedImage = File(image.path);
           }
-          _avatarNetworkUrl = image.path;
         });
+
+        // Subir a Supabase
+        final bytes = await image.readAsBytes();
+        final fileExt = image.path.split('.').last;
+        final fileName = 'avatar_${_userId}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+        final filePath = 'avatars/$fileName';
+        
+        await Supabase.instance.client.storage
+            .from('bookl-medias')
+            .uploadBinary(filePath, bytes);
+            
+        final publicUrl = Supabase.instance.client.storage
+            .from('bookl-medias')
+            .getPublicUrl(filePath);
+
+        setState(() {
+          _avatarNetworkUrl = publicUrl;
+        });
+
         _saveUserData();
       }
     } catch (e) {
