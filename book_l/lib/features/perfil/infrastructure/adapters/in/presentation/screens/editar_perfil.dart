@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../controller/perfil_controller.dart';
 import 'package:book_l/core/infrastructure/storage/local_storage.dart';
+import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/controller/auth_controller.dart';
 
 class EditarPerfil extends StatefulWidget {
   const EditarPerfil({super.key});
@@ -709,22 +710,54 @@ class _EditarPerfilState extends State<EditarPerfil> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      onPressed: () {
-                        // Logic to Deactivate Account
-                        Navigator.pop(context);
+                    StatefulBuilder(
+                      builder: (ctx, setInnerState) {
+                        bool _loading = false;
+                        return TextButton(
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                          ),
+                          onPressed: _loading
+                              ? null
+                              : () async {
+                                  setInnerState(() => _loading = true);
+                                  // 1. Marcar cuenta inactiva en memoria + Supabase
+                                  await PerfilController()
+                                      .desactivarCuenta(_userId);
+                                  // 2. Cerrar sesión
+                                  await AuthController().cerrarSesion();
+                                  // 3. Navegar al login
+                                  if (context.mounted) {
+                                    Navigator.of(context)
+                                      ..pop() // Cierra el diálogo
+                                      ..pop() // Cierra EditarPerfil
+                                      ..pop(); // Cierra PerfilScreen
+                                    Navigator.pushNamedAndRemoveUntil(
+                                      context,
+                                      '/login',
+                                      (route) => false,
+                                    );
+                                  }
+                                },
+                          child: _loading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Color(0xFFB3261E),
+                                  ),
+                                )
+                              : const Text(
+                                  'Desactivar',
+                                  style: TextStyle(
+                                    color: Color(0xFFB3261E),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                        );
                       },
-                      child: const Text(
-                        'Desactivar',
-                        style: TextStyle(
-                          color: Color(0xFFB3261E),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
                     ),
                   ],
                 ),
