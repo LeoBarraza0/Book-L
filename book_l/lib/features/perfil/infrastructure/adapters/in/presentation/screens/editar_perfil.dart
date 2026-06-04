@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../controller/perfil_controller.dart';
 import 'package:book_l/core/infrastructure/storage/local_storage.dart';
 import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/controller/auth_controller.dart';
+import 'package:book_l/core/infrastructure/services/bookl_service.dart';
 
 class EditarPerfil extends StatefulWidget {
   const EditarPerfil({super.key});
@@ -30,6 +31,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
   @override
   void initState() {
     super.initState();
+    _programas = BooklService().programas;
     _loadUserData();
   }
 
@@ -97,14 +99,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
     }
   }
 
-  final List<String> _programas = [
-    'Ingeniería de Sistemas',
-    'Ingeniería Industrial',
-    'Administración de Empresas',
-    'Contaduría Pública',
-    'Derecho',
-    'Medicina',
-  ];
+  late final List<String> _programas;
 
   final List<String> _semestres = [
     '1',
