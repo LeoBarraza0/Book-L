@@ -113,14 +113,13 @@ class AuthRepositoryImpl implements AuthRepository {
         // Generar un username automático a partir del correo
         final baseUsername = correo.trim().toLowerCase().split('@').first;
         final randomSuffix = DateTime.now().millisecondsSinceEpoch.toString().substring(9);
-        final generatedUsername = '${baseUsername}_$randomSuffix';
 
         // Insertar en Supabase. El id se autogenera mediante SERIAL
         final insertRes = await client.from('tbl_usuario').insert(Map<String, dynamic>.from({
           'nombrecompleto': nombreCompleto.trim(),
           'correo': correo.trim().toLowerCase(),
           'contrasena': contrasena,
-          'username': generatedUsername,
+          'username': baseUsername,
           'rol': rol,
           if (programa != null) 'programa': programa,
           if (celular != null) 'celular': celular,
