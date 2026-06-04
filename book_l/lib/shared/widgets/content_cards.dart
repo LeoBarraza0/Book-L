@@ -188,7 +188,7 @@ class SharedLeccionCard extends StatelessWidget {
           const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
           const SizedBox(width: 2),
           Text(
-            leccion.rating > 0 ? leccion.rating.toStringAsFixed(1) : '4.5',
+            leccion.rating.toStringAsFixed(1),
             style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
@@ -298,7 +298,7 @@ class SharedCursoCard extends StatelessWidget {
           const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
           const SizedBox(width: 4),
           Text(
-            curso.rating > 0 ? curso.rating.toStringAsFixed(1) : '4.5',
+            curso.rating.toStringAsFixed(1),
             style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
@@ -510,7 +510,7 @@ class _BaseFypCard extends StatelessWidget {
                           color: Color(0xFFFFB800), size: 20),
                       const SizedBox(width: 4),
                       Text(
-                        rating > 0 ? rating.toStringAsFixed(1) : '4.5',
+                        rating.toStringAsFixed(1),
                         style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,

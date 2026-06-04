@@ -44,10 +44,14 @@ class EjercicioRepositoryImpl implements EjercicioRepository {
   int nextOpcionId() => _service.nextOpcionId();
 
   @override
-  Future<void> addEjercicio(
-      Ejercicio ejercicio, List<Pregunta> preguntas, List<Opcion> opciones) async {
+  Future<void> addEjercicio(Ejercicio ejercicio, List<Pregunta> preguntas,
+      List<Opcion> opciones) async {
     if (SupabaseClientHelper.isConfigured) {
       try {
+        // 1. Insertar ejercicio en Supabase
+        debugPrint('[EjercicioRepo] Insertando ejercicio: ${ejercicio.titulo}, '
+            'tipo: ${ejercicio.tipo.name}, idCapitulo: ${ejercicio.idCapitulo}');
+
         final ejRes = await SupabaseClientHelper.client
             .from('tbl_ejercicio')
             .insert({
@@ -59,56 +63,113 @@ class EjercicioRepositoryImpl implements EjercicioRepository {
             .select()
             .single();
 
-        final insertedEj = EjercicioDto.fromJson(ejRes);
-        _service.addEjercicio(insertedEj);
+        debugPrint('[EjercicioRepo] Ejercicio insertado en Supabase: $ejRes');
 
-        // Agregar preguntas y opciones
+        final insertedEj = EjercicioDto.fromJson(ejRes);
+        final int supabaseEjId = insertedEj.idEjercicio;
+
+        // 2. Insertar preguntas y opciones secuencialmente
+        final List<Pregunta> preguntasConIds = [];
+        final List<Opcion> opcionesConIds = [];
+
         for (var p in preguntas) {
+          debugPrint('[EjercicioRepo] Insertando pregunta: ${p.contenido}');
+
           final pRes = await SupabaseClientHelper.client
               .from('tbl_pregunta')
               .insert({
-                'idejerciciofk': insertedEj.idEjercicio,
+                'idejerciciofk': supabaseEjId,
                 'contenido': p.contenido,
                 'explicacion': p.explicacion,
               })
               .select()
               .single();
 
-          final localP = Pregunta(
-            idPregunta: pRes['idpregunta'],
-            idEjercicioFk: insertedEj.idEjercicio,
-            contenido: p.contenido,
-            explicacion: p.explicacion,
-            opciones: p.opciones,
-          );
-          _service.addPregunta(localP);
+          debugPrint('[EjercicioRepo] Pregunta insertada: $pRes');
 
-          final ops = opciones.where((o) => o.idPreguntaFk == p.idPregunta);
-          for (var o in ops) {
+          final int supabasePregId = pRes['idpregunta'] as int;
+
+          // Buscar opciones que corresponden a esta pregunta por el ID local
+          final opsForPregunta =
+              opciones.where((o) => o.idPreguntaFk == p.idPregunta).toList();
+          debugPrint(
+              '[EjercicioRepo] Opciones para pregunta ${p.idPregunta}: ${opsForPregunta.length}');
+
+          final List<Opcion> opcionesDePregunta = [];
+          for (var o in opsForPregunta) {
             final oRes = await SupabaseClientHelper.client
                 .from('tbl_opcion')
                 .insert({
-                  'idpreguntafk': pRes['idpregunta'],
+                  'idpreguntafk': supabasePregId,
                   'contenido': o.contenido,
                   'correcta': o.correcta,
                 })
                 .select()
                 .single();
 
+            debugPrint('[EjercicioRepo] Opcion insertada: $oRes');
+
             final localO = Opcion(
-              idOpcion: oRes['idopcion'],
-              idPreguntaFk: pRes['idpregunta'],
+              idOpcion: oRes['idopcion'] as int,
+              idPreguntaFk: supabasePregId,
               contenido: o.contenido,
-              correcta: o.correcta,
+              correcta: (oRes['correcta'] is int)
+                  ? oRes['correcta'] == 1
+                  : oRes['correcta'] == true,
             );
-            _service.addOpcion(localO);
+            opcionesDePregunta.add(localO);
+            opcionesConIds.add(localO);
           }
+
+          final localP = Pregunta(
+            idPregunta: supabasePregId,
+            idEjercicioFk: supabaseEjId,
+            contenido: p.contenido,
+            explicacion: p.explicacion,
+            opciones: opcionesDePregunta,
+          );
+          preguntasConIds.add(localP);
         }
-      } catch (e) {
-        if (kDebugMode) print('Error insert Ejercicio Supabase: $e');
+
+        // 3. Crear ejercicio final con preguntas y opciones reales de Supabase
+        final ejercicioFinal = Ejercicio(
+          idEjercicio: supabaseEjId,
+          idCapitulo: insertedEj.idCapitulo,
+          tipo: insertedEj.tipo,
+          titulo: insertedEj.titulo,
+          descripcion: insertedEj.descripcion,
+          preguntas: preguntasConIds,
+        );
+
+        // 4. Guardar en memoria local
+        _service.ejercicios.add(ejercicioFinal);
+        _service.preguntas.addAll(preguntasConIds);
+        _service.opciones.addAll(opcionesConIds);
+
+        // Actualizar capítulo si existe
+        final capIdx = _service.capitulos
+            .indexWhere((c) => c.idCapitulo == ejercicioFinal.idCapitulo);
+        if (capIdx != -1) {
+          final cap = _service.capitulos[capIdx];
+          _service.capitulos[capIdx] = cap.copyWith(
+            ejercicios: [...cap.ejercicios, ejercicioFinal],
+          );
+        }
+
+        _service.save();
+        _service.notifyListeners();
+
+        debugPrint(
+            '[EjercicioRepo] Ejercicio guardado localmente y notificado. '
+            'Total ejercicios: ${_service.ejercicios.length}');
+      } catch (e, stackTrace) {
+        debugPrint(
+            '[EjercicioRepo] ERROR insertando ejercicio en Supabase: $e');
+        debugPrint('[EjercicioRepo] StackTrace: $stackTrace');
+        rethrow; // Propagar el error para que la UI lo sepa
       }
     } else {
-      // Persiste opciones
+      // Sin Supabase: persistir localmente
       for (final o in opciones) {
         _service.addOpcion(o);
       }
@@ -130,7 +191,7 @@ class EjercicioRepositoryImpl implements EjercicioRepository {
             .delete()
             .eq('idejercicio', idEjercicio);
       } catch (e) {
-        if (kDebugMode) print('Error remove Ejercicio Supabase: $e');
+        debugPrint('[EjercicioRepo] Error eliminando ejercicio: $e');
       }
     }
     _service.removeEjercicio(idEjercicio);

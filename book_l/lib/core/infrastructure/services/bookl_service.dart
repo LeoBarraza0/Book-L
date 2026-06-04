@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:book_l/features/auth/infrastructure/adapters/out/dtos/usuario_dto.dart';
 import 'package:book_l/features/auth/domain/models/usuario.dart';
 import 'package:book_l/features/curso/infrastructure/adapters/out/dtos/curso_dto.dart';
@@ -1045,6 +1044,10 @@ class BooklService extends ChangeNotifier {
     }
   }
 
+  void save() {
+    _save();
+  }
+
   void desasociarLeccion(int idCurso, int idLeccion) {
     leccionesCursos.removeWhere(
       (e) => e['id_curso'] == idCurso && e['id_leccion'] == idLeccion,
@@ -1393,17 +1396,14 @@ class BooklService extends ChangeNotifier {
 
       if (SupabaseClientHelper.isConfigured) {
         try {
-          SupabaseClientHelper.client
-              .from('tbl_notificacion')
-              .insert({
-                'idusuariofk': idSeguido,
-                'tipo': 'follow',
-                'idreferencia': idSeguidor,
-                'mensaje': '$nombreSeguidor ha comenzado a seguirte.',
-                'leida': false,
-              })
-              .then((_) => null,
-                  onError: (e) => debugPrint("Supabase notif error: $e"));
+          SupabaseClientHelper.client.from('tbl_notificacion').insert({
+            'idusuariofk': idSeguido,
+            'tipo': 'follow',
+            'idreferencia': idSeguidor,
+            'mensaje': '$nombreSeguidor ha comenzado a seguirte.',
+            'leida': false,
+          }).then((_) => null,
+              onError: (e) => debugPrint("Supabase notif error: $e"));
         } catch (e) {
           debugPrint("Error syncing follow notification: $e");
         }
@@ -1486,20 +1486,17 @@ class BooklService extends ChangeNotifier {
 
     if (SupabaseClientHelper.isConfigured) {
       try {
-        SupabaseClientHelper.client
-            .from('tbl_notificacion')
-            .insert({
-              'idusuariofk': idUsuarioDestino,
-              'tipo': tipo,
-              'mensaje': mensaje,
-              if (idReferencia != null) 'idreferencia': idReferencia,
-              if (idCursoFk != null) 'idcursofk': idCursoFk,
-              if (idLeccionFk != null) 'idleccionfk': idLeccionFk,
-              if (idComentarioFk != null) 'idcomentariofk': idComentarioFk,
-              'leida': false,
-            })
-            .then((_) => null,
-                onError: (e) => debugPrint("Supabase notif error: $e"));
+        SupabaseClientHelper.client.from('tbl_notificacion').insert({
+          'idusuariofk': idUsuarioDestino,
+          'tipo': tipo,
+          'mensaje': mensaje,
+          if (idReferencia != null) 'idreferencia': idReferencia,
+          if (idCursoFk != null) 'idcursofk': idCursoFk,
+          if (idLeccionFk != null) 'idleccionfk': idLeccionFk,
+          if (idComentarioFk != null) 'idcomentariofk': idComentarioFk,
+          'leida': false,
+        }).then((_) => null,
+            onError: (e) => debugPrint("Supabase notif error: $e"));
       } catch (e) {
         debugPrint("Error syncing notification: $e");
       }
@@ -1734,6 +1731,17 @@ class BooklService extends ChangeNotifier {
         lecciones[iLeccion] = lecciones[iLeccion]
             .copyWith(rating: double.parse(nuevoPromedio.toStringAsFixed(1)));
         nuevoPromedio = lecciones[iLeccion].rating;
+        if (SupabaseClientHelper.isConfigured) {
+          try {
+            SupabaseClientHelper.client
+                .from('tbl_leccion')
+                .update({'rating': nuevoPromedio})
+                .eq('idleccion', idObjeto)
+                .then((_) => null, onError: (e) => debugPrint("Supabase error rating leccion: $e"));
+          } catch (e) {
+            debugPrint("Error sync leccion rating: $e");
+          }
+        }
       }
     } else if (tipoObjeto == 'curso') {
       final iCurso = cursos.indexWhere((c) => c.idCurso == idObjeto);
@@ -1741,6 +1749,17 @@ class BooklService extends ChangeNotifier {
         cursos[iCurso] = cursos[iCurso]
             .copyWith(rating: double.parse(nuevoPromedio.toStringAsFixed(1)));
         nuevoPromedio = cursos[iCurso].rating;
+        if (SupabaseClientHelper.isConfigured) {
+          try {
+            SupabaseClientHelper.client
+                .from('tbl_curso')
+                .update({'rating': nuevoPromedio})
+                .eq('idcurso', idObjeto)
+                .then((_) => null, onError: (e) => debugPrint("Supabase error rating curso: $e"));
+          } catch (e) {
+            debugPrint("Error sync curso rating: $e");
+          }
+        }
       }
     }
 

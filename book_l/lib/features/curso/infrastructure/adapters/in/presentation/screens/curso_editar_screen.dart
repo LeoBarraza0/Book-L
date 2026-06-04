@@ -7,7 +7,7 @@ import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/
 import 'package:book_l/shared/widgets/seccion_editor_widget.dart';
 import 'package:book_l/features/leccion/infrastructure/adapters/in/presentation/widgets/agregar_seccion_button.dart';
 
-import 'package:book_l/core/infrastructure/services/bookl_service.dart';
+import 'package:book_l/core/infrastructure/services/supabase_client.dart';
 import 'package:book_l/core/infrastructure/storage/local_storage.dart';
 import 'package:book_l/features/leccion/domain/models/leccion.dart';
 import 'package:book_l/features/curso/domain/models/curso.dart';
@@ -97,25 +97,34 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
     );
 
     // Sección inicial por defecto
-    _secciones.add(
-      SeccionData(
-        titulo: 'Introducción',
-        cuerpo:
-            'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean.',
-      ),
-    );
+    if (widget.idCurso != null && _cursoOriginal?.contenido != null) {
+      for (final secJson in _cursoOriginal!.contenido!) {
+        _secciones.add(SeccionData.fromJson(secJson));
+      }
+    } else {
+      _secciones.add(SeccionData(titulo: 'Introducción'));
+    }
   }
 
   Future<void> _cambiarImagen() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null && _cursoOriginal != null) {
+      // Mostrar la imagen localmente inmediatamente
       setState(() {
         _cursoOriginal = _cursoOriginal!.copyWith(imagenUrl: picked.path);
       });
-      // Persistir el cambio inmediatamente
-      // Persistir el cambio mediante el controlador
-      _cursoCtrl.editarCurso(_cursoOriginal!);
+      // Subir a Supabase para obtener URL pública permanente
+      final url = await SupabaseClientHelper.uploadFile(
+        'bookl-medias',
+        picked.path,
+        fileName: picked.name,
+      );
+      if (url != null && mounted) {
+        setState(() {
+          _cursoOriginal = _cursoOriginal!.copyWith(imagenUrl: url);
+        });
+      }
     }
   }
 
@@ -140,6 +149,34 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
   void _refreshLeccionesLocales() {
     if (widget.idCurso != null) {
       _leccionesDelCurso = List.from(_cursoCtrl.leccionesDeCurso);
+    }
+  }
+
+  Future<void> _guardarCurso() async {
+    if (_tituloCtrl.text.trim().isEmpty) {
+      FeedbackUtils.showErrorSnackBar(context, 'El título no puede estar vacío');
+      return;
+    }
+
+    try {
+      final contenido = _secciones.map((s) => s.toJson()).toList();
+
+      if (_cursoOriginal != null) {
+        final cursoActualizado = _cursoOriginal!.copyWith(
+          nombre: _tituloCtrl.text.trim(),
+          contenido: contenido,
+        );
+        await _cursoCtrl.editarCurso(cursoActualizado);
+      }
+
+      if (mounted) {
+        FeedbackUtils.showSuccessSnackBar(context, 'Curso guardado exitosamente');
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        FeedbackUtils.showErrorSnackBar(context, 'Error al guardar: $e');
+      }
     }
   }
 
@@ -538,9 +575,9 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
               child: const Icon(Icons.person, color: Colors.white, size: 18),
             ),
             const SizedBox(width: 8),
-            const Text(
-              'Ema Nuel',
-              style: TextStyle(
+            Text(
+              AppSession().nombreCompleto ?? 'Usuario',
+              style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -554,9 +591,9 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
                 color: const Color(0xFF79AC63),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text(
-                'Estudiante',
-                style: TextStyle(
+              child: Text(
+                AppSession().rol ?? 'Estudiante',
+                style: const TextStyle(
                   fontFamily: 'Inter',
                   color: Colors.white,
                   fontSize: 10,
@@ -568,7 +605,9 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
             const Icon(Icons.star, color: Color(0xFFF6B55C), size: 14),
             const SizedBox(width: 3),
             Text(
-              (_cursoOriginal?.rating ?? 4.5).toString(),
+              _cursoOriginal != null && _cursoOriginal!.rating > 0 
+                  ? _cursoOriginal!.rating.toStringAsFixed(1) 
+                  : 'Nuevo',
               style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 14,
@@ -600,8 +639,8 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
           child: _StatCard(
             color: const Color(0xFFFEB95C),
             icon: Icons.star_border,
-            title: 'Rate: ${_cursoOriginal?.rating ?? 4.5}',
-            subtitle: '167 comentarios',
+            title: 'Rate: ${_cursoOriginal != null && _cursoOriginal!.rating > 0 ? _cursoOriginal!.rating.toStringAsFixed(1) : 'Nuevo'}',
+            subtitle: '0 comentarios',
           ),
         ),
       ],
@@ -730,10 +769,7 @@ class _CursoEditarScreenState extends State<CursoEditarScreen>
         ScaleTransition(
           scale: _guardarScaleAnim,
           child: _GuardarButton(
-            onTap: () {
-              FeedbackUtils.showSuccessSnackBar(
-                  context, 'Curso guardado exitosamente');
-            },
+            onTap: _guardarCurso,
           ),
         ),
       ],
