@@ -33,7 +33,10 @@ class _CursoDetailScreenState extends State<CursoDetailScreen> {
   void initState() {
     super.initState();
     if (widget.idCurso != null) {
-      _ctrl.seleccionarCurso(widget.idCurso!);
+      _ctrl.prepararCurso(widget.idCurso!);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _ctrl.seleccionarCurso(widget.idCurso!);
+      });
     }
   }
 

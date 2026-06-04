@@ -59,6 +59,31 @@ class _LeccionEditarScreenState extends State<LeccionEditarScreen>
 
     // Cargar lección existente si viene ID
     if (widget.idLeccion != null) {
+      _leccionCtrl.prepararLeccion(widget.idLeccion!);
+      final cachedL = _leccionCtrl.state.selected;
+      if (cachedL != null) {
+        _leccionActual = cachedL;
+        _tituloCtrl.text = cachedL.nombre;
+
+        _secciones.clear();
+        if (cachedL.contenido != null && cachedL.contenido!.isNotEmpty) {
+          for (final s in cachedL.contenido!) {
+            _secciones.add(SeccionData.fromJson(s));
+          }
+        } else {
+          _secciones.add(SeccionData(titulo: 'Introducción'));
+        }
+
+        _capitulosEnMemoria.clear();
+        _capitulosEnMemoria.addAll(_leccionCtrl.capitulosDeLeccion);
+
+        // Cargar materiales existentes
+        _materialesEnMemoria.clear();
+        _materialesEnMemoria.addAll(
+          _leccionCtrl.materialesDeLeccion(cachedL.idLeccion),
+        );
+      }
+
       _leccionCtrl.seleccionarLeccion(widget.idLeccion!).then((_) {
         final l = _leccionCtrl.state.selected;
         if (l != null && mounted) {

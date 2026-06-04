@@ -42,6 +42,7 @@ class _LeccionDetailScreenState extends State<LeccionDetailScreen> {
   void initState() {
     super.initState();
     if (widget.idLeccion != null) {
+      _ctrl.prepararLeccion(widget.idLeccion!);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _ctrl.seleccionarLeccion(widget.idLeccion!);
       });
