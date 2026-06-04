@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:book_l/shared/widgets/nav_bar.dart';
 import '../controller/leccion_controller.dart';
 import 'package:book_l/features/leccion/domain/models/leccion.dart';
 import 'package:book_l/shared/widgets/search_filter_bar.dart';
+import 'package:provider/provider.dart';
 
 class AdminLeccionScreen extends StatefulWidget {
   const AdminLeccionScreen({super.key});
@@ -29,7 +31,9 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
   @override
   void initState() {
     super.initState();
-    _leccionCtrl.cargarLecciones();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _leccionCtrl.cargarLecciones();
+    });
   }
 
   @override
@@ -219,6 +223,15 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
     );
   }
 
+  Widget _defaultThumb() {
+    return Container(
+      width: 72,
+      height: 72,
+      color: const Color(0xFF7BC85A),
+      child: const Icon(Icons.menu_book_rounded, color: Colors.white, size: 32),
+    );
+  }
+
   Widget _buildLeccionCard(BuildContext context, Leccion item) {
     final nCapitulos = _leccionCtrl.capitulosDe(item.idLeccion).length;
 
@@ -250,15 +263,19 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Thumbnail
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF7BC85A),
-                    borderRadius: BorderRadius.circular(10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    width: 72,
+                    height: 72,
+                    child: item.imagenUrl != null && item.imagenUrl!.isNotEmpty
+                        ? Image.network(
+                            item.imagenUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _defaultThumb(),
+                          )
+                        : _defaultThumb(),
                   ),
-                  child: const Icon(Icons.menu_book_rounded,
-                      color: Colors.white, size: 32),
                 ),
                 const SizedBox(width: 12),
 
@@ -309,15 +326,19 @@ class _AdminLeccionScreenState extends State<AdminLeccionScreen> {
                             fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(height: 3),
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.star, size: 13, color: Color(0xFFF6B55C)),
-                          SizedBox(width: 3),
-                          Text('4.9',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF111111))),
+                          const Icon(Icons.star, size: 13, color: Color(0xFFF6B55C)),
+                          const SizedBox(width: 3),
+                          Text(
+                            item.rating > 0
+                                ? item.rating.toStringAsFixed(1)
+                                : 'Sin calificación',
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF111111)),
+                          ),
                         ],
                       ),
                     ],

@@ -47,18 +47,18 @@ class LeccionController extends ChangeNotifier {
   }
 
   void _onServiceChanged() {
+    final localItems = BooklService().lecciones;
+    state = state.copyWith(items: localItems);
+
     if (state.selected != null) {
       try {
         final leccionLocal = BooklService()
             .lecciones
             .firstWhere((l) => l.idLeccion == state.selected!.idLeccion);
-        if (state.selected!.rating != leccionLocal.rating ||
-            state.selected!.estudiantes != leccionLocal.estudiantes) {
-          state = state.copyWith(selected: leccionLocal);
-          notifyListeners();
-        }
+        state = state.copyWith(selected: leccionLocal);
       } catch (_) {}
     }
+    notifyListeners();
   }
 
   // ── Repositorio (acceso directo para operaciones síncronas) ────────────────

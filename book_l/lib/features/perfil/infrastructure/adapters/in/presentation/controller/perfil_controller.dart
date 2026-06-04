@@ -103,11 +103,26 @@ class PerfilController extends ChangeNotifier {
       _repo.getCursosDeUsuario(idUsuario);
 
   // ══════════════════════════════════════════════════════════════════════════
-  // SESSION
+  // DESACTIVAR CUENTA
   // ══════════════════════════════════════════════════════════════════════════
+
+  /// Desactiva la cuenta del usuario actual: setea `activo = false` en
+  /// memoria y sincroniza con Supabase mediante BooklService.updateUsuario.
+  /// Luego cierra la sesión.
+  Future<void> desactivarCuenta(int idUsuario) async {
+    final usuario = getUsuarioById(idUsuario);
+    if (usuario == null) return;
+
+    // Marcar como inactivo en memoria + Supabase
+    final desactivado = usuario.copyWith(activo: false);
+    BooklService().updateUsuario(desactivado);
+
+    notifyListeners();
+  }
 
   /// Rol actual de la sesión.
   String get currentRole => _repo.currentRole;
+
 
   @override
   // ignore: must_call_super

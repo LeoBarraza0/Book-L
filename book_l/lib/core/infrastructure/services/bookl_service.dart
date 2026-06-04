@@ -281,25 +281,30 @@ class BooklService extends ChangeNotifier {
     }
 
     if (data.containsKey('progreso_usuario')) {
-      progresoUsuario =
-          List<Map<String, dynamic>>.from(data['progreso_usuario']);
+      progresoUsuario = (data['progreso_usuario'] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } else {
       progresoUsuario = [];
     }
     if (data.containsKey('respuestas_usuario')) {
-      respuestasUsuario =
-          List<Map<String, dynamic>>.from(data['respuestas_usuario']);
+      respuestasUsuario = (data['respuestas_usuario'] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } else {
       respuestasUsuario = [];
     }
     if (data.containsKey('guardados')) {
-      guardados = List<Map<String, dynamic>>.from(data['guardados']);
+      guardados = (data['guardados'] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } else {
       guardados = [];
     }
     if (data.containsKey('guardados_cursos')) {
-      guardadosCursos =
-          List<Map<String, dynamic>>.from(data['guardados_cursos']);
+      guardadosCursos = (data['guardados_cursos'] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } else {
       guardadosCursos = [];
     }
@@ -432,7 +437,9 @@ class BooklService extends ChangeNotifier {
               })
           .toList();
 
-      seguidores = List<Map<String, dynamic>>.from(results[7] as List);
+      seguidores = (results[7] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
       discusiones =
           (results[8] as List).map((e) => DiscusionDto.fromJson(e)).toList();
       comentarios =
@@ -466,13 +473,21 @@ class BooklService extends ChangeNotifier {
             )),
       ];
 
-      progresoUsuario = List<Map<String, dynamic>>.from(results[16] as List);
-      respuestasUsuario = List<Map<String, dynamic>>.from(results[17] as List);
-      guardados = List<Map<String, dynamic>>.from(results[18] as List);
-      guardadosCursos = List<Map<String, dynamic>>.from(results[19] as List);
+      progresoUsuario = (results[16] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      respuestasUsuario = (results[17] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      guardados = (results[18] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      guardadosCursos = (results[19] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
 
       rachas = (results[20] as List)
-          .map((e) => {
+          .map<Map<String, dynamic>>((e) => <String, dynamic>{
                 'id_usuario': toInt(e['idusuario'] ?? e['id_usuario']),
                 'racha_actual':
                     toInt(e['currentstreak'] ?? e['current_streak']),
@@ -487,7 +502,7 @@ class BooklService extends ChangeNotifier {
           .toList();
 
       notificaciones = (results[21] as List)
-          .map((e) => {
+          .map<Map<String, dynamic>>((e) => <String, dynamic>{
                 'id': toInt(e['idnotificacion'] ?? e['id_notificacion']),
                 'id_usuario_fk': toInt(e['idusuariofk'] ?? e['id_usuario_fk']),
                 'tipo': e['tipo'] as String,
@@ -1289,6 +1304,113 @@ class BooklService extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ── Operaciones Calificación ───────────────────────────────────────────────
+  /// Agrega o actualiza la calificación de un usuario para una lección o curso.
+  /// Recalcula el promedio en memoria y notifica a los listeners.
+  /// Retorna (nuevoPromedio, esActualizacion).
+  Future<(double, bool)> agregarOActualizarCalificacion(
+    int idObjeto,
+    String tipoObjeto,
+    int idUsuario,
+    int valor,
+  ) async {
+    // 1. Buscar si ya existe una calificación del usuario para este objeto
+    final idx = calificaciones.indexWhere((c) =>
+        c.idObjetoFk == idObjeto &&
+        c.tipoObjeto == tipoObjeto &&
+        c.idUsuarioFk == idUsuario);
+
+    final bool esActualizacion = idx != -1;
+
+    if (esActualizacion) {
+      // Actualizar en memoria
+      calificaciones[idx] = calificaciones[idx].copyWith(valor: valor);
+    } else {
+      // Insertar nueva calificación en memoria con ID temporal
+      final nuevoId = generateId();
+      calificaciones.add(
+        Calificacion(
+          idCalificacion: nuevoId,
+          idObjetoFk: idObjeto,
+          tipoObjeto: tipoObjeto,
+          idUsuarioFk: idUsuario,
+          valor: valor,
+        ),
+      );
+    }
+
+    // 2. Recalcular promedio para el objeto afectado
+    final cals = calificaciones
+        .where((c) => c.tipoObjeto == tipoObjeto && c.idObjetoFk == idObjeto)
+        .toList();
+    double promedio = 0.0;
+    if (cals.isNotEmpty) {
+      final suma = cals.fold<int>(0, (sum, c) => sum + c.valor);
+      promedio = double.parse((suma / cals.length).toStringAsFixed(1));
+    }
+
+    // 3. Actualizar el objeto en memoria con el nuevo rating
+    if (tipoObjeto == 'leccion') {
+      final lIdx = lecciones.indexWhere((l) => l.idLeccion == idObjeto);
+      if (lIdx != -1) {
+        lecciones[lIdx] = lecciones[lIdx].copyWith(rating: promedio);
+      }
+    } else if (tipoObjeto == 'curso') {
+      final cIdx = cursos.indexWhere((c) => c.idCurso == idObjeto);
+      if (cIdx != -1) {
+        cursos[cIdx] = cursos[cIdx].copyWith(rating: promedio);
+      }
+    }
+
+    _save();
+    notifyListeners();
+
+    // 4. Sincronizar con Supabase (el upsert ya fue hecho por el repositorio,
+    //    pero aquí actualizamos el id si Supabase devuelve el registro real)
+    if (SupabaseClientHelper.isConfigured && !esActualizacion) {
+      try {
+        final table = tipoObjeto == 'curso'
+            ? 'tbl_calificacion_curso'
+            : 'tbl_calificacion_leccion';
+        final fkField = tipoObjeto == 'curso' ? 'idcursofk' : 'idleccionfk';
+        final constraintCols = tipoObjeto == 'curso'
+            ? 'idusuariofk,idcursofk'
+            : 'idusuariofk,idleccionfk';
+
+        final response = await SupabaseClientHelper.client
+            .from(table)
+            .upsert(
+              <String, dynamic>{
+                'idusuariofk': idUsuario,
+                fkField: idObjeto,
+                'valor': valor,
+              },
+              onConflict: constraintCols,
+            )
+            .select()
+            .single();
+
+        // Reemplazar el registro temporal con el ID real de Supabase
+        final realId = (response['idcalificacion'] ?? response['id_calificacion']) as int?;
+        if (realId != null) {
+          final tempIdx = calificaciones.indexWhere((c) =>
+              c.idObjetoFk == idObjeto &&
+              c.tipoObjeto == tipoObjeto &&
+              c.idUsuarioFk == idUsuario);
+          if (tempIdx != -1) {
+            calificaciones[tempIdx] =
+                calificaciones[tempIdx].copyWith(idCalificacion: realId);
+            _save();
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error sync calificacion Supabase: $e');
+      }
+    }
+
+    return (promedio, esActualizacion);
+  }
+
   // ── Operaciones Discusión ─────────────────────────────────────────────────
   void addDiscusion(Discusion d, {bool syncToSupabase = true}) {
     discusiones.add(d);
@@ -1606,12 +1728,12 @@ class BooklService extends ChangeNotifier {
   }
 
   // ── Operaciones Material Educativo ──────────────────────────────────────────
-  void addMaterial(MaterialEducativo m) {
+  void addMaterial(MaterialEducativo m, {bool syncToSupabase = true}) {
     materiales.add(m);
     _save();
     notifyListeners();
 
-    if (SupabaseClientHelper.isConfigured) {
+    if (syncToSupabase && SupabaseClientHelper.isConfigured) {
       try {
         final matMap = <String, dynamic>{
           'idmaterial': m.idMaterial,
@@ -1633,14 +1755,25 @@ class BooklService extends ChangeNotifier {
     }
   }
 
-  void updateMaterial(MaterialEducativo m) {
+  void replaceMaterial(int oldId, MaterialEducativo newMaterial) {
+    final idx = materiales.indexWhere((x) => x.idMaterial == oldId);
+    if (idx != -1) {
+      materiales[idx] = newMaterial;
+    } else {
+      materiales.add(newMaterial);
+    }
+    _save();
+    notifyListeners();
+  }
+
+  void updateMaterial(MaterialEducativo m, {bool syncToSupabase = true}) {
     final idx = materiales.indexWhere((x) => x.idMaterial == m.idMaterial);
     if (idx != -1) {
       materiales[idx] = m;
       _save();
       notifyListeners();
 
-      if (SupabaseClientHelper.isConfigured) {
+      if (syncToSupabase && SupabaseClientHelper.isConfigured) {
         try {
           final matUpdateMap = <String, dynamic>{
             'nombre': m.nombre,
@@ -1662,12 +1795,12 @@ class BooklService extends ChangeNotifier {
     }
   }
 
-  void removeMaterial(int id) {
+  void removeMaterial(int id, {bool syncToSupabase = true}) {
     materiales.removeWhere((m) => m.idMaterial == id);
     _save();
     notifyListeners();
 
-    if (SupabaseClientHelper.isConfigured) {
+    if (syncToSupabase && SupabaseClientHelper.isConfigured) {
       try {
         SupabaseClientHelper.client
             .from('tbl_material')
@@ -1683,70 +1816,5 @@ class BooklService extends ChangeNotifier {
 
   List<MaterialEducativo> materialesDeLeccion(int idLeccion) {
     return materiales.where((m) => m.idLeccionFk == idLeccion).toList();
-  }
-
-  // ── Calificaciones (Reseñas Dinámicas) ─────────────────────────────────────
-  Future<(double, bool)> agregarOActualizarCalificacion(
-      int idObjeto, String tipoObjeto, int idUsuario, int valor) async {
-    bool isUpdate = false;
-    final index = calificaciones.indexWhere((c) =>
-        c.idObjetoFk == idObjeto &&
-        c.tipoObjeto == tipoObjeto &&
-        c.idUsuarioFk == idUsuario);
-
-    if (index >= 0) {
-      calificaciones[index] = calificaciones[index].copyWith(valor: valor);
-      isUpdate = true;
-    } else {
-      final newId = calificaciones.isEmpty
-          ? 1
-          : calificaciones
-                  .map((c) => c.idCalificacion)
-                  .reduce((a, b) => a > b ? a : b) +
-              1;
-      calificaciones.add(Calificacion(
-        idCalificacion: newId,
-        idObjetoFk: idObjeto,
-        tipoObjeto: tipoObjeto,
-        idUsuarioFk: idUsuario,
-        valor: valor,
-      ));
-    }
-
-    final calificacionesDelObjeto = calificaciones
-        .where((c) => c.idObjetoFk == idObjeto && c.tipoObjeto == tipoObjeto)
-        .toList();
-
-    double nuevoPromedio = 0.0;
-    if (calificacionesDelObjeto.isNotEmpty) {
-      final suma =
-          calificacionesDelObjeto.fold<int>(0, (sum, c) => sum + c.valor);
-      nuevoPromedio = suma / calificacionesDelObjeto.length;
-    }
-
-    if (tipoObjeto == 'leccion') {
-      final iLeccion = lecciones.indexWhere((l) => l.idLeccion == idObjeto);
-      if (iLeccion >= 0) {
-        lecciones[iLeccion] = lecciones[iLeccion]
-            .copyWith(rating: double.parse(nuevoPromedio.toStringAsFixed(1)));
-        nuevoPromedio = lecciones[iLeccion].rating;
-        // Nota: tbl_leccion no tiene columna 'rating' en Supabase.
-        // El rating se calcula desde tbl_calificacion_leccion.
-      }
-    } else if (tipoObjeto == 'curso') {
-      final iCurso = cursos.indexWhere((c) => c.idCurso == idObjeto);
-      if (iCurso >= 0) {
-        cursos[iCurso] = cursos[iCurso]
-            .copyWith(rating: double.parse(nuevoPromedio.toStringAsFixed(1)));
-        nuevoPromedio = cursos[iCurso].rating;
-        // Nota: tbl_curso no tiene columna 'rating' en Supabase.
-        // El rating se calcula desde tbl_calificacion_curso.
-      }
-    }
-
-    await _save();
-    notifyListeners();
-
-    return (nuevoPromedio, isUpdate);
   }
 }

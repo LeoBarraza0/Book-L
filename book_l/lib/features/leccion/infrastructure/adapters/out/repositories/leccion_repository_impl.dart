@@ -180,10 +180,11 @@ class LeccionRepositoryImpl implements LeccionRepository {
 
   @override
   int agregarMaterial(MaterialEducativo material) {
+    final tempId = _service.nextMaterialId();
+    final nuevo = material.copyWith(idMaterial: tempId);
+    _service.addMaterial(nuevo, syncToSupabase: false);
+
     if (SupabaseClientHelper.isConfigured) {
-      // Es sincrono en el puerto? Si es sincrono, no podemos usar await a menos que cambiemos la firma.
-      // Ya que devuelve int y no Future<int>, solo podemos hacerlo asincrono de fondo o fallback local.
-      // Lo mejor es lanzar fire-and-forget si la firma no es Future.
       SupabaseClientHelper.client
           .from('tbl_material')
           .insert(_materialToSupabaseMap(material))
@@ -191,15 +192,12 @@ class LeccionRepositoryImpl implements LeccionRepository {
           .single()
           .then((res) {
         final insertado = MaterialDto.fromJson(res);
-        _service.addMaterial(insertado);
+        _service.replaceMaterial(tempId, insertado);
       }).catchError((e) {
         if (kDebugMode) print('Error agregarMaterial Supabase: $e');
       });
     }
-    final id = _service.nextMaterialId();
-    final nuevo = material.copyWith(idMaterial: id);
-    _service.addMaterial(nuevo);
-    return id;
+    return tempId;
   }
 
   @override
@@ -213,7 +211,7 @@ class LeccionRepositoryImpl implements LeccionRepository {
         if (kDebugMode) print('Error actualizarMaterial Supabase: $e');
       });
     }
-    _service.updateMaterial(material);
+    _service.updateMaterial(material, syncToSupabase: false);
   }
 
   @override
@@ -227,7 +225,7 @@ class LeccionRepositoryImpl implements LeccionRepository {
         if (kDebugMode) print('Error eliminarMaterial Supabase: $e');
       });
     }
-    _service.removeMaterial(idMaterial);
+    _service.removeMaterial(idMaterial, syncToSupabase: false);
   }
 
   // ── Utilidades ─────────────────────────────────────────────────────────────
