@@ -33,8 +33,8 @@ import 'package:book_l/features/reportes/infrastructure/adapters/in/presentation
 import 'package:book_l/features/reportes/infrastructure/adapters/in/presentation/screens/reporte_detail_screen.dart';
 
 import 'package:book_l/features/onboarding/infrastructure/adapters/in/presentation/screens/bienvenida_screen.dart';
-import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/recuperar_correo_screen.dart';
-import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/recuperar_numero_screen.dart';
+// import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/recuperar_correo_screen.dart';
+// import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/recuperar_numero_screen.dart';
 import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/ingresar_codigo_screen.dart';
 import 'package:book_l/features/auth/infrastructure/adapters/in/presentation/screens/cambiar_password_screen.dart';
 
@@ -192,10 +192,6 @@ class BookLApp extends StatelessWidget {
               routes: {
                 '/bienvenida': (context) => const BienvenidaScreen(),
                 '/login': (context) => const LoginScreen(),
-                '/recuperar_correo': (context) => const RecuperarCorreoScreen(),
-                '/recuperar_numero': (context) => const RecuperarNumeroScreen(),
-                '/ingresar_codigo': (context) => const IngresarCodigoScreen(),
-                '/cambiar_password': (context) => const CambiarPasswordScreen(),
                 '/register': (context) => const RegisterScreen(),
                 '/home': (context) => const HomeScreen(),
                 '/notificaciones': (context) => const NotificacionScreen(),

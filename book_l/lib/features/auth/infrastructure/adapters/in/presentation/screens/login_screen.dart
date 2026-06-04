@@ -136,66 +136,6 @@ class _LoginScreenState extends State<LoginScreen> {
             onPressed: _ctrl.isLoading ? null : _onLogin,
           ),
           const SizedBox(height: 25),
-
-          const Text(
-            '¿Olvidaste la contraseña?',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF555555),
-              letterSpacing: 0.1,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 2),
-
-          GestureDetector(
-            onTap: () async {
-              final email = _emailController.text.trim();
-              if (email.isNotEmpty) {
-                try {
-                  // Busca el usuario en la BD en memoria (BooklService) según arquitectura
-                  final user = BooklService()
-                      .usuarios
-                      .firstWhere((u) => u.correo == email);
-
-                  if (!mounted) return;
-
-                  final String phone = user.celular?.toString() ?? '';
-                  _ctrl.setRecoveryData(email, phone);
-                  Navigator.pushNamed(context, '/recuperar_correo');
-                } catch (e) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('No existe una cuenta con este correo'),
-                      backgroundColor: Color(0xFFFF5252),
-                    ),
-                  );
-                }
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Ingresa tu correo para recuperarlo'),
-                    backgroundColor: Color(0xFFFF5252),
-                  ),
-                );
-              }
-            },
-            child: const Text(
-              'Recuperar contraseña',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4DC130),
-                decoration: TextDecoration.underline,
-                decorationColor: Color(0xFF4DC130),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 28),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -224,6 +164,16 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
           const SizedBox(height: 20),
+          const Text(
+            'Powered by Qbits',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: Colors.grey,
+              letterSpacing: 0.1,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
