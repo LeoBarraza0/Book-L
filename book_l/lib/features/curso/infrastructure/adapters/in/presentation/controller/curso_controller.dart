@@ -57,18 +57,62 @@ class CursoController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Prepara de forma síncrona el estado del curso seleccionado usando la memoria caché
+  void prepararCurso(int id) {
+    try {
+      final cursoLocal = BooklService().cursos.firstWhere((c) => c.idCurso == id);
+      state = state.copyWith(selected: cursoLocal, status: DataStatus.loaded);
+      
+      final asociadosIds = BooklService().leccionesCursos
+          .where((e) => e['id_curso'] == id)
+          .map((e) => e['id_leccion'])
+          .toList();
+      leccionesDeCurso = BooklService().lecciones
+          .where((l) => asociadosIds.contains(l.idLeccion))
+          .toList();
+    } catch (_) {
+      state = state.copyWith(selected: null, status: DataStatus.loading);
+      leccionesDeCurso = [];
+    }
+  }
+
   Future<void> seleccionarCurso(int id) async {
+    // 1. Cargar local de inmediato por si acaso no se llamó a prepararCurso previamente
+    try {
+      final cursoLocal = BooklService().cursos.firstWhere((c) => c.idCurso == id);
+      if (state.selected?.idCurso != id) {
+        state = state.copyWith(selected: cursoLocal, status: DataStatus.loaded);
+        final asociadosIds = BooklService().leccionesCursos
+            .where((e) => e['id_curso'] == id)
+            .map((e) => e['id_leccion'])
+            .toList();
+        leccionesDeCurso = BooklService().lecciones
+            .where((l) => asociadosIds.contains(l.idLeccion))
+            .toList();
+        notifyListeners();
+      }
+    } catch (_) {
+      if (state.selected != null) {
+        state = state.copyWith(selected: null, status: DataStatus.loading);
+        leccionesDeCurso = [];
+        notifyListeners();
+      }
+    }
+
+    // 2. Traer versión fresca de Supabase
     try {
       final curso = await _getCursoById(id);
       if (curso != null) {
-        state = state.copyWith(selected: curso);
+        state = state.copyWith(selected: curso, status: DataStatus.loaded);
         leccionesDeCurso = (await _getLecciones(id)).cast<Leccion>();
+        notifyListeners();
       }
     } catch (e) {
-      state =
-          state.copyWith(status: DataStatus.error, errorMessage: e.toString());
+      if (state.selected == null) {
+        state = state.copyWith(status: DataStatus.error, errorMessage: e.toString());
+        notifyListeners();
+      }
     }
-    notifyListeners();
   }
 
   Future<void> agregarCurso({

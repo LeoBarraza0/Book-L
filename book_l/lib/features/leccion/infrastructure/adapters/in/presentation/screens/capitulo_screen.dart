@@ -27,6 +27,9 @@ class _CapituloScreenState extends State<CapituloScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.idCapitulo != null) {
+      _ctrl.prepararCapitulo(widget.idCapitulo!);
+    }
     _cargarData();
   }
 

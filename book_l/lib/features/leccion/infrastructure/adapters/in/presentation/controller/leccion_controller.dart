@@ -91,19 +91,54 @@ class LeccionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Prepara de forma síncrona el estado de la lección seleccionada usando la memoria caché
+  void prepararLeccion(int id) {
+    try {
+      final leccionLocal = BooklService().lecciones.firstWhere((l) => l.idLeccion == id);
+      state = state.copyWith(selected: leccionLocal, status: DataStatus.loaded);
+      capitulosDeLeccion = _leccionRepo.capitulosDe(id);
+      capituloSeleccionado = null;
+    } catch (_) {
+      state = state.copyWith(selected: null, status: DataStatus.loading);
+      capitulosDeLeccion = [];
+      capituloSeleccionado = null;
+    }
+  }
+
   /// Selecciona una lección por ID y carga sus capítulos asociados
   Future<void> seleccionarLeccion(int id) async {
+    // 1. Cargar local de inmediato por si acaso no se llamó a prepararLeccion previamente
+    try {
+      final leccionLocal = BooklService().lecciones.firstWhere((l) => l.idLeccion == id);
+      if (state.selected?.idLeccion != id) {
+        state = state.copyWith(selected: leccionLocal, status: DataStatus.loaded);
+        capitulosDeLeccion = _leccionRepo.capitulosDe(id);
+        capituloSeleccionado = null;
+        notifyListeners();
+      }
+    } catch (_) {
+      if (state.selected != null) {
+        state = state.copyWith(selected: null, status: DataStatus.loading);
+        capitulosDeLeccion = [];
+        capituloSeleccionado = null;
+        notifyListeners();
+      }
+    }
+
+    // 2. Traer la versión actualizada de Supabase de forma asíncrona
     try {
       final leccion = await _getLeccionById(id);
       if (leccion != null) {
-        state = state.copyWith(selected: leccion);
+        state = state.copyWith(selected: leccion, status: DataStatus.loaded);
         capitulosDeLeccion = await _getCapitulos(id);
+        notifyListeners();
       }
     } catch (e) {
-      state =
-          state.copyWith(status: DataStatus.error, errorMessage: e.toString());
+      if (state.selected == null) {
+        state = state.copyWith(status: DataStatus.error, errorMessage: e.toString());
+        notifyListeners();
+      }
     }
-    notifyListeners();
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -162,15 +197,41 @@ class LeccionController extends ChangeNotifier {
   // READ — Capítulo
   // ══════════════════════════════════════════════════════════════════════════
 
+  /// Prepara de forma síncrona el capítulo usando la memoria caché
+  void prepararCapitulo(int id) {
+    try {
+      capituloSeleccionado = BooklService().capitulos.firstWhere((c) => c.idCapitulo == id);
+    } catch (_) {
+      capituloSeleccionado = null;
+    }
+  }
+
   /// Selecciona un capítulo por ID para ver su detalle
   Future<void> seleccionarCapitulo(int id) async {
+    // 1. Cargar de memoria caché de inmediato
+    try {
+      final capLocal = BooklService().capitulos.firstWhere((c) => c.idCapitulo == id);
+      if (capituloSeleccionado?.idCapitulo != id) {
+        capituloSeleccionado = capLocal;
+        notifyListeners();
+      }
+    } catch (_) {
+      if (capituloSeleccionado != null) {
+        capituloSeleccionado = null;
+        notifyListeners();
+      }
+    }
+
+    // 2. Traer versión fresca de Supabase
     try {
       final cap = await _getCapituloById(id);
-      capituloSeleccionado = cap;
+      if (cap != null) {
+        capituloSeleccionado = cap;
+        notifyListeners();
+      }
     } catch (_) {
       // Error silencioso — el capítulo puede no existir
     }
-    notifyListeners();
   }
 
   /// Obtiene un capítulo por ID (asíncrono)
