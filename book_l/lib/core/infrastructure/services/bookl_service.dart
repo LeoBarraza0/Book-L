@@ -324,37 +324,6 @@ class BooklService extends ChangeNotifier {
     }
 
     _nestRelations();
-    _calculateRatings();
-  }
-
-  void _calculateRatings() {
-    for (int i = 0; i < lecciones.length; i++) {
-      final cals = calificaciones
-          .where((c) =>
-              c.tipoObjeto == 'leccion' && c.idObjetoFk == lecciones[i].idLeccion)
-          .toList();
-      double promedio = 0.0;
-      if (cals.isNotEmpty) {
-        final suma = cals.fold<int>(0, (sum, c) => sum + c.valor);
-        promedio = suma / cals.length;
-      }
-      lecciones[i] =
-          lecciones[i].copyWith(rating: double.parse(promedio.toStringAsFixed(1)));
-    }
-
-    for (int i = 0; i < cursos.length; i++) {
-      final cals = calificaciones
-          .where((c) =>
-              c.tipoObjeto == 'curso' && c.idObjetoFk == cursos[i].idCurso)
-          .toList();
-      double promedio = 0.0;
-      if (cals.isNotEmpty) {
-        final suma = cals.fold<int>(0, (sum, c) => sum + c.valor);
-        promedio = suma / cals.length;
-      }
-      cursos[i] =
-          cursos[i].copyWith(rating: double.parse(promedio.toStringAsFixed(1)));
-    }
   }
 
   void _nestRelations() {
@@ -535,8 +504,7 @@ class BooklService extends ChangeNotifier {
       notificaciones = (results[21] as List)
           .map<Map<String, dynamic>>((e) => <String, dynamic>{
                 'id': toInt(e['idnotificacion'] ?? e['id_notificacion']),
-                'id_usuario_fk':
-                    toInt(e['idusuariofk'] ?? e['id_usuario_fk']),
+                'id_usuario_fk': toInt(e['idusuariofk'] ?? e['id_usuario_fk']),
                 'tipo': e['tipo'] as String,
                 'id_referencia':
                     toIntOrNull(e['idreferencia'] ?? e['id_referencia']),
@@ -579,7 +547,6 @@ class BooklService extends ChangeNotifier {
       }
 
       _nestRelations();
-      _calculateRatings();
       seedAppSession();
 
       // Guardar a SharedPreferences local
@@ -605,10 +572,13 @@ class BooklService extends ChangeNotifier {
     // Completed Capitulos
     final completedCaps = progresoUsuario
         .where((p) {
-          final uId = p['id_usuariofk'] ?? p['id_usuario_fk'] ?? p['idusuariofk'];
+          final uId =
+              p['id_usuariofk'] ?? p['id_usuario_fk'] ?? p['idusuariofk'];
           return uId == userId && p['estado'] == 'completada';
         })
-        .map<int>((p) => (p['id_capitulofk'] ?? p['id_capitulo_fk'] ?? p['idcapitulofk']) as int)
+        .map<int>((p) => (p['id_capitulofk'] ??
+            p['id_capitulo_fk'] ??
+            p['idcapitulofk']) as int)
         .toSet();
     session.completedCapitulos.value = completedCaps;
 
@@ -624,8 +594,8 @@ class BooklService extends ChangeNotifier {
     final completedEjs = <int>{};
     for (final ej in ejercicios) {
       if (ej.preguntas.isEmpty) continue;
-      final allAnswered = ej.preguntas
-          .every((p) => answeredPreguntaIds.contains(p.idPregunta));
+      final allAnswered =
+          ej.preguntas.every((p) => answeredPreguntaIds.contains(p.idPregunta));
       if (allAnswered) {
         completedEjs.add(ej.idEjercicio);
       }

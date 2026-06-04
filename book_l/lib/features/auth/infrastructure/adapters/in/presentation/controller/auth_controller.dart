@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'dart:math' as dart_math;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
+import 'package:book_l/core/infrastructure/services/supabase_client.dart';
 import 'package:book_l/core/infrastructure/storage/local_storage.dart';
 import 'package:book_l/features/auth/infrastructure/adapters/out/repositories/auth_repository_impl.dart';
 import 'package:book_l/features/auth/domain/models/usuario.dart';
@@ -56,8 +58,30 @@ class AuthController extends ChangeNotifier {
           throw Exception(
               'No tienes un correo registrado asociado a esta cuenta.');
         }
+        
+        // Enviar correo usando EmailJS
+        final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'service_id': 'service_jf5ttbo',
+            'template_id': 'template_mptnsqo',
+            'user_id': 'tUoBceOVteG2XsvYN',
+            'template_params': {
+              'codigo': recoveryCode,
+              'to_email': recoveryEmail,
+            }
+          }),
+        );
+        
+        if (response.statusCode != 200) {
+           print('Error EmailJS: ${response.body}');
+           throw Exception('No se pudo enviar el correo.');
+        }
+
         print('=====================================================');
-        print('CÓDIGO DE RECUPERACIÓN (CORREO): $recoveryCode');
+        print('CÓDIGO DE RECUPERACIÓN (CORREO ENVIADO): $recoveryCode');
         print('=====================================================');
       } else if (medium == 'Numero') {
         if (recoveryPhone == null || recoveryPhone!.isEmpty) {
@@ -65,7 +89,7 @@ class AuthController extends ChangeNotifier {
               'No tienes un número de celular asociado a esta cuenta.');
         }
         print('=====================================================');
-        print('CÓDIGO DE RECUPERACIÓN (SMS): $recoveryCode');
+        print('CÓDIGO DE RECUPERACIÓN (SMS simulado): $recoveryCode');
         print('=====================================================');
       }
     } catch (e) {
@@ -89,6 +113,18 @@ class AuthController extends ChangeNotifier {
       if (index != -1) {
         final usuario = svc.usuariosDto[index];
         svc.usuariosDto[index] = usuario.copyWith(contrasena: nuevaPassword);
+        
+        if (SupabaseClientHelper.isConfigured) {
+          try {
+            await SupabaseClientHelper.client
+                .from('tbl_usuario')
+                .update({'contrasena': nuevaPassword})
+                .eq('idusuario', usuario.idUsuario);
+          } catch (e) {
+            print('Error al actualizar contraseña en Supabase: $e');
+          }
+        }
+        
         return true;
       }
       return false;
