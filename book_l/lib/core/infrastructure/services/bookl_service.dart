@@ -143,6 +143,7 @@ class BooklService extends ChangeNotifier {
     // 2. SINCRONIZACIÓN ASÍNCRONA EN SEGUNDO PLANO CON SUPABASE
     if (SupabaseClientHelper.isConfigured) {
       _syncFromSupabase();
+      _initRealtimeSubscriptions();
     }
   }
 
@@ -276,6 +277,7 @@ class BooklService extends ChangeNotifier {
       calificaciones = (data['calificaciones'] as List)
           .map((e) => CalificacionDto.fromJson(e as Map<String, dynamic>))
           .toList();
+      _limpiarCalificacionesDuplicadas();
     } else {
       calificaciones = [];
     }
@@ -476,6 +478,8 @@ class BooklService extends ChangeNotifier {
               valor: toInt(e['valor']),
             )),
       ];
+
+      _limpiarCalificacionesDuplicadas();
 
       for (var i = 0; i < lecciones.length; i++) {
         final califs = calificaciones.where((c) => c.tipoObjeto == 'leccion' && c.idObjetoFk == lecciones[i].idLeccion).toList();
@@ -831,7 +835,8 @@ class BooklService extends ChangeNotifier {
   }
 
   void addCurso(Curso curso, {bool syncToSupabase = true}) {
-    cursos.add(curso);
+    final rating = obtenerRatingCurso(curso.idCurso);
+    cursos.add(curso.copyWith(rating: rating));
     registrarActividad(AppSession().usuarioId ?? 0);
     _save();
     notifyListeners();
@@ -863,7 +868,8 @@ class BooklService extends ChangeNotifier {
   }
 
   void addLeccion(Leccion leccion, {int? idCurso, bool syncToSupabase = true}) {
-    lecciones.add(leccion);
+    final rating = obtenerRatingLeccion(leccion.idLeccion);
+    lecciones.add(leccion.copyWith(rating: rating));
     if (idCurso != null) {
       leccionesCursos.add({
         'id_leccion': leccion.idLeccion,
@@ -916,7 +922,8 @@ class BooklService extends ChangeNotifier {
   void updateLeccion(Leccion leccion) {
     final idx = lecciones.indexWhere((l) => l.idLeccion == leccion.idLeccion);
     if (idx != -1) {
-      lecciones[idx] = leccion;
+      final rating = obtenerRatingLeccion(leccion.idLeccion);
+      lecciones[idx] = leccion.copyWith(rating: rating);
       _save();
       notifyListeners();
 
@@ -1007,7 +1014,8 @@ class BooklService extends ChangeNotifier {
   void updateCurso(Curso curso) {
     final idx = cursos.indexWhere((c) => c.idCurso == curso.idCurso);
     if (idx != -1) {
-      cursos[idx] = curso;
+      final rating = obtenerRatingCurso(curso.idCurso);
+      cursos[idx] = curso.copyWith(rating: rating);
       _save();
       notifyListeners();
 
@@ -1329,6 +1337,91 @@ class BooklService extends ChangeNotifier {
   }
 
   // ── Operaciones Calificación ───────────────────────────────────────────────
+  double obtenerRatingLeccion(int idLeccion) {
+    final cals = calificaciones
+        .where((c) => c.tipoObjeto == 'leccion' && c.idObjetoFk == idLeccion)
+        .toList();
+    if (cals.isEmpty) return 0.0;
+
+    // Deduplicar para asegurar un único voto por usuario
+    final uniqueCals = <int, Calificacion>{};
+    for (var c in cals) {
+      final existing = uniqueCals[c.idUsuarioFk];
+      if (existing == null) {
+        uniqueCals[c.idUsuarioFk] = c;
+      } else {
+        final bool cEsTemporal = c.idCalificacion > 1000000000;
+        final bool existingEsTemporal = existing.idCalificacion > 1000000000;
+        if (existingEsTemporal && !cEsTemporal) {
+          uniqueCals[c.idUsuarioFk] = c;
+        } else if (existingEsTemporal == cEsTemporal) {
+          if (c.idCalificacion > existing.idCalificacion) {
+            uniqueCals[c.idUsuarioFk] = c;
+          }
+        }
+      }
+    }
+
+    final uniqueList = uniqueCals.values;
+    if (uniqueList.isEmpty) return 0.0;
+    final suma = uniqueList.fold<int>(0, (sum, c) => sum + c.valor);
+    return double.parse((suma / uniqueList.length).toStringAsFixed(1));
+  }
+
+  double obtenerRatingCurso(int idCurso) {
+    final cals = calificaciones
+        .where((c) => c.tipoObjeto == 'curso' && c.idObjetoFk == idCurso)
+        .toList();
+    if (cals.isEmpty) return 0.0;
+
+    // Deduplicar para asegurar un único voto por usuario
+    final uniqueCals = <int, Calificacion>{};
+    for (var c in cals) {
+      final existing = uniqueCals[c.idUsuarioFk];
+      if (existing == null) {
+        uniqueCals[c.idUsuarioFk] = c;
+      } else {
+        final bool cEsTemporal = c.idCalificacion > 1000000000;
+        final bool existingEsTemporal = existing.idCalificacion > 1000000000;
+        if (existingEsTemporal && !cEsTemporal) {
+          uniqueCals[c.idUsuarioFk] = c;
+        } else if (existingEsTemporal == cEsTemporal) {
+          if (c.idCalificacion > existing.idCalificacion) {
+            uniqueCals[c.idUsuarioFk] = c;
+          }
+        }
+      }
+    }
+
+    final uniqueList = uniqueCals.values;
+    if (uniqueList.isEmpty) return 0.0;
+    final suma = uniqueList.fold<int>(0, (sum, c) => sum + c.valor);
+    return double.parse((suma / uniqueList.length).toStringAsFixed(1));
+  }
+
+  void _limpiarCalificacionesDuplicadas() {
+    final uniqueMap = <String, Calificacion>{};
+    for (var c in calificaciones) {
+      final key = '${c.tipoObjeto}_${c.idObjetoFk}_${c.idUsuarioFk}';
+      final existing = uniqueMap[key];
+      if (existing == null) {
+        uniqueMap[key] = c;
+      } else {
+        final bool cEsTemporal = c.idCalificacion > 1000000000;
+        final bool existingEsTemporal = existing.idCalificacion > 1000000000;
+
+        if (existingEsTemporal && !cEsTemporal) {
+          uniqueMap[key] = c;
+        } else if (existingEsTemporal == cEsTemporal) {
+          if (c.idCalificacion > existing.idCalificacion) {
+            uniqueMap[key] = c;
+          }
+        }
+      }
+    }
+    calificaciones = uniqueMap.values.toList();
+  }
+
   /// Agrega o actualiza la calificación de un usuario para una lección o curso.
   /// Recalcula el promedio en memoria y notifica a los listeners.
   /// Retorna (nuevoPromedio, esActualizacion).
@@ -1363,15 +1456,12 @@ class BooklService extends ChangeNotifier {
       );
     }
 
+    _limpiarCalificacionesDuplicadas();
+
     // 2. Recalcular promedio para el objeto afectado
-    final cals = calificaciones
-        .where((c) => c.tipoObjeto == tipoObjeto && c.idObjetoFk == idObjeto)
-        .toList();
-    double promedio = 0.0;
-    if (cals.isNotEmpty) {
-      final suma = cals.fold<int>(0, (sum, c) => sum + c.valor);
-      promedio = double.parse((suma / cals.length).toStringAsFixed(1));
-    }
+    final promedio = tipoObjeto == 'curso'
+        ? obtenerRatingCurso(idObjeto)
+        : obtenerRatingLeccion(idObjeto);
 
     // 3. Actualizar el objeto en memoria con el nuevo rating
     if (tipoObjeto == 'leccion') {
@@ -1389,9 +1479,8 @@ class BooklService extends ChangeNotifier {
     _save();
     notifyListeners();
 
-    // 4. Sincronizar con Supabase (el upsert ya fue hecho por el repositorio,
-    //    pero aquí actualizamos el id si Supabase devuelve el registro real)
-    if (SupabaseClientHelper.isConfigured && !esActualizacion) {
+    // 4. Sincronizar con Supabase (hacemos el upsert siempre, no solo cuando es inserción)
+    if (SupabaseClientHelper.isConfigured) {
       try {
         final table = tipoObjeto == 'curso'
             ? 'tbl_calificacion_curso'
@@ -1414,17 +1503,19 @@ class BooklService extends ChangeNotifier {
             .select()
             .single();
 
-        // Reemplazar el registro temporal con el ID real de Supabase
-        final realId = (response['idcalificacion'] ?? response['id_calificacion']) as int?;
-        if (realId != null) {
-          final tempIdx = calificaciones.indexWhere((c) =>
-              c.idObjetoFk == idObjeto &&
-              c.tipoObjeto == tipoObjeto &&
-              c.idUsuarioFk == idUsuario);
-          if (tempIdx != -1) {
-            calificaciones[tempIdx] =
-                calificaciones[tempIdx].copyWith(idCalificacion: realId);
-            _save();
+        // Reemplazar el registro temporal con el ID real de Supabase si fue una inserción
+        if (!esActualizacion) {
+          final realId = (response['idcalificacion'] ?? response['id_calificacion']) as int?;
+          if (realId != null) {
+            final tempIdx = calificaciones.indexWhere((c) =>
+                c.idObjetoFk == idObjeto &&
+                c.tipoObjeto == tipoObjeto &&
+                c.idUsuarioFk == idUsuario);
+            if (tempIdx != -1) {
+              calificaciones[tempIdx] =
+                  calificaciones[tempIdx].copyWith(idCalificacion: realId);
+              _save();
+            }
           }
         }
       } catch (e) {
@@ -1433,6 +1524,163 @@ class BooklService extends ChangeNotifier {
     }
 
     return (promedio, esActualizacion);
+  }
+
+  void _procesarCalificacionRealtime(Map<String, dynamic> record, String tipoObjeto) {
+    int toInt(dynamic value, [int defaultValue = 0]) {
+      if (value == null) return defaultValue;
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value) ?? defaultValue;
+      if (value is double) return value.toInt();
+      return defaultValue;
+    }
+
+    final idCal = toInt(record['idcalificacion'] ?? record['id_calificacion']);
+    final idUsuario = toInt(record['idusuariofk'] ?? record['id_usuario_fk']);
+    final fkField = tipoObjeto == 'curso' ? 'idcursofk' : 'idleccionfk';
+    final idObjeto = toInt(record[fkField] ?? record[tipoObjeto == 'curso' ? 'id_curso_fk' : 'id_leccion_fk']);
+    final valor = toInt(record['valor']);
+
+    if (idUsuario == 0 || idObjeto == 0) return;
+
+    // Buscar si ya existe la calificación del usuario para este objeto o por idCalificacion
+    final idx = calificaciones.indexWhere((c) =>
+        (c.idCalificacion == idCal) ||
+        (c.idObjetoFk == idObjeto &&
+         c.tipoObjeto == tipoObjeto &&
+         c.idUsuarioFk == idUsuario));
+
+    if (idx != -1) {
+      calificaciones[idx] = calificaciones[idx].copyWith(
+        idCalificacion: idCal,
+        valor: valor,
+      );
+    } else {
+      calificaciones.add(
+        Calificacion(
+          idCalificacion: idCal,
+          idObjetoFk: idObjeto,
+          tipoObjeto: tipoObjeto,
+          idUsuarioFk: idUsuario,
+          valor: valor,
+        ),
+      );
+    }
+
+    _limpiarCalificacionesDuplicadas();
+
+    // Recalcular promedio del objeto
+    final promedio = tipoObjeto == 'curso'
+        ? obtenerRatingCurso(idObjeto)
+        : obtenerRatingLeccion(idObjeto);
+
+    if (tipoObjeto == 'leccion') {
+      final lIdx = lecciones.indexWhere((l) => l.idLeccion == idObjeto);
+      if (lIdx != -1) {
+        lecciones[lIdx] = lecciones[lIdx].copyWith(rating: promedio);
+      }
+    } else if (tipoObjeto == 'curso') {
+      final cIdx = cursos.indexWhere((c) => c.idCurso == idObjeto);
+      if (cIdx != -1) {
+        cursos[cIdx] = cursos[cIdx].copyWith(rating: promedio);
+      }
+    }
+
+    _save();
+    notifyListeners();
+  }
+
+  void _procesarCalificacionDeleteRealtime(Map<String, dynamic> record, String tipoObjeto) {
+    int toInt(dynamic value, [int defaultValue = 0]) {
+      if (value == null) return defaultValue;
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value) ?? defaultValue;
+      if (value is double) return value.toInt();
+      return defaultValue;
+    }
+
+    final idCal = toInt(record['idcalificacion'] ?? record['id_calificacion']);
+    if (idCal == 0) return;
+
+    final idx = calificaciones.indexWhere((c) => c.idCalificacion == idCal && c.tipoObjeto == tipoObjeto);
+    if (idx != -1) {
+      final idObjeto = calificaciones[idx].idObjetoFk;
+      calificaciones.removeAt(idx);
+
+      // Recalcular promedio del objeto
+      final promedio = tipoObjeto == 'curso'
+          ? obtenerRatingCurso(idObjeto)
+          : obtenerRatingLeccion(idObjeto);
+
+      if (tipoObjeto == 'leccion') {
+        final lIdx = lecciones.indexWhere((l) => l.idLeccion == idObjeto);
+        if (lIdx != -1) {
+          lecciones[lIdx] = lecciones[lIdx].copyWith(rating: promedio);
+        }
+      } else if (tipoObjeto == 'curso') {
+        final cIdx = cursos.indexWhere((c) => c.idCurso == idObjeto);
+        if (cIdx != -1) {
+          cursos[cIdx] = cursos[cIdx].copyWith(rating: promedio);
+        }
+      }
+
+      _save();
+      notifyListeners();
+    }
+  }
+
+  void _initRealtimeSubscriptions() {
+    try {
+      final client = SupabaseClientHelper.client;
+
+      // Canal para calificaciones de lecciones
+      client
+          .channel('public:tbl_calificacion_leccion')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'tbl_calificacion_leccion',
+            callback: (payload) {
+              if (payload.eventType == PostgresChangeEvent.insert ||
+                  payload.eventType == PostgresChangeEvent.update) {
+                if (payload.newRecord.isNotEmpty) {
+                  _procesarCalificacionRealtime(payload.newRecord, 'leccion');
+                }
+              } else if (payload.eventType == PostgresChangeEvent.delete) {
+                if (payload.oldRecord.isNotEmpty) {
+                  _procesarCalificacionDeleteRealtime(payload.oldRecord, 'leccion');
+                }
+              }
+            },
+          )
+          .subscribe();
+
+      // Canal para calificaciones de cursos
+      client
+          .channel('public:tbl_calificacion_curso')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'tbl_calificacion_curso',
+            callback: (payload) {
+              if (payload.eventType == PostgresChangeEvent.insert ||
+                  payload.eventType == PostgresChangeEvent.update) {
+                if (payload.newRecord.isNotEmpty) {
+                  _procesarCalificacionRealtime(payload.newRecord, 'curso');
+                }
+              } else if (payload.eventType == PostgresChangeEvent.delete) {
+                if (payload.oldRecord.isNotEmpty) {
+                  _procesarCalificacionDeleteRealtime(payload.oldRecord, 'curso');
+                }
+              }
+            },
+          )
+          .subscribe();
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error initializing realtime subscriptions: $e");
+      }
+    }
   }
 
   // ── Operaciones Discusión ─────────────────────────────────────────────────
