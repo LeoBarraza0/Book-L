@@ -1692,10 +1692,8 @@ class BooklService extends ChangeNotifier {
         c.tipoObjeto == tipoObjeto &&
         c.idUsuarioFk == idUsuario);
 
-    int califId;
     if (index >= 0) {
       calificaciones[index] = calificaciones[index].copyWith(valor: valor);
-      califId = calificaciones[index].idCalificacion;
       isUpdate = true;
     } else {
       final newId = calificaciones.isEmpty
@@ -1704,7 +1702,6 @@ class BooklService extends ChangeNotifier {
                   .map((c) => c.idCalificacion)
                   .reduce((a, b) => a > b ? a : b) +
               1;
-      califId = newId;
       calificaciones.add(Calificacion(
         idCalificacion: newId,
         idObjetoFk: idObjeto,
@@ -1731,17 +1728,8 @@ class BooklService extends ChangeNotifier {
         lecciones[iLeccion] = lecciones[iLeccion]
             .copyWith(rating: double.parse(nuevoPromedio.toStringAsFixed(1)));
         nuevoPromedio = lecciones[iLeccion].rating;
-        if (SupabaseClientHelper.isConfigured) {
-          try {
-            SupabaseClientHelper.client
-                .from('tbl_leccion')
-                .update({'rating': nuevoPromedio})
-                .eq('idleccion', idObjeto)
-                .then((_) => null, onError: (e) => debugPrint("Supabase error rating leccion: $e"));
-          } catch (e) {
-            debugPrint("Error sync leccion rating: $e");
-          }
-        }
+        // Nota: tbl_leccion no tiene columna 'rating' en Supabase.
+        // El rating se calcula desde tbl_calificacion_leccion.
       }
     } else if (tipoObjeto == 'curso') {
       final iCurso = cursos.indexWhere((c) => c.idCurso == idObjeto);
@@ -1749,59 +1737,13 @@ class BooklService extends ChangeNotifier {
         cursos[iCurso] = cursos[iCurso]
             .copyWith(rating: double.parse(nuevoPromedio.toStringAsFixed(1)));
         nuevoPromedio = cursos[iCurso].rating;
-        if (SupabaseClientHelper.isConfigured) {
-          try {
-            SupabaseClientHelper.client
-                .from('tbl_curso')
-                .update({'rating': nuevoPromedio})
-                .eq('idcurso', idObjeto)
-                .then((_) => null, onError: (e) => debugPrint("Supabase error rating curso: $e"));
-          } catch (e) {
-            debugPrint("Error sync curso rating: $e");
-          }
-        }
+        // Nota: tbl_curso no tiene columna 'rating' en Supabase.
+        // El rating se calcula desde tbl_calificacion_curso.
       }
     }
 
     await _save();
     notifyListeners();
-
-    if (SupabaseClientHelper.isConfigured) {
-      try {
-        final client = SupabaseClientHelper.client;
-        final tableName = tipoObjeto == 'leccion'
-            ? 'tbl_calificacion_leccion'
-            : 'tbl_calificacion_curso';
-        final colName = tipoObjeto == 'leccion' ? 'idleccionfk' : 'idcursofk';
-
-        if (isUpdate) {
-          client
-              .from(tableName)
-              .update(Map<String, dynamic>.from({
-                'valor': valor,
-              }))
-              .eq('idusuariofk', idUsuario)
-              .eq(colName, idObjeto)
-              .then((_) => null,
-                  onError: (e) =>
-                      debugPrint("Supabase rating update error: $e"));
-        } else {
-          client
-              .from(tableName)
-              .insert(Map<String, dynamic>.from(<String, dynamic>{
-                'idcalificacion': califId,
-                'idusuariofk': idUsuario,
-                colName: idObjeto,
-                'valor': valor,
-              }))
-              .then((_) => null,
-                  onError: (e) =>
-                      debugPrint("Supabase rating insert error: $e"));
-        }
-      } catch (ex) {
-        debugPrint("Error syncing ratings: $ex");
-      }
-    }
 
     return (nuevoPromedio, isUpdate);
   }

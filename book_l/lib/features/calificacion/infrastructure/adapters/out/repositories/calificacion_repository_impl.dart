@@ -21,28 +21,18 @@ class CalificacionRepositoryImpl implements CalificacionRepository {
       try {
         final table = tipoObjeto == 'curso' ? 'tbl_calificacion_curso' : 'tbl_calificacion_leccion';
         final fkField = tipoObjeto == 'curso' ? 'idcursofk' : 'idleccionfk';
-        
-        final existing = await SupabaseClientHelper.client
-            .from(table)
-            .select('idcalificacion')
-            .eq('idusuariofk', idUsuarioSession)
-            .eq(fkField, idObjeto)
-            .maybeSingle();
+        final constraintCols = tipoObjeto == 'curso'
+            ? 'idusuariofk,idcursofk'
+            : 'idusuariofk,idleccionfk';
 
-        if (existing != null) {
-          await SupabaseClientHelper.client
-              .from(table)
-              .update({'valor': valor})
-              .eq('idcalificacion', existing['idcalificacion']);
-        } else {
-          await SupabaseClientHelper.client
-              .from(table)
-              .insert({
-                'idusuariofk': idUsuarioSession,
-                fkField: idObjeto,
-                'valor': valor,
-              });
-        }
+        // UPSERT atómico: inserta si no existe, actualiza si ya existe
+        await SupabaseClientHelper.client
+            .from(table)
+            .upsert({
+              'idusuariofk': idUsuarioSession,
+              fkField: idObjeto,
+              'valor': valor,
+            }, onConflict: constraintCols);
       } catch (e) {
         if (kDebugMode) print('Error enviarCalificacion Supabase: $e');
       }
