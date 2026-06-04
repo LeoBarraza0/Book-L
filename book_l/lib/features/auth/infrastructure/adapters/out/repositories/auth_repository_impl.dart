@@ -160,14 +160,13 @@ class AuthRepositoryImpl implements AuthRepository {
       final nuevoId = _service.nextUsuarioId();
       final baseUsername = correo.trim().toLowerCase().split('@').first;
       final randomSuffix = DateTime.now().millisecondsSinceEpoch.toString().substring(9);
-      final generatedUsername = '${baseUsername}_$randomSuffix';
 
       dto = UsuarioDto(
         idUsuario: nuevoId,
         nombreCompleto: nombreCompleto.trim(),
         correo: correo.trim().toLowerCase(),
         contrasena: contrasena,
-        username: generatedUsername,
+        username: baseUsername,
         rol: rol,
         programa: programa,
         celular: celular,
