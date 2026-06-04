@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:book_l/core/infrastructure/services/bookl_service.dart';
 import 'package:book_l/core/infrastructure/storage/local_storage.dart';
 import 'package:book_l/core/infrastructure/services/supabase_client.dart';
@@ -58,6 +59,7 @@ class AuthRepositoryImpl implements AuthRepository {
     if (!_service.usuariosDto.any((u) => u.idUsuario == found!.idUsuario)) {
       _service.usuariosDto.add(found);
       _service.usuarios.add(found.toEntity());
+      _service.guardarDatos();
     }
 
     final usuario = found.toEntity();
@@ -124,7 +126,7 @@ class AuthRepositoryImpl implements AuthRepository {
           if (celular != null) 'celular': celular,
           if (semestre != null) 'semestre': semestre,
           if (nacimiento != null) 'nacimiento': nacimiento.toIso8601String().split('T').first,
-          if (preferencias != null) 'preferencias': preferencias,
+          if (preferencias != null) 'preferencias': jsonDecode(preferencias),
           if (avatarUrl != null) 'avatar_url': avatarUrl,
           if (descripcion != null) 'descripcion': descripcion,
           'activo': true,
@@ -136,6 +138,7 @@ class AuthRepositoryImpl implements AuthRepository {
         if (!_service.usuariosDto.any((u) => u.idUsuario == dto!.idUsuario)) {
           _service.usuariosDto.add(dto);
           _service.usuarios.add(dto.toEntity());
+          _service.guardarDatos();
         }
       } catch (e) {
         if (kDebugMode) {

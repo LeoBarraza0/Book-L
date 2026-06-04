@@ -79,6 +79,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(correo)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('El formato del correo electrónico no es válido'),
+          backgroundColor: Color(0xFFFF5252),
+        ),
+      );
+      return;
+    }
+
+    final hasEightChars = pass.length >= 8;
+    final hasUppercase = pass.contains(RegExp(r'[A-Z]'));
+    final hasSpecialChar = pass.contains(RegExp(r'[^a-zA-Z0-9\s]'));
+
+    if (!hasEightChars) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La contraseña debe tener al menos 8 caracteres'),
+          backgroundColor: Color(0xFFFF5252),
+        ),
+      );
+      return;
+    }
+
+    if (!hasUppercase && !hasSpecialChar) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La contraseña debe contener al menos una mayúscula o un carácter especial'),
+          backgroundColor: Color(0xFFFF5252),
+        ),
+      );
+      return;
+    }
+
     final ok = await _ctrl.registrar(
       nombreCompleto: nombre,
       correo: correo,
