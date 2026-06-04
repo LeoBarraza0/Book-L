@@ -28,4 +28,7 @@ abstract class EjercicioRepository {
 
   /// Elimina un ejercicio por su ID.
   Future<void> removeEjercicio(int idEjercicio);
+
+  /// Guarda la respuesta del usuario a una pregunta.
+  Future<void> guardarRespuesta(int idUsuario, int idPregunta, int? idOpcion, bool correcta);
 }

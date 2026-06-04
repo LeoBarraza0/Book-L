@@ -183,6 +183,13 @@ class EjerciciosController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ── USER RESPONSES ─────────────────────────────────────────────────────────
+
+  /// Guarda la respuesta de un usuario a una pregunta específica
+  Future<void> guardarRespuesta(int idUsuario, int idPregunta, int? idOpcion, bool correcta) async {
+    await _repo.guardarRespuesta(idUsuario, idPregunta, idOpcion, correcta);
+  }
+
   // ── Filtros ────────────────────────────────────────────────────────────────
 
   void updateQuery(String query) {

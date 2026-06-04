@@ -166,7 +166,14 @@ class EjercicioRepositoryImpl implements EjercicioRepository {
         debugPrint(
             '[EjercicioRepo] ERROR insertando ejercicio en Supabase: $e');
         debugPrint('[EjercicioRepo] StackTrace: $stackTrace');
-        rethrow; // Propagar el error para que la UI lo sepa
+        // Fallback: guardar localmente sin Supabase
+        _service.addEjercicio(ejercicio);
+        for (final p in preguntas) {
+          _service.addPregunta(p);
+        }
+        for (final o in opciones) {
+          _service.addOpcion(o);
+        }
       }
     } else {
       // Sin Supabase: persistir localmente
@@ -195,5 +202,21 @@ class EjercicioRepositoryImpl implements EjercicioRepository {
       }
     }
     _service.removeEjercicio(idEjercicio);
+  }
+
+  @override
+  Future<void> guardarRespuesta(int idUsuario, int idPregunta, int? idOpcion, bool correcta) async {
+    if (SupabaseClientHelper.isConfigured) {
+      try {
+        await SupabaseClientHelper.client.from('tbl_respuesta_usuario').insert({
+          'id_usuario': idUsuario,
+          'id_pregunta': idPregunta,
+          if (idOpcion != null) 'id_opcion': idOpcion,
+          'correcta': correcta,
+        });
+      } catch (e) {
+        if (kDebugMode) print('Error insertando respuesta de usuario en Supabase: $e');
+      }
+    }
   }
 }

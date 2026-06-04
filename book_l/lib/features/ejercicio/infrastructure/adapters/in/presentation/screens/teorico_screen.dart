@@ -4,6 +4,8 @@ import 'package:book_l/shared/widgets/nav_bar.dart';
 import 'package:book_l/features/calificacion/infrastructure/adapters/in/presentation/screens/resultado_screen.dart';
 import 'package:book_l/features/ejercicio/domain/models/ejercicio.dart';
 import 'package:book_l/features/ejercicio/domain/models/opcion.dart';
+import 'package:book_l/core/infrastructure/storage/local_storage.dart';
+import 'package:book_l/features/ejercicio/infrastructure/adapters/in/presentation/controller/ejercicios_controller.dart';
 
 class TeoricoScreen extends StatefulWidget {
   final Ejercicio ejercicio;
@@ -185,6 +187,12 @@ class _TeoricoScreenState extends State<TeoricoScreen> {
                                         _hasAnswered = true;
                                         if (isCorrect) _respuestasCorrectas++;
                                       });
+                                      EjerciciosController().guardarRespuesta(
+                                        AppSession().usuarioId ?? 0,
+                                        preguntaActual.idPregunta,
+                                        preguntaActual.opciones[_selectedIndex!].idOpcion,
+                                        isCorrect,
+                                      );
                                     } else {
                                       // Next question or Final Screen
                                       if (_currentQuestionIndex <
